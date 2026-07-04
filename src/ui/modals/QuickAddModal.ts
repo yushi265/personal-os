@@ -40,6 +40,8 @@ export interface QuickAddModalOptions {
 	todoService: TodoService;
 	store: IndexStore;
 	settings: POSSettings;
+	/** Dataview/Tasks有効時のみtrue。falseの場合はonOpenで即座に閉じる(誤起動防御、detail-design.md §8.1) */
+	todoFeatures: boolean;
 }
 
 export class QuickAddModal extends Modal {
@@ -57,6 +59,11 @@ export class QuickAddModal extends Modal {
 	}
 
 	onOpen(): void {
+		if (!this.opts.todoFeatures) {
+			new Notice(t("E001"));
+			this.close();
+			return;
+		}
 		this.render();
 	}
 

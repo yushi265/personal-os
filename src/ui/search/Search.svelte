@@ -13,7 +13,11 @@
 	let selectedSavedViewId = $state("");
 	let entityResults = $state<Entity[]>([]);
 	let todoResults = $state<Todo[]>([]);
-	let savedViews = $state<SavedView[]>(plugin.savedViewService.list());
+	let savedViews = $state<SavedView[]>([]);
+
+	$effect(() => {
+		savedViews = plugin.savedViewService.list();
+	});
 
 	function sortValue(e: Entity): string | number {
 		switch (sortKey) {

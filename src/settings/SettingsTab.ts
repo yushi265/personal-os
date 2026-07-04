@@ -17,6 +17,8 @@ export class POSSettingsTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		this.plugin.refreshCapability();
+
 		this.renderFolderSection(containerEl);
 		this.renderDashboardSection(containerEl);
 		this.renderDefaultsSection(containerEl);
@@ -144,11 +146,26 @@ export class POSSettingsTab extends PluginSettingTab {
 			"obsidian-tasks-plugin"
 		];
 
-		new Setting(containerEl)
+		const dvSetting = new Setting(containerEl)
 			.setName(t("settings.capability.dataview"))
 			.setDesc(dvDetected ? t("settings.capability.detected") : t("settings.capability.notDetected"));
-		new Setting(containerEl)
+		if (!dvDetected) {
+			dvSetting.addButton((btn) =>
+				btn.setButtonText(t("settings.capability.installLink")).onClick(() => {
+					window.open("https://obsidian.md/plugins?id=dataview");
+				})
+			);
+		}
+
+		const tasksSetting = new Setting(containerEl)
 			.setName(t("settings.capability.tasks"))
 			.setDesc(tasksDetected ? t("settings.capability.detected") : t("settings.capability.notDetected"));
+		if (!tasksDetected) {
+			tasksSetting.addButton((btn) =>
+				btn.setButtonText(t("settings.capability.installLink")).onClick(() => {
+					window.open("https://obsidian.md/plugins?id=obsidian-tasks-plugin");
+				})
+			);
+		}
 	}
 }

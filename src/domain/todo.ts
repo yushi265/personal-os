@@ -3,13 +3,15 @@ import type { Priority } from "./entity";
 /**
  * Todoの内部表現(design.md §3.2)。
  * rawText は元のTodo行から checkbox/インデントを除いた生テキスト(DataviewのSTask.textそのまま)。
- * editLine の照合用行復元(rebuildTodoLine)にのみ使う内部用途で、未設定でも動作するようoptionalとする。
+ * indent は行頭のインデント文字列(ネストしたTodoの "- [ ]" 前の空白)。
+ * どちらも editLine の照合用行復元(rebuildTodoLine)にのみ使う内部用途で、未設定でも動作するようoptionalとする。
  */
 export interface Todo {
 	filePath: string;
 	line: number;
 	text: string;
 	rawText?: string;
+	indent?: string;
 	done: boolean;
 	dueDate?: string;
 	startDate?: string;
@@ -97,9 +99,12 @@ export function toggleTodoLine(line: string, doneDate: string): string {
  * Todoオブジェクトから行内容を復元する。editLine() の expected 照合や、
  * PromoteService(Phase 4)でTicketノートへ移設する際の行生成に用いる。
  * rawText未設定時は表示用text(メタデータ除去済み)からの近似復元となる。
+ * デフォルトでは元のインデントを維持する(editLineの照合はインデント込みの実行行と一致させる必要がある)。
+ * stripIndent: true の場合はインデントを除去する(Promote先の新規ノートへ移設する際、トップレベル項目として書き出すため)。
  */
-export function rebuildTodoLine(todo: Todo): string {
+export function rebuildTodoLine(todo: Todo, opts?: { stripIndent?: boolean }): string {
 	const checkbox = todo.done ? "- [x]" : "- [ ]";
 	const body = todo.rawText ?? todo.text;
-	return `${checkbox} ${body}`.trimEnd();
+	const indent = opts?.stripIndent ? "" : (todo.indent ?? "");
+	return `${indent}${checkbox} ${body}`.trimEnd();
 }

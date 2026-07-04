@@ -112,6 +112,7 @@ const MESSAGES = {
 	"settings.capability.tasks": "Tasks",
 	"settings.capability.detected": "検出済み",
 	"settings.capability.notDetected": "未検出",
+	"settings.capability.installLink": "導入ページを開く",
 
 	"kanban.title": "Kanban",
 	"kanban.modeTicket": "Ticket",
@@ -185,4 +186,20 @@ export function aiContextCopiedNotice(charCount: number): string {
 /** AI Summary成功時のNotice文言 */
 export function aiSummaryCopiedNotice(charCount: number): string {
 	return `AIサマリーをコピーしました(${charCount}文字)`;
+}
+
+/**
+ * parseEntity() の解析エラー理由(ParseErrorWidgetに表示される)。
+ * 値埋め込みのため t() 形式ではなく関数として提供する(aiContextCopiedNotice等と同様のパターン)。
+ */
+export function parseErrorNoType(): string {
+	return "type未定義";
+}
+
+export function parseErrorInvalidType(value: unknown): string {
+	return `不正なtype: ${String(value)}`;
+}
+
+export function parseErrorInvalidStatus(status: string): string {
+	return `不正なstatus: ${status}`;
 }

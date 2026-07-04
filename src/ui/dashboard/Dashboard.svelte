@@ -40,11 +40,21 @@
 		</button>
 	</div>
 
+	{#if !$data.todoFeatures}
+		<div class="pos-widget pos-widget-banner">
+			<p>{t("dashboard.todoDisabledNotice")}</p>
+			<p class="pos-widget-banner-links">
+				<a href="https://obsidian.md/plugins?id=dataview" target="_blank" rel="noopener">Dataview</a>
+				<a href="https://obsidian.md/plugins?id=obsidian-tasks-plugin" target="_blank" rel="noopener">Tasks</a>
+			</p>
+		</div>
+	{/if}
+
 	<div class="pos-dashboard-grid">
 		{#each plugin.settings.dashboard.widgets.filter((w) => w.visible) as w (w.id)}
 			{#if w.id === "today-todo" && $data.todoFeatures}
 				<TodayTodoWidget todos={$data.todayTodos} onToggle={toggleTodo} onOpen={openPath} />
-			{:else if w.id === "overdue" && $data.todoFeatures}
+			{:else if w.id === "overdue"}
 				<OverdueWidget todos={$data.overdueTodos} entities={$data.overdueEntities} onToggle={toggleTodo} onOpen={openPath} />
 			{:else if w.id === "active-goals"}
 				<ActiveEntitiesWidget type="goal" entities={$data.activeGoals} onOpen={openPath} />

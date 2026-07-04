@@ -1,7 +1,9 @@
 /**
  * Domain層: Entity型定義・parseEntity()
  * このファイルはObsidian APIに一切依存しない純粋TypeScriptとする。
+ * i18n/ja.ts はObsidian非依存の文言モジュールのため、ユーザー可視文言(ParseErrorWidget表示)の生成にのみ利用する。
  */
+import { parseErrorInvalidStatus, parseErrorInvalidType, parseErrorNoType } from "../i18n/ja";
 
 export const ENTITY_TYPES = ["goal", "project", "ticket", "review", "resource", "inbox"] as const;
 export type EntityType = (typeof ENTITY_TYPES)[number];
@@ -122,14 +124,14 @@ export function parseEntity(
 	fm: Record<string, unknown> | undefined,
 	resolveLink: (link: string) => string | null
 ): ParseResult {
-	if (!fm?.type) return { ok: false, reason: "type未定義" };
-	if (!ENTITY_TYPES.includes(fm.type as EntityType)) return { ok: false, reason: `不正なtype: ${fm.type}` };
+	if (!fm?.type) return { ok: false, reason: parseErrorNoType() };
+	if (!ENTITY_TYPES.includes(fm.type as EntityType)) return { ok: false, reason: parseErrorInvalidType(fm.type) };
 	const type = fm.type as EntityType;
 
 	const status = String(fm.status ?? defaultStatusOf(type));
 	const validStatuses = validStatusesOf(type);
 	if (validStatuses && !validStatuses.includes(status)) {
-		return { ok: false, reason: `不正なstatus: ${status}` };
+		return { ok: false, reason: parseErrorInvalidStatus(status) };
 	}
 
 	const warnings: string[] = [];

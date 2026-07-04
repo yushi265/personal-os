@@ -53,6 +53,7 @@ export default class PersonalOSPlugin extends Plugin {
 	reviewService!: ReviewService;
 	exportService!: ExportService;
 	capability: Capability = { todoFeatures: false };
+	private capabilityDetected = false;
 
 	async onload() {
 		await this.loadSettings();
@@ -94,7 +95,7 @@ export default class PersonalOSPlugin extends Plugin {
 		this.addRibbonIcon("layout-dashboard", t("ribbon.openDashboard"), () => this.openDashboard());
 
 		this.app.workspace.onLayoutReady(async () => {
-			this.detectCapability();
+			this.refreshCapability();
 			await this.waitDataviewReady();
 			await this.indexer.fullScan();
 			this.registerVaultEvents();
@@ -160,7 +161,10 @@ export default class PersonalOSPlugin extends Plugin {
 		this.addCommand({
 			id: "refresh-index",
 			name: t("command.refreshIndex"),
-			callback: () => void this.indexer.fullScan(),
+			callback: () => {
+				this.refreshCapability();
+				void this.indexer.fullScan();
+			},
 		});
 		this.addCommand({
 			id: "promote-todo",
@@ -243,6 +247,7 @@ export default class PersonalOSPlugin extends Plugin {
 			promoteService: this.promoteService,
 			store: this.store,
 			todo,
+			todoFeatures: this.capability.todoFeatures,
 		}).open();
 	}
 
@@ -329,11 +334,21 @@ export default class PersonalOSPlugin extends Plugin {
 			todoService: this.todoService,
 			store: this.store,
 			settings: this.settings,
+			todoFeatures: this.capability.todoFeatures,
 		}).open();
 	}
 
-	private detectCapability(): void {
-		this.capability = { todoFeatures: this.dataviewAdapter.available && this.tasksAdapter.available };
+	/**
+	 * 依存プラグイン(Dataview/Tasks)の有効化状態を再検出する。
+	 * 初回起動時に加え、設定画面を開いたタイミング・Refresh Indexコマンド実行時にも呼ばれる(detail-design.md §8.1)。
+	 * 状態が変化した場合のみ capability-changed を発火し、Dashboardのバナー表示等を更新させる。
+	 */
+	refreshCapability(): void {
+		const next = { todoFeatures: this.dataviewAdapter.available && this.tasksAdapter.available };
+		const changed = !this.capabilityDetected || next.todoFeatures !== this.capability.todoFeatures;
+		this.capability = next;
+		this.capabilityDetected = true;
+		if (!changed) return;
 		this.eventBus.emitEvent("capability-changed", this.capability);
 		if (!this.capability.todoFeatures) {
 			new Notice(t("E001"));

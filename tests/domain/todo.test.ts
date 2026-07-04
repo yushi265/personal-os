@@ -142,4 +142,14 @@ describe("rebuildTodoLine", () => {
 		const todo = makeTodo({ done: true, rawText: "buy milk ✅ 2026-07-01" });
 		expect(rebuildTodoLine(todo)).toBe("- [x] buy milk ✅ 2026-07-01");
 	});
+
+	it("preserves the original indent so editLine can match nested todo lines", () => {
+		const todo = makeTodo({ indent: "  ", rawText: "sub task" });
+		expect(rebuildTodoLine(todo)).toBe("  - [ ] sub task");
+	});
+
+	it("strips the indent when stripIndent is requested (e.g. moving into a new note)", () => {
+		const todo = makeTodo({ indent: "  ", rawText: "sub task" });
+		expect(rebuildTodoLine(todo, { stripIndent: true })).toBe("- [ ] sub task");
+	});
 });

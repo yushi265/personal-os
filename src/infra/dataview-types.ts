@@ -8,6 +8,8 @@ export interface STask {
 	text: string;
 	completed: boolean;
 	priority?: string;
+	/** 行内の開始位置。start.col がリスト項目("- ")の開始カラム(=インデント幅)を表す */
+	position?: { start: { line: number; col: number }; end: { line: number; col: number } };
 	[key: string]: unknown;
 }
 

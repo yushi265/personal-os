@@ -52,6 +52,21 @@
 	border-left: 3px solid var(--text-warning);
 }
 
+.pos-widget-banner {
+	border-left: 3px solid var(--text-warning);
+	margin-bottom: var(--size-4-4);
+}
+
+.pos-widget-banner p {
+	margin: 0;
+}
+
+.pos-widget-banner-links {
+	margin-top: var(--size-4-2) !important;
+	display: flex;
+	gap: var(--size-4-3);
+}
+
 .pos-widget-title {
 	margin: 0 0 var(--size-4-2) 0;
 	font-size: var(--font-ui-medium);

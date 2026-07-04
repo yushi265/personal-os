@@ -49,8 +49,11 @@ export class PromoteService {
 				templateName: opt.template,
 			});
 
-			// ② 元Todo本文をTicketノートへ移設(## Todo セクション配下)
-			await this.repo.processBody(created.path, (body) => `${body}\n## Todo\n${rebuildTodoLine(todo)}\n`);
+			// ② 元Todo本文をTicketノートへ移設(## Todo セクション配下、トップレベル項目としてインデントは除去)
+			await this.repo.processBody(
+				created.path,
+				(body) => `${body}\n## Todo\n${rebuildTodoLine(todo, { stripIndent: true })}\n`
+			);
 
 			// ③ 元Todo行の処理
 			const result = await this.applySourceTodoAction(todo, opt);

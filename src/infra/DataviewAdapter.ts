@@ -41,6 +41,7 @@ export class DataviewAdapter implements TodoProvider {
 			line: t.line,
 			text: stripMetadata(t.text),
 			rawText: t.text,
+			indent: " ".repeat(t.position?.start.col ?? 0),
 			done: t.completed,
 			dueDate: extractEmojiDate(t.text, "📅"),
 			startDate: extractEmojiDate(t.text, "🛫"),

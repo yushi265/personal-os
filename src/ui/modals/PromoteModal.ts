@@ -36,6 +36,8 @@ export interface PromoteTodoModalOptions {
 	promoteService: PromoteService;
 	store: IndexStore;
 	todo: Todo;
+	/** Dataview/Tasks有効時のみtrue。falseの場合はonOpenで即座に閉じる(誤起動防御、detail-design.md §8.1) */
+	todoFeatures: boolean;
 }
 
 /** Todo→Ticket昇格モーダル(detail-design.md §5.1 PromoteModal / §4.3) */
@@ -53,6 +55,11 @@ export class PromoteTodoModal extends Modal {
 	}
 
 	onOpen(): void {
+		if (!this.opts.todoFeatures) {
+			new Notice(t("E001"));
+			this.close();
+			return;
+		}
 		this.render();
 	}
 
