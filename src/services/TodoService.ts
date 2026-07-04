@@ -1,8 +1,8 @@
 import { Notice } from "obsidian";
 import type { Priority } from "../domain/entity";
 import { today } from "../domain/date";
-import { buildTodoLine, rebuildTodoLine, toggleTodoLine } from "../domain/todo";
-import type { Todo } from "../domain/todo";
+import { buildTodoLine, rebuildTodoLine, toggleTodoLine, updateTodoLine } from "../domain/todo";
+import type { Todo, TodoPatch } from "../domain/todo";
 import type { EditLineResult } from "../infra/VaultRepository";
 import type { VaultRepository } from "../infra/VaultRepository";
 import type { IndexStore } from "../infra/IndexStore";
@@ -57,6 +57,14 @@ export class TodoService {
 	async remove(todo: Todo): Promise<void> {
 		const expected = rebuildTodoLine(todo);
 		const result = await this.repo.editLine(todo.filePath, todo.line, expected, null);
+		await this.handleMismatch(result, todo.filePath);
+	}
+
+	/** インライン編集(text/due/priority): ManageView/Previewの両方から共通利用(design-ui-first.md §4.5) */
+	async updateInline(todo: Todo, patch: TodoPatch): Promise<void> {
+		const expected = rebuildTodoLine(todo);
+		const next = updateTodoLine(todo, patch);
+		const result = await this.repo.editLine(todo.filePath, todo.line, expected, next);
 		await this.handleMismatch(result, todo.filePath);
 	}
 

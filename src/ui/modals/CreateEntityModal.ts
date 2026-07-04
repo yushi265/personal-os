@@ -37,6 +37,8 @@ export interface CreateEntityModalOptions {
 	store: IndexStore;
 	settings: POSSettings;
 	initialType?: EntityType;
+	/** 呼び出し元(ManageViewの「+ 新規」等)が親を事前セットするためのオプション(design-ui-first.md §4.2) */
+	initialParentPath?: string;
 	onCreated?: (path: string) => void;
 }
 
@@ -55,6 +57,7 @@ export class CreateEntityModal extends Modal {
 		super(app);
 		this.type = opts.initialType ?? "goal";
 		this.priority = opts.settings.defaultPriority;
+		this.parentPath = opts.initialParentPath;
 	}
 
 	onOpen(): void {
@@ -96,6 +99,10 @@ export class CreateEntityModal extends Modal {
 		if (this.type === "project" || this.type === "ticket") {
 			const parentType: EntityType = this.type === "project" ? "goal" : "project";
 			new Setting(contentEl).setName(t("modal.createEntity.parent")).addText((text) => {
+				if (this.parentPath) {
+					const parentEntity = this.opts.store.get(this.parentPath);
+					if (parentEntity) text.setValue(parentEntity.title);
+				}
 				new EntitySuggest(
 					this.app,
 					text.inputEl,

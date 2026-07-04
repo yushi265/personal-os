@@ -15,8 +15,9 @@
 	let todoResults = $state<Todo[]>([]);
 	let savedViews = $state<SavedView[]>([]);
 
+	// ManageView専用のSavedView(viewMode==="manage")は一覧に出さない(design-ui-first.md §3.4)
 	$effect(() => {
-		savedViews = plugin.savedViewService.list();
+		savedViews = plugin.savedViewService.list().filter((v) => v.viewMode !== "manage");
 	});
 
 	function sortValue(e: Entity): string | number {
@@ -66,7 +67,7 @@
 			sort: { key: sortKey, order: sortOrder },
 			viewMode: "list",
 		});
-		savedViews = plugin.savedViewService.list();
+		savedViews = plugin.savedViewService.list().filter((v) => v.viewMode !== "manage");
 	}
 
 	function openPath(path: string): void {

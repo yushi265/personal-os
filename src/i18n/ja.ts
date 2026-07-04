@@ -215,6 +215,21 @@ const MESSAGES = {
 	"manage.column.parent": "所属",
 	"manage.emptyState": "該当する項目はありません。",
 	"manage.newButton": "+ 新規",
+	"manage.column.actions": "",
+	"manage.field.unset": "(未設定)",
+	"manage.updateFailed": "更新に失敗しました。",
+	"manage.rowMenu.label": "操作",
+	"manage.rowMenu.openNote": "ノートを開く",
+	"manage.rowMenu.showPreview": "Previewに表示",
+	"manage.rowMenu.promote": "昇格",
+	"manage.rowMenu.archive": "Archive",
+	"manage.rowMenu.delete": "削除",
+	"manage.savedView.placeholder": "Saved View...",
+	"manage.savedView.namePlaceholder": "名前を入力...",
+	"manage.savedView.save": "現在の状態を保存",
+	"manage.savedView.unnamed": "無題のView",
+	"confirmModal.confirm": "実行",
+	"confirmModal.cancel": "キャンセル",
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;
@@ -247,4 +262,9 @@ export function parseErrorInvalidType(value: unknown): string {
 
 export function parseErrorInvalidStatus(status: string): string {
 	return `不正なstatus: ${status}`;
+}
+
+/** ManageView RowMenuの削除確認メッセージ(タイトル埋め込みのためt()とは別関数とする) */
+export function manageDeleteConfirmMessage(title: string): string {
+	return `「${title}」を削除しますか?この操作は取り消せません。`;
 }

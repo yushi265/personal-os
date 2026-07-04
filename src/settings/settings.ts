@@ -19,8 +19,12 @@ export interface SavedView {
 	id: string;
 	name: string;
 	query: string;
-	sort: { key: "due" | "priority" | "title" | "progress"; order: "asc" | "desc" };
-	viewMode: "list" | "kanban";
+	// "text"/"parent" は Todoタブ専用のソートキー(design-ui-first.md §3.2のManageSortKeyのスーパーセット化)。
+	// 旧data.jsonは旧4値のみのため、unionの拡張だけで後方互換が保たれる(§7.5 S-1〜S-4)。
+	sort: { key: "due" | "priority" | "title" | "progress" | "text" | "parent"; order: "asc" | "desc" };
+	viewMode: "list" | "kanban" | "manage";
+	// viewMode !== "manage" では無視される。settings層からui層への依存を避けるためManageTab型は再importせずインライン化する。
+	tab?: "project" | "ticket" | "todo";
 }
 
 export interface POSSettings {

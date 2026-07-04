@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t, type MessageKey } from "../../i18n/ja";
+	import type PersonalOSPlugin from "../../main";
 	import type { ManageRowData, ManageSort, ManageSortKey, ManageTab } from "./manageData";
 	import ManageRow from "./ManageRow.svelte";
 
@@ -7,12 +8,14 @@
 		tab,
 		rows,
 		sort,
+		plugin,
 		onSortChange,
 		onOpen,
 	}: {
 		tab: ManageTab;
 		rows: ManageRowData[];
 		sort: ManageSort;
+		plugin: PersonalOSPlugin;
 		onSortChange: (key: ManageSortKey) => void;
 		onOpen: (path: string) => void;
 	} = $props();
@@ -22,7 +25,7 @@
 		labelKey: MessageKey;
 	}
 
-	// A2は表示専用のため列にセル編集UIは載せない(A3でRowMenu/インライン編集セルを差し込む想定。§3.1参照)
+	// A3: 各セルはui/components/の共通セルコンポーネントへ置換(ManageRow.svelte参照)。末尾にRowMenu用の列を追加する
 	const projectColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
 		{ key: null, labelKey: "manage.column.status" },
@@ -31,6 +34,7 @@
 		{ key: "progress", labelKey: "manage.column.progress" },
 		{ key: "due", labelKey: "manage.column.due" },
 		{ key: null, labelKey: "manage.column.labels" },
+		{ key: null, labelKey: "manage.column.actions" },
 	];
 	const ticketColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
@@ -40,6 +44,7 @@
 		{ key: "progress", labelKey: "manage.column.progress" },
 		{ key: "due", labelKey: "manage.column.due" },
 		{ key: null, labelKey: "manage.column.labels" },
+		{ key: null, labelKey: "manage.column.actions" },
 	];
 	const todoColumns: ColumnDef[] = [
 		{ key: null, labelKey: "manage.column.done" },
@@ -47,6 +52,7 @@
 		{ key: "parent", labelKey: "manage.column.parent" },
 		{ key: "priority", labelKey: "manage.column.priority" },
 		{ key: "due", labelKey: "manage.column.due" },
+		{ key: null, labelKey: "manage.column.actions" },
 	];
 
 	const columns = $derived(tab === "project" ? projectColumns : tab === "ticket" ? ticketColumns : todoColumns);
@@ -78,7 +84,7 @@
 			</tr>
 		{:else}
 			{#each rows as row (rowKey(row))}
-				<ManageRow {row} {onOpen} />
+				<ManageRow {row} {tab} {plugin} {onOpen} />
 			{/each}
 		{/if}
 	</tbody>
