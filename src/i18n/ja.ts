@@ -18,9 +18,14 @@ const MESSAGES = {
 	"command.createTicket": "Create Ticket",
 	"command.createTodo": "Create Todo",
 	"command.openDashboard": "Open Dashboard",
+	"command.openKanban": "Open Kanban",
 	"command.refreshIndex": "Refresh Index",
+	"command.promoteTodo": "Promote Todo to Ticket",
+	"command.promoteTicket": "Promote Ticket to Project",
+	"command.archiveEntity": "Archive Entity",
 
 	"notice.todoAdded": "追加しました",
+	"promote.failed": "昇格に失敗しました。",
 
 	"dashboard.title": "Personal OS Dashboard",
 	"dashboard.refresh": "更新",
@@ -107,6 +112,26 @@ const MESSAGES = {
 	"settings.capability.tasks": "Tasks",
 	"settings.capability.detected": "検出済み",
 	"settings.capability.notDetected": "未検出",
+
+	"kanban.title": "Kanban",
+	"kanban.modeTicket": "Ticket",
+	"kanban.modeProject": "Project",
+	"kanban.moveFailed": "移動に失敗しました。",
+	"kanban.moveStatus": "ステータスを変更",
+
+	"modal.promoteTodo.title": "TicketへPromote",
+	"modal.promoteTodo.newTitle": "新Ticket名",
+	"modal.promoteTodo.project": "所属Project",
+	"modal.promoteTodo.sourceAction": "元Todoの扱い",
+	"modal.promoteTodo.sourceAction.delete": "削除",
+	"modal.promoteTodo.sourceAction.complete": "完了にする",
+	"modal.promoteTodo.sourceAction.link": "リンク化",
+	"modal.promoteTodo.submit": "Promote",
+
+	"modal.promoteTicket.title": "ProjectへPromote",
+	"modal.promoteTicket.confirmPrefix": "「",
+	"modal.promoteTicket.confirmSuffix": "」をProjectへ昇格しますか?",
+	"modal.promoteTicket.submit": "Promote",
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;

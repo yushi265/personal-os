@@ -150,6 +150,26 @@ export class VaultRepository {
 		await this.app.fileManager.renameFile(file, target);
 	}
 
+	/** fileManager.renameFile で任意フォルダへ移動する(Promote等)。同名衝突時はサフィックス。移動後のpathを返す */
+	async moveToFolder(path: string, folder: string): Promise<string> {
+		const file = this.getFile(path);
+		if (!file) throw new Error(`File not found: ${path}`);
+
+		await this.ensureFolder(folder);
+
+		let target = `${folder}/${file.name}`;
+		let suffix = 1;
+		while (this.app.vault.getAbstractFileByPath(target)) {
+			target = `${folder}/${file.basename} ${suffix}.${file.extension}`;
+			suffix++;
+		}
+
+		this.selfWriteGuard.markWrite(path);
+		this.selfWriteGuard.markWrite(target);
+		await this.app.fileManager.renameFile(file, target);
+		return target;
+	}
+
 	/** システムゴミ箱(vault.trash) */
 	async trash(path: string): Promise<void> {
 		const file = this.getFile(path);

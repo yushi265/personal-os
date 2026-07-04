@@ -125,6 +125,138 @@
 	font-size: var(--font-ui-smaller);
 }
 
+/* ---- Kanban ---- */
+
+.pos-kanban {
+	padding: var(--size-4-4);
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.pos-kanban-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-4);
+	margin-bottom: var(--size-4-4);
+}
+
+.pos-kanban-title {
+	margin: 0;
+	font-size: var(--font-ui-large);
+	flex: 1;
+}
+
+.pos-kanban-toggle {
+	display: flex;
+	gap: var(--size-4-1);
+}
+
+.pos-kanban-toggle-btn {
+	cursor: pointer;
+}
+
+.pos-kanban-toggle-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.pos-kanban-columns {
+	flex: 1;
+	display: flex;
+	gap: var(--size-4-3);
+	overflow-x: auto;
+	align-items: flex-start;
+}
+
+.pos-kanban-column {
+	background: var(--background-secondary);
+	border-radius: var(--radius-m);
+	padding: var(--size-4-3);
+	min-width: 240px;
+	flex: 1 0 240px;
+}
+
+.pos-kanban-column-title {
+	margin: 0 0 var(--size-4-2) 0;
+	font-size: var(--font-ui-medium);
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+}
+
+.pos-kanban-column-count {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-weight: normal;
+}
+
+.pos-kanban-column-cards {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-2);
+	min-height: 40px;
+}
+
+.pos-kanban-card {
+	background: var(--background-primary);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2);
+	cursor: pointer;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-2);
+}
+
+.pos-kanban-card:hover {
+	box-shadow: var(--shadow-s);
+}
+
+.pos-kanban-card-title {
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+.pos-kanban-card-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	flex-wrap: wrap;
+}
+
+.pos-kanban-badge {
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-1);
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.pos-kanban-badge-high {
+	background: var(--text-error);
+	color: var(--text-on-accent);
+}
+
+.pos-kanban-badge-medium {
+	background: var(--text-warning);
+	color: var(--text-on-accent);
+}
+
+.pos-kanban-badge-blocked {
+	background: var(--text-error);
+	color: var(--text-on-accent);
+}
+
+.pos-kanban-card-menu {
+	position: absolute;
+	top: var(--size-4-1);
+	right: var(--size-4-1);
+	cursor: pointer;
+	background: transparent;
+	border: none;
+}
+
 /* ---- Preview ---- */
 
 .pos-preview {

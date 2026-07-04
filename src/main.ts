@@ -1,5 +1,6 @@
-import { Notice, Plugin, TFile } from "obsidian";
+import { MarkdownView, Notice, Plugin, TFile } from "obsidian";
 import type { EntityType } from "./domain/entity";
+import type { Todo } from "./domain/todo";
 import { DEFAULT_SETTINGS, type POSSettings } from "./settings/settings";
 import { POSSettingsTab } from "./settings/SettingsTab";
 import { POSEventBus } from "./infra/EventBus";
@@ -12,10 +13,14 @@ import { TasksAdapter } from "./infra/TasksAdapter";
 import { EntityService } from "./services/EntityService";
 import { TodoService } from "./services/TodoService";
 import { ProgressService } from "./services/ProgressService";
+import { ActivityLogService } from "./services/ActivityLogService";
+import { PromoteService } from "./services/PromoteService";
 import { CreateEntityModal } from "./ui/modals/CreateEntityModal";
 import { QuickAddModal } from "./ui/modals/QuickAddModal";
+import { PromoteTicketModal, PromoteTodoModal } from "./ui/modals/PromoteModal";
 import { DashboardView, VIEW_TYPE_DASHBOARD } from "./ui/dashboard/DashboardView";
 import { PreviewView, VIEW_TYPE_PREVIEW } from "./ui/preview/PreviewView";
+import { KanbanView, VIEW_TYPE_KANBAN } from "./ui/kanban/KanbanView";
 import { t } from "./i18n/ja";
 
 interface Capability {
@@ -34,6 +39,8 @@ export default class PersonalOSPlugin extends Plugin {
 	entityService!: EntityService;
 	todoService!: TodoService;
 	progressService!: ProgressService;
+	activityLogService!: ActivityLogService;
+	promoteService!: PromoteService;
 	capability: Capability = { todoFeatures: false };
 
 	async onload() {
@@ -55,9 +62,16 @@ export default class PersonalOSPlugin extends Plugin {
 			this.dataviewAdapter,
 			this.progressService
 		);
-		// ActivityLogServiceはPhase 4で追加し、EntityServiceへ注入する。
-		this.entityService = new EntityService(this.repo, this.store, this.settings, undefined, this.progressService);
+		this.activityLogService = new ActivityLogService(this.repo, this.settings);
+		this.entityService = new EntityService(
+			this.repo,
+			this.store,
+			this.settings,
+			this.activityLogService,
+			this.progressService
+		);
 		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
+		this.promoteService = new PromoteService(this.repo, this.store, this.entityService, this.activityLogService);
 
 		this.registerViews();
 		this.registerCommands();
@@ -88,7 +102,8 @@ export default class PersonalOSPlugin extends Plugin {
 	private registerViews(): void {
 		this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this));
 		this.registerView(VIEW_TYPE_PREVIEW, (leaf) => new PreviewView(leaf, this));
-		// Kanban/Timeline Viewの登録場所(Phase 4〜5で追加)
+		this.registerView(VIEW_TYPE_KANBAN, (leaf) => new KanbanView(leaf, this));
+		// Timeline Viewの登録場所(Phase 5で追加)
 	}
 
 	private registerCommands(): void {
@@ -122,10 +137,75 @@ export default class PersonalOSPlugin extends Plugin {
 			callback: () => this.openDashboard(),
 		});
 		this.addCommand({
+			id: "open-kanban",
+			name: t("command.openKanban"),
+			callback: () => this.openKanban(),
+		});
+		this.addCommand({
 			id: "refresh-index",
 			name: t("command.refreshIndex"),
 			callback: () => void this.indexer.fullScan(),
 		});
+		this.addCommand({
+			id: "promote-todo",
+			name: t("command.promoteTodo"),
+			checkCallback: (checking) => {
+				if (!this.capability.todoFeatures) return false;
+				const todo = this.findTodoAtCursor();
+				if (!todo) return false;
+				if (!checking) this.openPromoteTodoModal(todo);
+				return true;
+			},
+		});
+		this.addCommand({
+			id: "promote-ticket",
+			name: t("command.promoteTicket"),
+			checkCallback: (checking) => {
+				const entity = this.activeEntity();
+				if (!entity || entity.type !== "ticket") return false;
+				if (!checking) this.openPromoteTicketModal(entity.path, entity.title);
+				return true;
+			},
+		});
+		this.addCommand({
+			id: "archive-entity",
+			name: t("command.archiveEntity"),
+			checkCallback: (checking) => {
+				const entity = this.activeEntity();
+				if (!entity) return false;
+				if (!checking) void this.entityService.archive(entity.path);
+				return true;
+			},
+		});
+	}
+
+	private activeEntity() {
+		const file = this.app.workspace.getActiveFile();
+		if (!file) return undefined;
+		return this.store.get(file.path);
+	}
+
+	private findTodoAtCursor(): Todo | undefined {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view?.file) return undefined;
+		const line = view.editor.getCursor().line;
+		return this.store.getTodos(view.file.path).find((todo) => todo.line === line);
+	}
+
+	private openPromoteTodoModal(todo: Todo): void {
+		new PromoteTodoModal(this.app, {
+			promoteService: this.promoteService,
+			store: this.store,
+			todo,
+		}).open();
+	}
+
+	private openPromoteTicketModal(ticketPath: string, ticketTitle: string): void {
+		new PromoteTicketModal(this.app, {
+			promoteService: this.promoteService,
+			ticketPath,
+			ticketTitle,
+		}).open();
 	}
 
 	private openCreateModal(type: EntityType): void {
@@ -145,6 +225,17 @@ export default class PersonalOSPlugin extends Plugin {
 		}
 		const leaf = this.app.workspace.getLeaf(true);
 		await leaf.setViewState({ type: VIEW_TYPE_DASHBOARD, active: true });
+		this.app.workspace.revealLeaf(leaf);
+	}
+
+	private async openKanban(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_KANBAN);
+		if (existing.length > 0) {
+			this.app.workspace.revealLeaf(existing[0]);
+			return;
+		}
+		const leaf = this.app.workspace.getLeaf(true);
+		await leaf.setViewState({ type: VIEW_TYPE_KANBAN, active: true });
 		this.app.workspace.revealLeaf(leaf);
 	}
 
