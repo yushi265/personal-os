@@ -18,6 +18,7 @@ import { PromoteService } from "./services/PromoteService";
 import { SearchService } from "./services/SearchService";
 import { SavedViewService } from "./services/SavedViewService";
 import { ReviewService } from "./services/ReviewService";
+import { ExportService } from "./services/ExportService";
 import { CreateEntityModal } from "./ui/modals/CreateEntityModal";
 import { QuickAddModal } from "./ui/modals/QuickAddModal";
 import { PromoteTicketModal, PromoteTodoModal } from "./ui/modals/PromoteModal";
@@ -50,6 +51,7 @@ export default class PersonalOSPlugin extends Plugin {
 	searchService!: SearchService;
 	savedViewService!: SavedViewService;
 	reviewService!: ReviewService;
+	exportService!: ExportService;
 	capability: Capability = { todoFeatures: false };
 
 	async onload() {
@@ -84,6 +86,7 @@ export default class PersonalOSPlugin extends Plugin {
 		this.searchService = new SearchService(this.store, this.repo);
 		this.savedViewService = new SavedViewService(this.settings, () => this.saveSettings());
 		this.reviewService = new ReviewService(this.repo, this.store, this.activityLogService);
+		this.exportService = new ExportService(this.store);
 
 		this.registerViews();
 		this.registerCommands();
@@ -209,6 +212,16 @@ export default class PersonalOSPlugin extends Plugin {
 			id: "open-timeline",
 			name: t("command.openTimeline"),
 			callback: () => this.openTimeline(),
+		});
+		this.addCommand({
+			id: "export-ai-context",
+			name: t("command.exportAiContext"),
+			callback: () => void this.exportService.exportAiContext(),
+		});
+		this.addCommand({
+			id: "export-ai-summary",
+			name: t("command.exportAiSummary"),
+			callback: () => void this.exportService.exportAiSummary(),
 		});
 	}
 

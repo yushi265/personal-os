@@ -148,6 +148,8 @@ const MESSAGES = {
 	"command.openReview": "Open Review",
 	"command.openSearch": "Open Search",
 	"command.openTimeline": "Open Timeline",
+	"command.exportAiContext": "Export AI Context",
+	"command.exportAiSummary": "Export AI Summary",
 
 	"search.title": "Search",
 	"search.savedViewPlaceholder": "Saved View...",
@@ -173,4 +175,14 @@ export type MessageKey = keyof typeof MESSAGES;
 
 export function t(key: MessageKey): string {
 	return MESSAGES[key];
+}
+
+/** AI Export成功時のNotice文言(文字数埋め込みのためt()とは別関数とする) */
+export function aiContextCopiedNotice(charCount: number): string {
+	return `AIコンテキストをコピーしました(${charCount}文字)`;
+}
+
+/** AI Summary成功時のNotice文言 */
+export function aiSummaryCopiedNotice(charCount: number): string {
+	return `AIサマリーをコピーしました(${charCount}文字)`;
 }
