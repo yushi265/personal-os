@@ -31,7 +31,8 @@ import { KanbanView, VIEW_TYPE_KANBAN } from "./ui/kanban/KanbanView";
 import { SearchView, VIEW_TYPE_SEARCH } from "./ui/search/SearchView";
 import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
 import { ManageView, VIEW_TYPE_MANAGE } from "./ui/manage/ManageView";
-import type { ManageScreen } from "./ui/manage/manageNav";
+import { makeProjectDetailScreen, makeTicketDetailScreen, type ManageScreen } from "./ui/manage/manageNav";
+import { EntitySwitcherModal } from "./ui/modals/EntitySwitcherModal";
 import { t } from "./i18n/ja";
 
 interface Capability {
@@ -232,6 +233,11 @@ export default class PersonalOSPlugin extends Plugin {
 			callback: () => this.openManage(),
 		});
 		this.addCommand({
+			id: "open-entity-switcher",
+			name: t("command.openEntitySwitcher"),
+			callback: () => this.openEntitySwitcher(),
+		});
+		this.addCommand({
 			id: "export-ai-context",
 			name: t("command.exportAiContext"),
 			callback: () => void this.exportService.exportAiContext(),
@@ -359,6 +365,16 @@ export default class PersonalOSPlugin extends Plugin {
 		}
 		this.app.workspace.revealLeaf(leaf);
 		if (leaf.view instanceof ManageView) leaf.view.navigateTo(screen);
+	}
+
+	/** エンティティ版クイックスイッチャー(Phase U2)。project/ticketは管理Viewの詳細画面へ、goalはノートを開く */
+	openEntitySwitcher(): void {
+		new EntitySwitcherModal(this.app, {
+			store: this.store,
+			onChooseProject: (path) => void this.openManageAt(makeProjectDetailScreen(path)),
+			onChooseTicket: (path) => void this.openManageAt(makeTicketDetailScreen(path)),
+			onChooseGoal: (path) => void this.app.workspace.openLinkText(path, "", false),
+		}).open();
 	}
 
 	private async ensurePreviewLeaf(): Promise<void> {

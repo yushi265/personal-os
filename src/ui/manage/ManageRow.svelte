@@ -21,6 +21,7 @@
 		plugin,
 		onOpen,
 		onNavigate,
+		focused = false,
 	}: {
 		row: ManageRowData;
 		tab: ManageTab;
@@ -28,6 +29,8 @@
 		onOpen: (path: string) => void;
 		/** 指定時、行の空白部分クリックでentity詳細へ遷移する(design-drilldown-nav.md §3.1.1) */
 		onNavigate?: (path: string) => void;
+		/** ManageTableのキーボード操作(↑/↓)によるフォーカス中の行かどうか(Phase U2) */
+		focused?: boolean;
 	} = $props();
 
 	function statusOptions(entity: Entity): { value: string; label: string }[] {
@@ -119,7 +122,12 @@
 	{@const entity = row.entity}
 	{@const badges = badgeCounts(entity)}
 	{@const fraction = entityProgressFraction(plugin.store, entity)}
-	<tr class="pos-manage-row" class:pos-manage-row-navigable={!!onNavigate} onclick={() => onNavigate?.(entity.path)}>
+	<tr
+		class="pos-manage-row"
+		class:pos-manage-row-navigable={!!onNavigate}
+		class:pos-manage-row-focused={focused}
+		onclick={() => onNavigate?.(entity.path)}
+	>
 		<td onclick={(e) => e.stopPropagation()}>
 			<TitleCell
 				value={entity.title}

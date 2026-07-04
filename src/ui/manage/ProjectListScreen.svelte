@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { Notice } from "obsidian";
 	import type { Snippet } from "svelte";
 	import type { Entity } from "../../domain/entity";
 	import type PersonalOSPlugin from "../../main";
-	import { t } from "../../i18n/ja";
+	import { entityCreatedNotice, t } from "../../i18n/ja";
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
 	import ManageFilterBar from "./ManageFilterBar.svelte";
 	import ManageTable from "./ManageTable.svelte";
+	import InlineCreateRow from "./InlineCreateRow.svelte";
 	import {
 		goalGroupProgress,
 		groupProjectsByGoal,
@@ -28,6 +30,7 @@
 		onToggleGoal,
 		onNavigate,
 		toolbarExtra,
+		focusNewRowToken,
 	}: {
 		plugin: PersonalOSPlugin;
 		refreshTick: number;
@@ -41,6 +44,8 @@
 		onToggleGoal: (key: string) => void;
 		onNavigate: (path: string) => void;
 		toolbarExtra?: Snippet;
+		/** Manage.svelteの「n」キー操作から先頭のGoalセクションのインライン新規作成行へフォーカスを要求する(Phase U2) */
+		focusNewRowToken?: number;
 	} = $props();
 
 	// IndexStoreは素のMapでリアクティブでないため、refreshTickを明示的に参照して再計算のトリガとする(Manage.svelte参照)
@@ -71,6 +76,12 @@
 			openAfterCreate: false,
 		}).open();
 	}
+
+	// インライン新規作成(design-ui-first.md §4.2、Phase U2): status=backlog等の他フィールドはEntityService.createのデフォルトに委ねる
+	async function createProjectInline(goalPath: string | undefined, title: string): Promise<void> {
+		await plugin.entityService.create({ type: "project", title, goal: goalPath });
+		new Notice(entityCreatedNotice(title));
+	}
 </script>
 
 <ManageFilterBar
@@ -91,7 +102,7 @@
 		<button class="pos-manage-empty-action" onclick={() => createProject(undefined)}>{t("manage.nav.newProject")}</button>
 	</div>
 {:else}
-	{#each groups as group (groupKey(group.goal))}
+	{#each groups as group, groupIndex (groupKey(group.goal))}
 		{@const key = groupKey(group.goal)}
 		{@const collapsed = collapsedGoals.has(key)}
 		{@const groupProgress = goalGroupProgress(group.projects)}
@@ -119,6 +130,12 @@
 					{onSortChange}
 					onOpen={openNote}
 					{onNavigate}
+				/>
+				<InlineCreateRow
+					label={t("manage.nav.inlineNewProject")}
+					inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
+					onSubmit={(title) => createProjectInline(group.goal?.path, title)}
+					focusRequestToken={groupIndex === 0 ? focusNewRowToken : undefined}
 				/>
 				<button class="pos-manage-goal-new-btn" onclick={() => createProject(group.goal?.path)}>
 					{t("manage.nav.newProjectInGoal")}

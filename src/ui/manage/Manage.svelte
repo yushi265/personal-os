@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { Menu, Notice } from "obsidian";
+	import { Menu, Notice, Platform } from "obsidian";
 	import { untrack } from "svelte";
 	import type { Writable } from "svelte/store";
 	import type PersonalOSPlugin from "../../main";
 	import { t } from "../../i18n/ja";
 	import { SaveViewModal } from "../modals/SaveViewModal";
+	import { EntitySwitcherModal } from "../modals/EntitySwitcherModal";
 	import type { SavedView } from "../../settings/settings";
+	import { isEditableTarget } from "./manageKeyboard";
 	import {
 		DEFAULT_ENTITY_SORT,
 		EMPTY_MANAGE_FILTER,
@@ -49,6 +51,9 @@
 	let listSort = $state<ManageSort>({ ...DEFAULT_ENTITY_SORT });
 	let listFilterExpanded = $state(false);
 	let collapsedGoals = $state<Set<string>>(new Set());
+
+	// キーボード操作(Phase U2): 「n」でインライン新規作成行へフォーカスを要求する外部トリガー
+	let focusNewRowToken = $state(0);
 
 	const manageSavedViews = $derived.by((): SavedView[] => {
 		void $refreshToken;
@@ -127,6 +132,34 @@
 		new SaveViewModal(plugin.app, { onSubmit: saveCurrentView }).open();
 	}
 
+	function openEntitySwitcher(): void {
+		new EntitySwitcherModal(plugin.app, {
+			store: plugin.store,
+			onChooseProject: goToProjectDetail,
+			onChooseTicket: goToTicketDetail,
+			onChooseGoal: openPath,
+		}).open();
+	}
+
+	/**
+	 * 管理View内キーボード操作(Phase U2): 「n」でインライン新規作成行へフォーカス、
+	 * Backspace/Alt+←でパンくずを一つ戻る。入力欄・編集中セルにフォーカスがある間は発動しない。
+	 * contentEl(このView)配下でのみ有効なため、Obsidianのグローバルショートカットとは衝突しない。
+	 */
+	function handleRootKeydown(e: KeyboardEvent): void {
+		if (isEditableTarget(e.target as HTMLElement | null)) return;
+		if (e.key === "n" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+			e.preventDefault();
+			focusNewRowToken++;
+			return;
+		}
+		if (e.key === "Backspace" || (e.key === "ArrowLeft" && e.altKey)) {
+			if (stack.length <= 1) return;
+			e.preventDefault();
+			goBack();
+		}
+	}
+
 	function openSavedViewMenu(e: MouseEvent): void {
 		const menu = new Menu();
 		if (manageSavedViews.length === 0) {
@@ -163,9 +196,19 @@
 	});
 </script>
 
-<div class="pos-manage">
+<!-- svelte-ignore a11y_no_static_element_interactions -- ページ内ショートカット(n/Backspace)束ね用のコンテナ。詳細はhandleRootKeydown参照 -->
+<div class="pos-manage" onkeydown={handleRootKeydown}>
 	<div class="pos-manage-header">
 		<h2 class="pos-manage-title">{t("manage.title")}</h2>
+		<button
+			type="button"
+			class="pos-manage-entity-switcher-btn"
+			aria-label={t("manage.toolbar.entitySwitcher")}
+			title={t("manage.toolbar.entitySwitcher")}
+			onclick={openEntitySwitcher}
+		>
+			🔍
+		</button>
 	</div>
 
 	<nav class="pos-manage-breadcrumb" aria-label="breadcrumb">
@@ -197,6 +240,7 @@
 			onSortChange={changeListSort}
 			onToggleGoal={toggleGoal}
 			onNavigate={goToProjectDetail}
+			{focusNewRowToken}
 		>
 			{#snippet toolbarExtra()}
 				<button type="button" class="pos-manage-savedview-btn" onclick={openSavedViewMenu}>
@@ -212,8 +256,13 @@
 			onScreenChange={updateCurrentScreen}
 			onNavigateTicket={goToTicketDetail}
 			onOpenNote={openPath}
+			{focusNewRowToken}
 		/>
 	{:else if current.kind === "ticket-detail"}
 		<TicketDetailScreen {plugin} {refreshTick} screen={current} onScreenChange={updateCurrentScreen} onOpenNote={openPath} />
+	{/if}
+
+	{#if !Platform.isMobile}
+		<p class="pos-manage-kbd-hint">{t("manage.kbdHint")}</p>
 	{/if}
 </div>

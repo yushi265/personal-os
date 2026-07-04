@@ -290,6 +290,11 @@ export function goalGroupProgress(projects: Entity[]): number | null {
 	return Math.round(sum / projects.length);
 }
 
+/** インライン新規作成行(InlineCreateRow.svelte)のタイトルバリデーション。空白のみは不可(design-ui-first.md §4.2 titleRequiredと同方針) */
+export function isValidInlineTitle(title: string): boolean {
+	return title.trim().length > 0;
+}
+
 /** Entityのlabelsに加え、Todoのlabelsも集計対象に含める(Todoタブのlabelsフィルタ候補のため) */
 export function collectKnownLabels(store: IndexStore): string[] {
 	const set = new Set<string>();

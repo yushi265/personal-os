@@ -5,7 +5,7 @@ export interface SaveViewModalOptions {
 	onSubmit: (name: string) => void | Promise<void>;
 }
 
-/** 保存ビューの名前入力モーダル(design-ui-first.md §4.2 ConfirmModalの流儀)。SavedViewメニューの「現在の状態を保存...」から開く */
+/** 保存ビューの名前入力モーダル(design-ui-first.md §4.2)。SavedViewメニューの「現在の状態を保存...」から開く */
 export class SaveViewModal extends Modal {
 	private name = "";
 

@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { Notice } from "obsidian";
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, validStatusesOf } from "../../domain/entity";
 	import type PersonalOSPlugin from "../../main";
-	import { t } from "../../i18n/ja";
+	import { entityCreatedNotice, t } from "../../i18n/ja";
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
 	import StatusCell from "../components/StatusCell.svelte";
 	import PriorityCell from "../components/PriorityCell.svelte";
@@ -13,6 +14,7 @@
 	import MemoSection from "../components/MemoSection.svelte";
 	import ManageFilterBar from "./ManageFilterBar.svelte";
 	import ManageTable from "./ManageTable.svelte";
+	import InlineCreateRow from "./InlineCreateRow.svelte";
 	import type { ManageScreen } from "./manageNav";
 	import {
 		buildProjectTicketRows,
@@ -35,6 +37,7 @@
 		onScreenChange,
 		onNavigateTicket,
 		onOpenNote,
+		focusNewRowToken,
 	}: {
 		plugin: PersonalOSPlugin;
 		refreshTick: number;
@@ -42,6 +45,8 @@
 		onScreenChange: (next: Extract<ManageScreen, { kind: "project-detail" }>) => void;
 		onNavigateTicket: (path: string) => void;
 		onOpenNote: (path: string) => void;
+		/** Manage.svelteの「n」キー操作からこの画面のインライン新規作成行へフォーカスを要求する外部トリガー(Phase U2) */
+		focusNewRowToken?: number;
 	} = $props();
 
 	// IndexStoreは素のMapでリアクティブでないため、refreshTickを明示的に参照して再計算のトリガとする(Manage.svelte参照)
@@ -127,6 +132,12 @@
 			openAfterCreate: false,
 		}).open();
 	}
+
+	// インライン新規作成(design-ui-first.md §4.2、Phase U2): status=backlog等の他フィールドはEntityService.createのデフォルトに委ねる
+	async function createTicketInline(title: string): Promise<void> {
+		await plugin.entityService.create({ type: "ticket", title, project: screen.path });
+		new Notice(entityCreatedNotice(title));
+	}
 </script>
 
 {#if entity}
@@ -184,6 +195,12 @@
 			onSortChange={changeTicketSort}
 			onOpen={onOpenNote}
 			onNavigate={onNavigateTicket}
+		/>
+		<InlineCreateRow
+			label={t("manage.projectDetail.inlineNewTicket")}
+			inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
+			onSubmit={createTicketInline}
+			focusRequestToken={focusNewRowToken}
 		/>
 		<button class="pos-manage-new-btn" onclick={createTicket}>{t("manage.projectDetail.newTicket")}</button>
 	</section>

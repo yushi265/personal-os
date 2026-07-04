@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t, type MessageKey } from "../../i18n/ja";
 	import type PersonalOSPlugin from "../../main";
+	import { isEditableTarget, moveFocus } from "./manageKeyboard";
 	import type { ManageRowData, ManageSort, ManageSortKey, ManageTab } from "./manageData";
 	import ManageRow from "./ManageRow.svelte";
 
@@ -21,6 +22,32 @@
 		onOpen: (path: string) => void;
 		onNavigate?: (path: string) => void;
 	} = $props();
+
+	// キーボード操作(Phase U2): ↑/↓で行フォーカス移動、Enterで詳細/ノートを開く(design §「キーボード操作」)。
+	// rowsの中身が変わったら(フィルタ・ソート・reindex)フォーカスは一旦解除する
+	let focusedIndex = $state(-1);
+	$effect(() => {
+		rows;
+		focusedIndex = -1;
+	});
+
+	function handleKeydown(e: KeyboardEvent): void {
+		if (isEditableTarget(e.target as HTMLElement | null)) return;
+		if (e.key === "ArrowDown") {
+			e.preventDefault();
+			focusedIndex = moveFocus(focusedIndex, rows.length, 1);
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			focusedIndex = moveFocus(focusedIndex, rows.length, -1);
+		} else if (e.key === "Enter") {
+			if (focusedIndex < 0 || focusedIndex >= rows.length) return;
+			e.preventDefault();
+			const entity = rows[focusedIndex].entity;
+			if (!entity) return;
+			if (onNavigate) onNavigate(entity.path);
+			else onOpen(entity.path);
+		}
+	}
 
 	interface ColumnDef {
 		key: ManageSortKey | null;
@@ -62,25 +89,29 @@
 	}
 </script>
 
-<table class="pos-manage-table">
-	<thead>
-		<tr>
-			{#each columns as col (col.labelKey)}
-				<th class:pos-manage-th-sortable={!!col.key} onclick={() => col.key && onSortChange(col.key)}>
-					{t(col.labelKey)}{sortIndicator(col.key)}
-				</th>
-			{/each}
-		</tr>
-	</thead>
-	<tbody>
-		{#if rows.length === 0}
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -- 行フォーカス移動(↑/↓/Enter)のための複合ウィジェットコンテナ(design: キーボード操作) -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="pos-manage-table-wrapper" role="grid" tabindex="0" onkeydown={handleKeydown}>
+	<table class="pos-manage-table">
+		<thead>
 			<tr>
-				<td class="pos-manage-empty" colspan={columns.length}>{t("manage.emptyState")}</td>
+				{#each columns as col (col.labelKey)}
+					<th class:pos-manage-th-sortable={!!col.key} onclick={() => col.key && onSortChange(col.key)}>
+						{t(col.labelKey)}{sortIndicator(col.key)}
+					</th>
+				{/each}
 			</tr>
-		{:else}
-			{#each rows as row (rowKey(row))}
-				<ManageRow {row} {tab} {plugin} {onOpen} {onNavigate} />
-			{/each}
-		{/if}
-	</tbody>
-</table>
+		</thead>
+		<tbody>
+			{#if rows.length === 0}
+				<tr>
+					<td class="pos-manage-empty" colspan={columns.length}>{t("manage.emptyState")}</td>
+				</tr>
+			{:else}
+				{#each rows as row, i (rowKey(row))}
+					<ManageRow {row} {tab} {plugin} {onOpen} {onNavigate} focused={i === focusedIndex} />
+				{/each}
+			{/if}
+		</tbody>
+	</table>
+</div>

@@ -583,6 +583,26 @@
 	font-size: var(--font-ui-large);
 }
 
+.pos-manage-entity-switcher-btn {
+	cursor: pointer;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	font-size: var(--font-ui-medium);
+	color: var(--text-muted);
+	padding: 0 var(--size-4-1);
+}
+
+.pos-manage-entity-switcher-btn:hover {
+	color: var(--text-accent);
+}
+
+.pos-manage-kbd-hint {
+	margin-top: var(--size-4-4);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+}
+
 .pos-manage-tabs {
 	display: flex;
 	gap: var(--size-4-1);
@@ -744,12 +764,22 @@
 	color: var(--text-accent);
 }
 
+.pos-manage-table-wrapper:focus-visible {
+	outline: 2px solid var(--background-modifier-border-focus);
+	outline-offset: -2px;
+}
+
 .pos-manage-row {
 	transition: background-color 0.1s ease;
 }
 
 .pos-manage-row:hover {
 	background: var(--background-modifier-hover);
+}
+
+.pos-manage-row-focused {
+	background: var(--background-modifier-hover);
+	box-shadow: inset 2px 0 0 var(--interactive-accent);
 }
 
 .pos-manage-title-link {
@@ -818,6 +848,32 @@
 .pos-manage-new-btn {
 	cursor: pointer;
 	margin-left: auto;
+}
+
+.pos-manage-inline-create-row {
+	display: block;
+	width: 100%;
+	text-align: left;
+	cursor: pointer;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	padding: var(--size-4-2) var(--size-4-2);
+	border-radius: var(--radius-s);
+	transition: color 0.1s ease, background-color 0.1s ease;
+}
+
+.pos-manage-inline-create-row:hover,
+.pos-manage-inline-create-row:focus-visible {
+	color: var(--text-accent);
+	background: var(--background-modifier-hover);
+}
+
+.pos-manage-inline-create-input {
+	display: block;
+	width: 100%;
 }
 
 .pos-manage-row-menu-btn {
@@ -1261,4 +1317,35 @@
 	resize: none;
 	overflow-y: hidden;
 	font-size: var(--font-ui-small);
+}
+
+/* ---- エンティティ版クイックスイッチャー(EntitySwitcherModal, Phase U2) ---- */
+
+.pos-entity-switcher-item {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-1);
+}
+
+.pos-entity-switcher-title-row {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+}
+
+.pos-entity-switcher-type-badge {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background: var(--background-modifier-border);
+	padding: 0 var(--size-4-2);
+	border-radius: var(--radius-s);
+}
+
+.pos-entity-switcher-title {
+	color: var(--text-normal);
+}
+
+.pos-entity-switcher-status {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
 }

@@ -15,6 +15,7 @@ import {
 	filterToQueryString,
 	goalGroupProgress,
 	groupProjectsByGoal,
+	isValidInlineTitle,
 	projectTodoFraction,
 	queryStringToFilter,
 	sortEntityRows,
@@ -457,5 +458,16 @@ describe("goalGroupProgress", () => {
 	it("G-3: treats a missing progress value as 0", () => {
 		const projects = [makeEntity({ path: "a.md", type: "project" }), makeEntity({ path: "b.md", type: "project", progress: 50 })];
 		expect(goalGroupProgress(projects)).toBe(25);
+	});
+});
+
+describe("isValidInlineTitle", () => {
+	it("空文字・空白のみは不可", () => {
+		expect(isValidInlineTitle("")).toBe(false);
+		expect(isValidInlineTitle("   ")).toBe(false);
+	});
+
+	it("前後の空白があっても実質的な文字があれば可", () => {
+		expect(isValidInlineTitle("  タイトル  ")).toBe(true);
 	});
 });

@@ -271,18 +271,23 @@ const MESSAGES = {
 	"manage.nav.unknown": "(不明)",
 	"manage.nav.unclassified": "未分類",
 	"manage.nav.itemsSuffix": "件",
-	"manage.nav.newProjectInGoal": "+ 新規プロジェクト",
+	"manage.nav.newProjectInGoal": "詳細作成...",
+	"manage.nav.inlineNewProject": "+ プロジェクトを追加…",
 	"manage.nav.entityGone": "表示していた項目が削除またはアーカイブされたため、上の階層へ戻りました。",
 	"manage.nav.openNote": "ノートを開く",
 	"manage.nav.openDetail": "詳細を開く",
 	"manage.nav.editTitle": "名前を編集",
 	"manage.nav.newProject": "+ 新規プロジェクト",
-	"manage.projectDetail.newTicket": "+ 新規チケット",
+	"manage.projectDetail.newTicket": "詳細作成...",
+	"manage.projectDetail.inlineNewTicket": "+ チケットを追加…",
 	"manage.projectDetail.todoScope": "Todoの範囲",
 	"manage.projectDetail.scopeDirect": "直下",
 	"manage.projectDetail.scopeAll": "すべて",
-	"confirmModal.confirm": "実行",
-	"confirmModal.cancel": "キャンセル",
+
+	"command.openEntitySwitcher": "Quick open project/ticket",
+	"modal.entitySwitcher.placeholder": "プロジェクト/チケットを検索...",
+	"manage.toolbar.entitySwitcher": "プロジェクト/チケットを検索",
+	"manage.kbdHint": "⌨ ↑↓ 移動 / Enter 開く / n 新規作成 / Backspace 戻る",
 
 	"undo.action": "元に戻す",
 } as const;
@@ -376,18 +381,6 @@ export function parseErrorInvalidType(value: unknown): string {
 
 export function parseErrorInvalidStatus(status: string): string {
 	return `不正なstatus: ${status}`;
-}
-
-/** ManageView RowMenuの削除確認メッセージ(タイトル埋め込みのためt()とは別関数とする) */
-export function manageDeleteConfirmMessage(title: string): string {
-	return `「${title}」を削除しますか?この操作は取り消せません。`;
-}
-
-/** メモ削除確認メッセージ(本文埋め込みのためt()とは別関数とする。長文は先頭のみ表示) */
-export function memoDeleteConfirmMessage(text: string): string {
-	const firstLine = text.split("\n")[0];
-	const summary = firstLine.length > 40 ? `${firstLine.slice(0, 40)}...` : firstLine;
-	return `メモ「${summary}」を削除しますか?この操作は取り消せません。`;
 }
 
 /** 解析エラーノートを開いた場合のPreview表示メッセージ(design-ui-first.md §4.7) */
