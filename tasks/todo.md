@@ -1,5 +1,17 @@
 # Personal OS 実装 TODO
 
+## フィードバック対応第2弾(2026-07-04)
+
+- [x] Phase F1: ノート開くボタン撤去 / Enter作成の即時反映バグ(IndexStore楽観upsert+dataview:metadata-change購読)/ 削除ボタン赤トーンダウン / statusソート / Goal・Project付け替えメニュー + テスト6件(累計349件)→ commit `eab8170`
+- [x] Phase F2 設計: D&D並び替え(order永続化方式)+ メモ→コメント改名+シンプルメモ(保存形式)→ `design-reorder-and-notes.md` commit `213cd40`
+- [x] Phase F2 実装: D&D並び替え(order frontmatter/手動ソート/Goal跨ぎドロップ/Todo行移動)+ テスト35件(累計384件)→ commit `12e1b46`
+- [x] Phase F3 実装: コメント改名(ストレージ`## Memo`互換維持)+シンプルメモ(`## Note`/blur自動保存)+ テスト20件(累計404件)→ commit `8ea914c`
+
+### フィードバック対応第2弾 完了レビュー(2026-07-05)
+
+- 7件全対応完了(F1: 5件+F2: D&D並び替え+F3: コメント/メモ)。テスト404件全パス、Obsidian+webapp両対応、テストVault反映済み
+- 実機確認の観点: Enter作成の即時反映 / ⠿ハンドルのD&D(Goal跨ぎ含む)/ statusソート→手動順に戻す / ⋮のGoal・Project変更 / メモ自動保存とコメント表示 / 既存`## Memo`ノートの互換
+
 ## Obsidian UI洗練パッケージ(2026-07-04)
 
 - [x] Phase V1: ビジュアル言語の統一(Dashboard Widget刷新+statライン+Preview整列+共通表示部品)→ commit `900ba61`
