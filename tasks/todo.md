@@ -23,6 +23,9 @@
   - 方式差メモ: ブラウザ版のArchive/削除は確認ダイアログ(Obsidian内はUndoトースト)
 - [x] Phase P5: SSE同期+仕上げ(SseHub/切断バナー/api/summary/静的配信/webapp-dist同梱)+ テスト13件(累計338件)→ commit `ffd1356`
 
+- [x] Phase P6 デザイン磨き込み: motion導入(ページ遷移/スタッガー/Todo完了演出/カウントアップ)/ glassmorphismヘッダー / スケルトン / Cmd+Kパレット / SSE接続ドット → commit `7136929`
+  - バンドル: gzip 199KB(+37%、motion主因。ローカル配信なので許容)
+
 ### ブラウザUI 完了レビュー(2026-07-04)
 
 - P1〜P5全完了。テスト338件全パス、0エラー0警告、webapp同梱ビルド成功、テストVault反映済み
