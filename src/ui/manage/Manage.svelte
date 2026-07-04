@@ -281,8 +281,9 @@
 			{#each breadcrumbs as bc, i (i)}
 				<!-- svelte-ignore a11y_mouse_events_have_key_events -- ホバープレビュー(Phase U3)はマウス専用のプログレッシブエンハンスメント。パンくずの主機能(遷移)はonclickのボタンで別途担保済み -->
 				<button
-					class="pos-manage-breadcrumb-item"
+					class="pos-manage-breadcrumb-item pos-truncate"
 					class:pos-manage-breadcrumb-current={i === stack.length - 1}
+					title={bc.label}
 					onclick={bc.onClick}
 					onmouseover={(e) => onBreadcrumbHover(e, bc.path)}
 				>

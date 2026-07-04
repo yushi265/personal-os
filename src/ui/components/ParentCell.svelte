@@ -56,9 +56,10 @@
 	</select>
 {:else}
 	<span
-		class="pos-cell-badge"
+		class="pos-cell-badge pos-truncate"
 		role="button"
 		tabindex="0"
+		title={currentLabel()}
 		onclick={() => (editing = true)}
 		onkeydown={(e) => e.key === "Enter" && (editing = true)}
 	>

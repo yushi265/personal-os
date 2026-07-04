@@ -246,8 +246,13 @@ const MESSAGES = {
 	"modal.review.decision.continue": "Continue",
 	"modal.review.decision.pause": "Pause",
 	"modal.review.decision.complete": "Complete",
+	"modal.review.decision.continue.desc": "このまま継続します",
+	"modal.review.decision.pause.desc": "一時停止としてマークします",
+	"modal.review.decision.complete.desc": "完了としてマークします",
 	"modal.review.submit": "Submit",
 	"modal.review.submitted": "レビューを記録しました",
+
+	"modal.cancel": "キャンセル",
 
 	"command.openReview": "Open Review",
 	"command.openSearch": "Open Search",
@@ -329,6 +334,7 @@ const MESSAGES = {
 	"manage.rowMenu.promote": "昇格",
 	"manage.rowMenu.archive": "Archive",
 	"manage.rowMenu.delete": "削除",
+	"manage.savedView.nameLabel": "名前",
 	"manage.savedView.namePlaceholder": "名前を入力...",
 	"manage.savedView.save": "現在の状態を保存",
 	"manage.savedView.unnamed": "無題のView",

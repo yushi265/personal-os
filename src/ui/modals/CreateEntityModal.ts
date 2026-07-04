@@ -5,6 +5,7 @@ import type { EntityService } from "../../services/EntityService";
 import type { IndexStore } from "../../infra/IndexStore";
 import type { POSSettings } from "../../settings/settings";
 import { entityCreatedNotice, t } from "../../i18n/ja";
+import { addModalButtonRow, bindEnterSubmit, bindModEnterSubmit, bindRequiredField, markRequired } from "./modalHelpers";
 
 class EntitySuggest extends AbstractInputSuggest<Entity> {
 	constructor(
@@ -63,6 +64,7 @@ export class CreateEntityModal extends Modal {
 	}
 
 	onOpen(): void {
+		bindModEnterSubmit(this.contentEl, () => void this.submit());
 		this.render();
 	}
 
@@ -74,6 +76,7 @@ export class CreateEntityModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		this.setTitle(t("modal.createEntity.title"));
+		let titleValidation: { revalidate: () => void } | undefined;
 
 		new Setting(contentEl).setName(t("modal.createEntity.type")).addDropdown((dropdown) =>
 			dropdown
@@ -87,16 +90,20 @@ export class CreateEntityModal extends Modal {
 		);
 
 		let titleInputEl: HTMLInputElement | undefined;
-		new Setting(contentEl).setName(t("modal.createEntity.titleField")).addText((text) => {
+		const titleSetting = new Setting(contentEl).setName(t("modal.createEntity.titleField"));
+		markRequired(titleSetting.nameEl);
+		titleSetting.addText((text) => {
 			titleInputEl = text.inputEl;
 			text
 				.setPlaceholder(t("modal.createEntity.titleFieldPlaceholder"))
 				.setValue(this.title)
 				.onChange((value) => {
 					this.title = value;
+					titleValidation?.revalidate();
 				});
 		});
 		titleInputEl?.focus();
+		if (titleInputEl) bindEnterSubmit(titleInputEl, () => void this.submit());
 
 		if (this.type === "project" || this.type === "ticket") {
 			const parentType: EntityType = this.type === "project" ? "goal" : "project";
@@ -146,12 +153,12 @@ export class CreateEntityModal extends Modal {
 			});
 		}
 
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText(t("modal.createEntity.submit"))
-				.setCta()
-				.onClick(() => this.submit())
-		);
+		const submitBtn = addModalButtonRow(contentEl, {
+			submitLabel: t("modal.createEntity.submit"),
+			onSubmit: () => void this.submit(),
+			onCancel: () => this.close(),
+		});
+		if (titleInputEl) titleValidation = bindRequiredField(titleInputEl, submitBtn, () => this.title);
 	}
 
 	private listTemplates(): string[] {

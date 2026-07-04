@@ -5,6 +5,7 @@ import { stripMetadata } from "../../domain/todo";
 import type { IndexStore } from "../../infra/IndexStore";
 import type { PromoteService, SourceTodoAction } from "../../services/PromoteService";
 import { t } from "../../i18n/ja";
+import { addModalButtonRow, bindEnterSubmit, bindModEnterSubmit, bindRequiredField, markRequired } from "./modalHelpers";
 
 class ProjectSuggest extends AbstractInputSuggest<Entity> {
 	constructor(
@@ -60,6 +61,7 @@ export class PromoteTodoModal extends Modal {
 			this.close();
 			return;
 		}
+		bindModEnterSubmit(this.contentEl, () => void this.submit());
 		this.render();
 	}
 
@@ -71,12 +73,19 @@ export class PromoteTodoModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		this.setTitle(t("modal.promoteTodo.title"));
+		let titleValidation: { revalidate: () => void } | undefined;
 
-		new Setting(contentEl).setName(t("modal.promoteTodo.newTitle")).addText((text) =>
+		let titleInputEl: HTMLInputElement | undefined;
+		const titleSetting = new Setting(contentEl).setName(t("modal.promoteTodo.newTitle"));
+		markRequired(titleSetting.nameEl);
+		titleSetting.addText((text) => {
+			titleInputEl = text.inputEl;
 			text.setValue(this.newTitle).onChange((value) => {
 				this.newTitle = value;
-			})
-		);
+				titleValidation?.revalidate();
+			});
+		});
+		if (titleInputEl) bindEnterSubmit(titleInputEl, () => void this.submit());
 
 		new Setting(contentEl).setName(t("modal.promoteTodo.project")).addText((text) => {
 			new ProjectSuggest(
@@ -106,12 +115,12 @@ export class PromoteTodoModal extends Modal {
 				})
 		);
 
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText(t("modal.promoteTodo.submit"))
-				.setCta()
-				.onClick(() => void this.submit())
-		);
+		const submitBtn = addModalButtonRow(contentEl, {
+			submitLabel: t("modal.promoteTodo.submit"),
+			onSubmit: () => void this.submit(),
+			onCancel: () => this.close(),
+		});
+		if (titleInputEl) titleValidation = bindRequiredField(titleInputEl, submitBtn, () => this.newTitle);
 	}
 
 	private async submit(): Promise<void> {
@@ -150,16 +159,16 @@ export class PromoteTicketModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl } = this;
+		bindModEnterSubmit(contentEl, () => void this.submit());
 		this.setTitle(t("modal.promoteTicket.title"));
 		contentEl.createEl("p", {
 			text: `${t("modal.promoteTicket.confirmPrefix")}${this.opts.ticketTitle}${t("modal.promoteTicket.confirmSuffix")}`,
 		});
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText(t("modal.promoteTicket.submit"))
-				.setCta()
-				.onClick(() => void this.submit())
-		);
+		addModalButtonRow(contentEl, {
+			submitLabel: t("modal.promoteTicket.submit"),
+			onSubmit: () => void this.submit(),
+			onCancel: () => this.close(),
+		});
 	}
 
 	onClose(): void {

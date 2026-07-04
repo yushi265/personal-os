@@ -129,7 +129,7 @@
 		class:pos-manage-row-focused={focused}
 		onclick={() => onNavigate?.(entity.path)}
 	>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-title" onclick={(e) => e.stopPropagation()}>
 			<TitleCell
 				value={entity.title}
 				onCommit={(next) => commitTitle(entity, next)}
@@ -140,33 +140,33 @@
 			/>
 			<RowBadges blockerCount={badges.blockers} memoCount={badges.memos} todoCount={badges.todos} />
 		</td>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-status" onclick={(e) => e.stopPropagation()}>
 			<StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} />
 		</td>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-parent" onclick={(e) => e.stopPropagation()}>
 			<ParentCell
 				value={tab === "project" ? entity.goal : entity.project}
 				options={parentOptions()}
 				onCommit={(next) => commitParent(entity, next)}
 			/>
 		</td>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-priority" onclick={(e) => e.stopPropagation()}>
 			<PriorityCell value={entity.priority ?? ""} options={priorityOptions()} onCommit={(next) => commitPriority(entity, next)} />
 		</td>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-progress" onclick={(e) => e.stopPropagation()}>
 			{#if entity.type !== "goal"}
 				<ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} />
 			{/if}
 		</td>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-due" onclick={(e) => e.stopPropagation()}>
 			<DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} relative />
 		</td>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-labels" onclick={(e) => e.stopPropagation()}>
 			{#each entity.labels as label (label)}
 				<span class="pos-manage-chip pos-manage-chip-static">{label}</span>
 			{/each}
 		</td>
-		<td onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-actions" onclick={(e) => e.stopPropagation()}>
 			<RowMenu
 				onOpenNote={() => onOpen(entity.path)}
 				onShowPreview={() => showPreview(entity.path)}
@@ -177,7 +177,7 @@
 			/>
 		</td>
 		{#if onNavigate}
-			<td class="pos-manage-nav-cell" onclick={(e) => e.stopPropagation()}>
+			<td class="pos-manage-nav-cell pos-manage-cell-nav" onclick={(e) => e.stopPropagation()}>
 				<button
 					type="button"
 					class="pos-manage-nav-chevron"

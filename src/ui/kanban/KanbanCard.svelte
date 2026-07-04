@@ -70,7 +70,7 @@
 	onkeydown={(e) => e.key === "Enter" && onNavigate(entity.path, e.metaKey || e.ctrlKey)}
 >
 	<button class="pos-kanban-card-menu" onclick={openCardMenu} aria-label={t("kanban.cardMenuLabel")}>⋮</button>
-	<div class="pos-kanban-card-title">{entity.title}</div>
+	<div class="pos-kanban-card-title pos-truncate" title={entity.title}>{entity.title}</div>
 	<div class="pos-kanban-card-meta">
 		<PriorityLabel value={entity.priority ?? ""} label={entity.priority ?? ""} />
 		<DueLabel value={entity.due} />

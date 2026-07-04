@@ -104,9 +104,10 @@
 	<span class="pos-title-cell-nav">
 		<!-- svelte-ignore a11y_mouse_events_have_key_events -- ホバープレビュー(Phase U3)はマウス専用のプログレッシブエンハンスメント。キーボード操作はonclick/onkeydownのEnterで別途担保済み -->
 		<span
-			class="pos-cell-text pos-cell-title pos-title-link"
+			class="pos-cell-text pos-cell-title pos-title-link pos-truncate"
 			role="link"
 			tabindex="0"
+			title={display}
 			onclick={() => onNavigate?.()}
 			onkeydown={(e) => e.key === "Enter" && onNavigate?.()}
 			onmouseover={onTitleHover}
@@ -118,9 +119,10 @@
 {:else}
 	<!-- svelte-ignore a11y_mouse_events_have_key_events -- ホバープレビュー(Phase U3)はマウス専用のプログレッシブエンハンスメント。キーボード操作はonclick/onkeydownのEnterで別途担保済み -->
 	<span
-		class="pos-cell-text pos-cell-title"
+		class="pos-cell-text pos-cell-title pos-truncate"
 		role="button"
 		tabindex="0"
+		title={display}
 		onclick={startEdit}
 		onkeydown={(e) => e.key === "Enter" && startEdit()}
 		onmouseover={onTitleHover}

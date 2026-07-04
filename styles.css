@@ -1651,3 +1651,200 @@
 	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
 }
+
+/* ==== Obsidian UI V3: モーダル入力体験 ==== */
+
+.pos-modal-button-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-4);
+}
+
+.pos-modal-required-mark {
+	color: var(--text-error);
+}
+
+.pos-modal-field-invalid {
+	border-color: var(--text-error) !important;
+}
+
+.pos-modal-decision-group {
+	margin-bottom: var(--size-4-1);
+}
+
+.pos-modal-decision-desc {
+	margin: 0 0 var(--size-4-2);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+/* ==== Obsidian UI V3: フォーカスリング統一 ==== */
+
+.pos-dashboard :focus-visible,
+.pos-manage :focus-visible,
+.pos-kanban :focus-visible,
+.pos-search :focus-visible,
+.pos-timeline :focus-visible,
+.pos-preview :focus-visible,
+.modal-container .modal :focus-visible {
+	outline: 2px solid var(--background-modifier-border-focus);
+	outline-offset: 2px;
+}
+
+/* ==== Obsidian UI V3: タップ領域の最終監査(アイコン専用ボタンは最低40px相当) ==== */
+
+.pos-kanban-card-menu,
+.pos-manage-row-menu-btn,
+.pos-manage-nav-chevron,
+.pos-manage-back-btn,
+.pos-dashboard-refresh,
+.pos-manage-entity-switcher-btn {
+	min-width: 40px;
+	min-height: 40px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pos-widget-open-note {
+	min-width: 40px;
+	min-height: 40px;
+}
+
+/* ==== Obsidian UI V3: トランケーション統一 ==== */
+
+.pos-truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: inline-block;
+	max-width: 100%;
+	vertical-align: bottom;
+}
+
+.pos-manage-breadcrumb-item.pos-truncate {
+	max-width: 220px;
+}
+
+/* ==== Obsidian UI V3: 数字のガタつき防止 ==== */
+
+.pos-manage-goal-count,
+.pos-row-badge,
+.pos-kanban-card-meta,
+.pos-preview-todo-row {
+	font-variant-numeric: tabular-nums;
+}
+
+/* ==== Obsidian UI V3: Kanbanカードの「⋮」(デスクトップはホバーで強調、モバイルは常時表示) ==== */
+
+body:not(.is-mobile) .pos-kanban-card-menu {
+	opacity: 0.6;
+}
+
+body:not(.is-mobile) .pos-kanban-card-menu:hover,
+body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
+	opacity: 1;
+}
+
+/* ==== Obsidian UI V3: モバイル対応(狭幅でテーブル→カードレイアウト) ==== */
+
+.pos-manage {
+	container-type: inline-size;
+}
+
+.pos-preview {
+	container-type: inline-size;
+}
+
+@container (max-width: 560px) {
+	.pos-manage-table thead {
+		display: none;
+	}
+
+	.pos-manage-table,
+	.pos-manage-table tbody {
+		display: block;
+		width: 100%;
+	}
+
+	.pos-manage-table tr {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-template-areas:
+			"title title"
+			"parent status"
+			"priority due"
+			"progress progress"
+			"labels labels"
+			"actions nav";
+		gap: var(--size-2-2) var(--size-4-3);
+		padding: var(--size-4-3) var(--size-4-2);
+		border-bottom: 1px solid var(--background-modifier-border);
+	}
+
+	.pos-manage-table td {
+		display: block;
+		border-bottom: none;
+		padding: 0;
+	}
+
+	.pos-manage-cell-title {
+		grid-area: title;
+		font-size: var(--font-ui-medium);
+	}
+
+	.pos-manage-cell-parent {
+		grid-area: parent;
+	}
+
+	.pos-manage-cell-status {
+		grid-area: status;
+	}
+
+	.pos-manage-cell-priority {
+		grid-area: priority;
+	}
+
+	.pos-manage-cell-due {
+		grid-area: due;
+		text-align: right;
+	}
+
+	.pos-manage-cell-progress {
+		grid-area: progress;
+	}
+
+	.pos-manage-cell-labels {
+		grid-area: labels;
+	}
+
+	.pos-manage-cell-labels:empty {
+		display: none;
+	}
+
+	.pos-manage-cell-actions {
+		grid-area: actions;
+	}
+
+	.pos-manage-cell-nav {
+		grid-area: nav;
+		width: auto;
+		text-align: right;
+	}
+}
+
+@container (max-width: 480px) {
+	.pos-preview-fields {
+		grid-template-columns: 1fr;
+	}
+
+	.pos-preview-fields dt {
+		margin-top: var(--size-4-2);
+	}
+
+	.pos-preview-fields dt:first-child {
+		margin-top: 0;
+	}
+}

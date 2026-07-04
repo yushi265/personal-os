@@ -4,6 +4,7 @@ import type { IndexStore } from "../../infra/IndexStore";
 import type { TodoService } from "../../services/TodoService";
 import type { POSSettings } from "../../settings/settings";
 import { t } from "../../i18n/ja";
+import { addModalButtonRow, bindModEnterSubmit, bindRequiredField, markRequired } from "./modalHelpers";
 
 interface TargetOption {
 	label: string;
@@ -64,6 +65,7 @@ export class QuickAddModal extends Modal {
 			this.close();
 			return;
 		}
+		bindModEnterSubmit(this.contentEl, () => void this.submit());
 		this.render();
 	}
 
@@ -75,15 +77,19 @@ export class QuickAddModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		this.setTitle(t("modal.quickAdd.title"));
+		let textValidation: { revalidate: () => void } | undefined;
 
 		let textInputEl: HTMLInputElement | undefined;
-		new Setting(contentEl).setName(t("modal.quickAdd.text")).addText((text) => {
+		const textSetting = new Setting(contentEl).setName(t("modal.quickAdd.text"));
+		markRequired(textSetting.nameEl);
+		textSetting.addText((text) => {
 			textInputEl = text.inputEl;
 			text
 				.setPlaceholder(t("modal.quickAdd.textPlaceholder"))
 				.setValue(this.text)
 				.onChange((value) => {
 					this.text = value;
+					textValidation?.revalidate();
 				});
 			text.inputEl.addEventListener("keydown", (evt) => {
 				if (evt.key === "Enter") {
@@ -127,12 +133,12 @@ export class QuickAddModal extends Modal {
 			});
 		}
 
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText(t("modal.quickAdd.submit"))
-				.setCta()
-				.onClick(() => void this.submit())
-		);
+		const submitBtn = addModalButtonRow(contentEl, {
+			submitLabel: t("modal.quickAdd.submit"),
+			onSubmit: () => void this.submit(),
+			onCancel: () => this.close(),
+		});
+		if (textInputEl) textValidation = bindRequiredField(textInputEl, submitBtn, () => this.text);
 	}
 
 	private targetCandidates(): TargetOption[] {

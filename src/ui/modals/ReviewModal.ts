@@ -1,7 +1,14 @@
 import { Modal, Notice, Setting, type App } from "obsidian";
 import type { Entity, ReviewCycle } from "../../domain/entity";
 import type { ReviewDecision, ReviewService } from "../../services/ReviewService";
-import { t } from "../../i18n/ja";
+import { t, type MessageKey } from "../../i18n/ja";
+import { addModalButtonRow, bindModEnterSubmit } from "./modalHelpers";
+
+const DECISIONS: { value: ReviewDecision; labelKey: MessageKey; descKey: MessageKey }[] = [
+	{ value: "continue", labelKey: "modal.review.decision.continue", descKey: "modal.review.decision.continue.desc" },
+	{ value: "pause", labelKey: "modal.review.decision.pause", descKey: "modal.review.decision.pause.desc" },
+	{ value: "complete", labelKey: "modal.review.decision.complete", descKey: "modal.review.decision.complete.desc" },
+];
 
 export interface ReviewModalOptions {
 	reviewService: ReviewService;
@@ -26,6 +33,7 @@ export class ReviewModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl } = this;
+		bindModEnterSubmit(contentEl, () => void this.submit());
 		this.setTitle(`${t("modal.review.title")}: ${this.opts.target.title}`);
 
 		new Setting(contentEl)
@@ -52,25 +60,35 @@ export class ReviewModal extends Modal {
 				})
 			);
 
-		new Setting(contentEl).setName(t("modal.review.decision")).addDropdown((dropdown) =>
-			dropdown
-				.addOptions({
-					continue: t("modal.review.decision.continue"),
-					pause: t("modal.review.decision.pause"),
-					complete: t("modal.review.decision.complete"),
-				})
-				.setValue(this.decision)
-				.onChange((value) => {
-					this.decision = value as ReviewDecision;
-				})
-		);
+		new Setting(contentEl).setName(t("modal.review.decision"));
+		const decisionGroup = contentEl.createDiv({ cls: "pos-manage-chip-group pos-modal-decision-group" });
+		decisionGroup.setAttr("role", "group");
+		decisionGroup.setAttr("aria-label", t("modal.review.decision"));
+		const descEl = contentEl.createEl("p", { cls: "pos-modal-decision-desc" });
 
-		new Setting(contentEl).addButton((btn) =>
-			btn
-				.setButtonText(t("modal.review.submit"))
-				.setCta()
-				.onClick(() => void this.submit())
-		);
+		const renderDecision = (): void => {
+			decisionGroup.empty();
+			for (const d of DECISIONS) {
+				const btn = decisionGroup.createEl("button", {
+					type: "button",
+					cls: "pos-manage-chip",
+					text: t(d.labelKey),
+				});
+				btn.toggleClass("pos-manage-chip-active", this.decision === d.value);
+				btn.onclick = () => {
+					this.decision = d.value;
+					renderDecision();
+				};
+			}
+			descEl.setText(t(DECISIONS.find((d) => d.value === this.decision)?.descKey ?? "modal.review.decision.continue.desc"));
+		};
+		renderDecision();
+
+		addModalButtonRow(contentEl, {
+			submitLabel: t("modal.review.submit"),
+			onSubmit: () => void this.submit(),
+			onCancel: () => this.close(),
+		});
 	}
 
 	onClose(): void {
