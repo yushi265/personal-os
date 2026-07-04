@@ -1,5 +1,18 @@
 # Personal OS 実装 TODO
 
+## Obsidian UI洗練パッケージ(2026-07-04)
+
+- [x] Phase V1: ビジュアル言語の統一(Dashboard Widget刷新+statライン+Preview整列+共通表示部品)→ commit `900ba61`
+- [x] Phase V2: Kanban/Search/Timelineの洗練(カードデザイン/D&Dフィードバック/今日ライン+月グリッド)+ テスト5件(累計343件)→ commit `8631e28`
+  - 挙動変更メモ: Kanbanカード・Search結果・Timeline行のクリック=管理View詳細へ(ノートは⋮/修飾クリック — 全画面で操作言語統一)
+- [x] Phase V3: モーダル入力体験+モバイル+細部(フォーム/カードレイアウト/トランケーション)→ commit `377fe8d`
+
+### Obsidian UI洗練パッケージ 完了レビュー(2026-07-04)
+
+- V1〜V3完了。テスト343件全パス、0エラー0警告、テストVault反映済み
+- 全画面(Dashboard/Manage/Kanban/Search/Timeline/Preview/モーダル5種)で視覚言語・操作言語・空状態の統一をコードレベル確認済み(V3報告のチェック表)
+- 実機確認の観点: モーダルのCmd+Enter送信 / 狭幅でのカードレイアウト / KanbanのD&Dフィードバック / Timelineの今日ライン / Dashboardのstatライン・件数ピル
+
 ## UX改善パッケージ(全13項目、2026-07-04ユーザー承認)
 
 - [x] Phase U1 クイックウィン: 相対日付+色 / 進捗分数表示 / Undoトースト化 / 行バッジ(⛔💬Todo残)/ Goal集計進捗 + テスト21件(累計247件)→ commit `048b766`
