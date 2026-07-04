@@ -66,11 +66,11 @@ export default class PersonalOSPlugin extends Plugin {
 
 		this.eventBus = new POSEventBus();
 		this.selfWriteGuard = new SelfWriteGuard();
-		this.repo = new VaultRepository(this.app, this.settings, this.selfWriteGuard);
+		this.repo = new VaultRepository(this.app, this.settings);
 		this.store = new IndexStore();
 		this.dataviewAdapter = new DataviewAdapter(this.app, this.store);
 		this.tasksAdapter = new TasksAdapter(this.app);
-		this.progressService = new ProgressService(this.repo, this.store);
+		this.progressService = new ProgressService(this.repo, this.store, this.selfWriteGuard);
 		this.indexer = new Indexer(
 			this.app,
 			this.repo,

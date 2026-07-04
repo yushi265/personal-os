@@ -1,16 +1,20 @@
 import type { Entity } from "../domain/entity";
 import { calcProjectProgress, calcTicketProgress } from "../domain/progress";
 import type { IndexStore } from "../infra/IndexStore";
+import type { SelfWriteGuard } from "../infra/SelfWriteGuard";
 import type { ProgressRecalculator } from "../infra/types";
 import type { VaultRepository } from "../infra/VaultRepository";
 
 /**
  * 進捗自動計算(design.md §4.1)。infra/types.tsのProgressRecalculatorに適合する。
+ * progress書き戻しはVaultRepository経由の他の書き込みと違い、自分自身のchangedイベントで
+ * 再計算を誘発すると無限ループになるため、書き戻し直前にのみSelfWriteGuardでreindexを抑制する。
  */
 export class ProgressService implements ProgressRecalculator {
 	constructor(
 		private repo: VaultRepository,
-		private store: IndexStore
+		private store: IndexStore,
+		private selfWriteGuard: SelfWriteGuard
 	) {}
 
 	/** 変更ファイルの祖先(Ticket→親Project、あるいはProject自身)のみ再計算する */
@@ -55,6 +59,7 @@ export class ProgressService implements ProgressRecalculator {
 	/** 値が同一なら書き込みをスキップする(無限ループ・無駄なGit差分の防止) */
 	private async writeBack(entity: Entity, progress: number): Promise<void> {
 		if (entity.progress === progress) return;
+		this.selfWriteGuard.markWrite(entity.path);
 		await this.repo.updateFrontmatter(entity.path, (fm) => {
 			fm.progress = progress;
 		});

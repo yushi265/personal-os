@@ -1,18 +1,19 @@
 import { TFile, type App } from "obsidian";
 import type { EntityType } from "../domain/entity";
 import type { POSSettings } from "../settings/settings";
-import type { SelfWriteGuard } from "./SelfWriteGuard";
 
 export type EditLineResult = "ok" | "line-mismatch" | "not-found";
 
 /**
  * 全ファイルI/Oの唯一の窓口。Services層はObsidian APIを直接触らない。
+ * SelfWriteGuardは持たない: reindex抑制はprogress書き戻し(ProgressService)専用の関心事であり、
+ * ここで一律markWriteすると他プラグイン書き込み由来のindex-updatedまで揉み消してしまう
+ * (design.md §4.1 = progress無限ループ防止のみが目的)。
  */
 export class VaultRepository {
 	constructor(
 		private app: App,
-		private settings: POSSettings,
-		private selfWriteGuard: SelfWriteGuard
+		private settings: POSSettings
 	) {}
 
 	// ---- 参照 ----
@@ -66,7 +67,6 @@ export class VaultRepository {
 			suffix++;
 		}
 
-		this.selfWriteGuard.markWrite(path);
 		return this.app.vault.create(path, body);
 	}
 
@@ -74,7 +74,6 @@ export class VaultRepository {
 	async createNoteAt(path: string, body: string): Promise<TFile> {
 		const folder = path.substring(0, path.lastIndexOf("/"));
 		if (folder) await this.ensureFolder(folder);
-		this.selfWriteGuard.markWrite(path);
 		return this.app.vault.create(path, body);
 	}
 
@@ -84,7 +83,6 @@ export class VaultRepository {
 	async updateFrontmatter(path: string, fn: (fm: Record<string, unknown>) => void): Promise<void> {
 		const file = this.getFile(path);
 		if (!file) return;
-		this.selfWriteGuard.markWrite(path);
 		await this.app.fileManager.processFrontMatter(file, fn);
 	}
 
@@ -92,7 +90,6 @@ export class VaultRepository {
 	async processBody(path: string, fn: (body: string) => string): Promise<void> {
 		const file = this.getFile(path);
 		if (!file) return;
-		this.selfWriteGuard.markWrite(path);
 		await this.app.vault.process(file, fn);
 	}
 
@@ -106,7 +103,6 @@ export class VaultRepository {
 		if (!file) return "not-found";
 
 		let result: EditLineResult = "ok";
-		this.selfWriteGuard.markWrite(path);
 		await this.app.vault.process(file, (data) => {
 			const lines = data.split("\n");
 
@@ -153,8 +149,6 @@ export class VaultRepository {
 			suffix++;
 		}
 
-		this.selfWriteGuard.markWrite(path);
-		this.selfWriteGuard.markWrite(target);
 		await this.app.fileManager.renameFile(file, target);
 	}
 
@@ -172,8 +166,6 @@ export class VaultRepository {
 		}
 		if (target === path) return path; // 変更なし
 
-		this.selfWriteGuard.markWrite(path);
-		this.selfWriteGuard.markWrite(target);
 		await this.app.fileManager.renameFile(file, target);
 		return target;
 	}
@@ -192,8 +184,6 @@ export class VaultRepository {
 			suffix++;
 		}
 
-		this.selfWriteGuard.markWrite(path);
-		this.selfWriteGuard.markWrite(target);
 		await this.app.fileManager.renameFile(file, target);
 		return target;
 	}
@@ -202,7 +192,6 @@ export class VaultRepository {
 	async trash(path: string): Promise<void> {
 		const file = this.getFile(path);
 		if (!file) return;
-		this.selfWriteGuard.markWrite(path);
 		await this.app.vault.trash(file, true);
 	}
 
@@ -210,14 +199,12 @@ export class VaultRepository {
 	async appendOrCreate(path: string, line: string, initialContent: string): Promise<void> {
 		const file = this.getFile(path);
 		if (file) {
-			this.selfWriteGuard.markWrite(path);
 			await this.app.vault.process(file, (data) => data + line);
 			return;
 		}
 
 		const folder = path.substring(0, path.lastIndexOf("/"));
 		if (folder) await this.ensureFolder(folder);
-		this.selfWriteGuard.markWrite(path);
 		await this.app.vault.create(path, initialContent + line);
 	}
 
