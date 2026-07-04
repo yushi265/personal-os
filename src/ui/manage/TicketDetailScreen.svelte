@@ -10,6 +10,7 @@
 	import TitleCell from "../components/TitleCell.svelte";
 	import BlockerList from "../components/BlockerList.svelte";
 	import TodoList from "../components/TodoList.svelte";
+	import MemoSection from "../components/MemoSection.svelte";
 	import type { ManageScreen } from "./manageNav";
 
 	/**
@@ -131,4 +132,9 @@
 			<p>{t("manage.todoDisabledNotice")}</p>
 		</div>
 	{/if}
+
+	<section class="pos-manage-detail-section">
+		<h3>{t("preview.section.memo")}</h3>
+		<MemoSection {plugin} path={screen.path} />
+	</section>
 {/if}

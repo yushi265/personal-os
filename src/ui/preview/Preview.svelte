@@ -18,6 +18,7 @@
 	import TagChips from "../components/TagChips.svelte";
 	import BlockerList from "../components/BlockerList.svelte";
 	import TodoList from "../components/TodoList.svelte";
+	import MemoSection from "../components/MemoSection.svelte";
 
 	let {
 		plugin,
@@ -242,6 +243,11 @@
 				<p>{t("preview.todoDisabledNotice")}</p>
 			</div>
 		{/if}
+
+		<details class="pos-preview-section">
+			<summary>{t("preview.section.memo")}</summary>
+			<MemoSection {plugin} path={entity.path} />
+		</details>
 
 		<details class="pos-preview-section" open>
 			<summary>{t("preview.section.children")}</summary>

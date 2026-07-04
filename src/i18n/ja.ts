@@ -91,6 +91,14 @@ const MESSAGES = {
 	"preview.todoAdd.priority": "優先度",
 	"preview.todoAdd.submit": "追加",
 	"preview.todoAdd.textRequired": "本文を入力してください。",
+	"preview.section.memo": "メモ",
+
+	"memo.placeholder": "メモを追加...",
+	"memo.add": "追加",
+	"memo.showMore": "もっと見る",
+	"memo.edit": "編集",
+	"memo.delete": "削除",
+	"memo.empty": "メモはありません。",
 
 	"modal.createEntity.title": "新規作成",
 	"modal.createEntity.type": "種類",
@@ -306,6 +314,13 @@ export function parseErrorInvalidStatus(status: string): string {
 /** ManageView RowMenuの削除確認メッセージ(タイトル埋め込みのためt()とは別関数とする) */
 export function manageDeleteConfirmMessage(title: string): string {
 	return `「${title}」を削除しますか?この操作は取り消せません。`;
+}
+
+/** メモ削除確認メッセージ(本文埋め込みのためt()とは別関数とする。長文は先頭のみ表示) */
+export function memoDeleteConfirmMessage(text: string): string {
+	const firstLine = text.split("\n")[0];
+	const summary = firstLine.length > 40 ? `${firstLine.slice(0, 40)}...` : firstLine;
+	return `メモ「${summary}」を削除しますか?この操作は取り消せません。`;
 }
 
 /** 解析エラーノートを開いた場合のPreview表示メッセージ(design-ui-first.md §4.7) */
