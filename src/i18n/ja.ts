@@ -54,7 +54,6 @@ const MESSAGES = {
 	"preview.section.blockers": "Blockers",
 	"preview.section.children": "配下",
 	"preview.section.todos": "Todo",
-	"preview.field.type": "種類",
 	"preview.field.status": "ステータス",
 	"preview.field.priority": "優先度",
 	"preview.field.progress": "進捗",
@@ -171,7 +170,6 @@ const MESSAGES = {
 	"modal.review.decision.complete": "Complete",
 	"modal.review.submit": "Submit",
 	"modal.review.submitted": "レビューを記録しました",
-	"modal.review.notEligible": "GoalまたはProjectのノートを開いてください。",
 
 	"command.openReview": "Open Review",
 	"command.openSearch": "Open Search",

@@ -192,7 +192,7 @@ export class EntityFieldService {
 	}
 
 	private display(value: EntityFieldValue): string {
-		if (value === undefined || value === "") return "(未設定)";
+		if (value === undefined || value === "") return t("manage.field.unset");
 		if (Array.isArray(value)) return value.join(", ");
 		return value;
 	}
