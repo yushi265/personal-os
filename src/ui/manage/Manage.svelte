@@ -329,7 +329,7 @@
 			{focusNewRowToken}
 		/>
 	{:else if current.kind === "ticket-detail"}
-		<TicketDetailScreen {plugin} {refreshTick} screen={current} onScreenChange={updateCurrentScreen} onOpenNote={openPath} />
+		<TicketDetailScreen {plugin} {refreshTick} screen={current} onScreenChange={updateCurrentScreen} />
 	{/if}
 	</div>
 	{/key}

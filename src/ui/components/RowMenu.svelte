@@ -12,6 +12,8 @@
 		onRename,
 		onPromote,
 		onArchive,
+		onChangeParent,
+		changeParentLabel,
 		onDelete,
 	}: {
 		onOpenNote: () => void;
@@ -19,6 +21,9 @@
 		onRename?: () => void;
 		onPromote?: () => void;
 		onArchive?: () => void;
+		/** Goal/Project再割り当て(一覧行からの導線、ParentCellが無い画面向け)。changeParentLabelとセットで指定する */
+		onChangeParent?: () => void;
+		changeParentLabel?: string;
 		onDelete: () => void;
 	} = $props();
 
@@ -32,6 +37,9 @@
 		}
 		if (onPromote) {
 			menu.addItem((item) => item.setTitle(t("manage.rowMenu.promote")).onClick(onPromote));
+		}
+		if (onChangeParent && changeParentLabel) {
+			menu.addItem((item) => item.setTitle(changeParentLabel).onClick(onChangeParent));
 		}
 		if (onArchive) {
 			menu.addItem((item) => item.setTitle(t("manage.rowMenu.archive")).onClick(onArchive));

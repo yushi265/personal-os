@@ -133,7 +133,7 @@
 				/>
 				<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} relative />
 				<button class="pos-preview-todo-action" onclick={() => promoteTodo(todo)}>{t("preview.todo.promote")}</button>
-				<button class="pos-preview-todo-action mod-warning" onclick={() => deleteTodo(todo)}>
+				<button class="pos-preview-todo-action pos-btn-danger-ghost" onclick={() => deleteTodo(todo)}>
 					{t("preview.todo.delete")}
 				</button>
 			</li>

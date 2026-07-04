@@ -312,7 +312,7 @@
 					<button onclick={() => promoteEntity(entity)}>{t("preview.action.promote")}</button>
 				{/if}
 			</div>
-			<button class="mod-warning" onclick={() => deleteEntity(entity)}>{t("preview.action.delete")}</button>
+			<button class="pos-btn-danger-ghost" onclick={() => deleteEntity(entity)}>{t("preview.action.delete")}</button>
 		</div>
 
 		{#if Object.keys(entity.extra).length > 0}

@@ -100,7 +100,8 @@ export default class PersonalOSPlugin extends Plugin {
 			this.store,
 			this.settings,
 			this.activityLogService,
-			this.progressService
+			this.progressService,
+			this.eventBus
 		);
 		this.entityFieldService = new EntityFieldService(this.repo, this.store, this.activityLogService);
 		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
@@ -555,5 +556,26 @@ export default class PersonalOSPlugin extends Plugin {
 				if (file instanceof TFile) this.indexer.handleDelete(file);
 			})
 		);
+		this.registerDataviewMetadataChange();
+	}
+
+	/**
+	 * Dataviewは自身のpage/taskインデックスをmetadataCacheの"changed"より遅れて再構築するため、
+	 * Todo追記直後にreindexFileしてもDataviewAdapter.getTodos()が古いtasksを返すことがある(design-ui-first.md起因のバグ)。
+	 * Dataviewが該当ファイルの再インデックスを終えた通知("dataview:metadata-change")を購読し、そのタイミングで
+	 * 改めてreindexFileすることで最終的に正しいTodo一覧へ収束させる。
+	 */
+	private registerDataviewMetadataChange(): void {
+		const metadataCache = this.app.metadataCache as unknown as {
+			on(name: string, cb: (...args: unknown[]) => void): { name: string; callback: (...args: unknown[]) => void };
+			offref(ref: unknown): void;
+		};
+		const ref = metadataCache.on("dataview:metadata-change", (...args: unknown[]) => {
+			const file = args[1];
+			if (file instanceof TFile && this.repo.isUnderRoot(file.path)) {
+				void this.indexer.reindexFile(file);
+			}
+		});
+		this.register(() => metadataCache.offref(ref));
 	}
 }

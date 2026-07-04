@@ -6,6 +6,7 @@
 	import { VIEW_TYPE_PREVIEW } from "../preview/PreviewView";
 	import { showUndoNotice } from "../undoNotice";
 	import { PromoteTicketModal } from "../modals/PromoteModal";
+	import { ParentPickerModal } from "../modals/ParentPickerModal";
 	import StatusCell from "../components/StatusCell.svelte";
 	import PriorityCell from "../components/PriorityCell.svelte";
 	import DateCell from "../components/DateCell.svelte";
@@ -79,6 +80,16 @@
 	let editTitleToken = $state(0);
 	function requestRenameTitle(): void {
 		editTitleToken++;
+	}
+
+	// RowMenu「Goalを変更…」/「Projectを変更…」: ParentCell(列)が無い画面(showParentColumn=false)からの再割り当て導線
+	function changeParent(entity: Entity): void {
+		const parentType = tab === "project" ? "goal" : "project";
+		new ParentPickerModal(plugin.app, {
+			store: plugin.store,
+			parentType,
+			onChoose: (path) => void commitParent(entity, path),
+		}).open();
 	}
 
 	// ---- RowMenu操作 ----
@@ -177,6 +188,8 @@
 				onShowPreview={() => showPreview(entity.path)}
 				onRename={onNavigate ? requestRenameTitle : undefined}
 				onPromote={tab === "ticket" ? () => promoteEntity(entity) : undefined}
+				onChangeParent={() => changeParent(entity)}
+				changeParentLabel={tab === "project" ? t("manage.rowMenu.changeGoal") : t("manage.rowMenu.changeProject")}
 				onArchive={() => archiveEntity(entity)}
 				onDelete={() => deleteEntity(entity)}
 			/>

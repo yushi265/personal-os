@@ -230,24 +230,6 @@
 	width: 100%;
 }
 
-.pos-widget-open-note {
-	flex-shrink: 0;
-	min-width: var(--size-4-6);
-	min-height: var(--size-4-6);
-	padding: 0;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--text-muted);
-	background: transparent;
-	box-shadow: none;
-}
-
-.pos-widget-open-note:hover {
-	color: var(--text-accent);
-	background: var(--background-modifier-hover);
-}
-
 .pos-widget-log-line {
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
@@ -539,6 +521,18 @@
 	justify-content: space-between;
 	gap: var(--size-4-2);
 	margin-bottom: var(--size-4-3);
+}
+
+/* 破壊的操作(削除)は通常時は目立たせず、ホバー時のみ警告色にする */
+.pos-btn-danger-ghost {
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-muted);
+}
+
+.pos-btn-danger-ghost:hover {
+	color: var(--text-error);
+	background: color-mix(in srgb, var(--text-error) 16%, transparent);
 }
 
 .pos-preview-actions-primary {
@@ -1726,11 +1720,6 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-}
-
-.pos-widget-open-note {
-	min-width: 40px;
-	min-height: 40px;
 }
 
 /* ==== Obsidian UI V3: トランケーション統一 ==== */

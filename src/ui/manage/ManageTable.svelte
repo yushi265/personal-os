@@ -62,7 +62,7 @@
 	// A3: 各セルはui/components/の共通セルコンポーネントへ置換(ManageRow.svelte参照)。末尾にRowMenu用の列を追加する
 	const projectColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
-		{ key: null, labelKey: "manage.column.status" },
+		{ key: "status", labelKey: "manage.column.status" },
 		{ key: null, labelKey: "manage.column.goal", isParent: true },
 		{ key: "priority", labelKey: "manage.column.priority" },
 		{ key: "progress", labelKey: "manage.column.progress" },
@@ -73,7 +73,7 @@
 	];
 	const ticketColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
-		{ key: null, labelKey: "manage.column.status" },
+		{ key: "status", labelKey: "manage.column.status" },
 		{ key: null, labelKey: "manage.column.project", isParent: true },
 		{ key: "priority", labelKey: "manage.column.priority" },
 		{ key: "progress", labelKey: "manage.column.progress" },

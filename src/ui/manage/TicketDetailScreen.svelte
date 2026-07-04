@@ -25,13 +25,11 @@
 		refreshTick,
 		screen,
 		onScreenChange,
-		onOpenNote,
 	}: {
 		plugin: PersonalOSPlugin;
 		refreshTick: number;
 		screen: Extract<ManageScreen, { kind: "ticket-detail" }>;
 		onScreenChange: (next: Extract<ManageScreen, { kind: "ticket-detail" }>) => void;
-		onOpenNote: (path: string) => void;
 	} = $props();
 
 	// IndexStoreは素のMapでリアクティブでないため、refreshTickを明示的に参照して再計算のトリガとする(Manage.svelte参照)
@@ -118,10 +116,6 @@
 			</div>
 		</dd>
 	</dl>
-
-	<div class="pos-preview-actions">
-		<button onclick={() => onOpenNote(screen.path)}>{t("manage.nav.openNote")}</button>
-	</div>
 
 	<section class="pos-manage-detail-section">
 		<h3>{t("preview.section.blockers")}</h3>

@@ -1,6 +1,7 @@
 import { Notice, type TFile } from "obsidian";
-import { FORBIDDEN_TITLE_CHARS, defaultStatusOf, validStatusesOf, type EntityType, type Priority } from "../domain/entity";
+import { FORBIDDEN_TITLE_CHARS, defaultStatusOf, parseEntity, validStatusesOf, type EntityType, type Priority } from "../domain/entity";
 import { today } from "../domain/date";
+import type { POSEventBus } from "../infra/EventBus";
 import type { ActivityLogger, ProgressRecalculator } from "../infra/types";
 import type { IndexStore } from "../infra/IndexStore";
 import type { VaultRepository } from "../infra/VaultRepository";
@@ -30,7 +31,8 @@ export class EntityService {
 		private store: IndexStore,
 		private settings: POSSettings,
 		private activityLog?: ActivityLogger,
-		private progressService?: ProgressRecalculator
+		private progressService?: ProgressRecalculator,
+		private eventBus?: POSEventBus
 	) {}
 
 	/** 作成: テンプレート解決→ノート生成→ログ→インデックス反映 */
@@ -65,13 +67,37 @@ export class EntityService {
 		// ④ ノート作成
 		const file = await this.repo.createEntityNote(input.type, safeTitle, body);
 
-		// ⑤ ログ
+		// ⑤ IndexStoreへ楽観的にupsert(metadataCache "changed" イベントの到着を待たず即座に画面へ反映する。
+		// 後続の実イベントによるreindexFileが同じ内容で上書きするため整合性は保たれる)
+		this.upsertOptimistically(file, fm, { goalTitle, goalPath: input.goal, projectTitle, projectPath: input.project });
+
+		// ⑥ ログ
 		if (this.activityLog) {
 			await this.activityLog.log("create", `${input.type}「${safeTitle}」を作成`);
 		}
 
-		// ⑥ 生成したTFileを返す
+		// ⑦ 生成したTFileを返す
 		return file;
+	}
+
+	/**
+	 * parseEntityを通してfm(=実際に書き込んだ内容)からEntityを組み立て、即座にIndexStore/index-updatedへ反映する。
+	 * goal/projectのwikilinkはタイトルで書き込んでいるため、resolveLinkはそのタイトルを既知の実pathへ直接マップする。
+	 */
+	private upsertOptimistically(
+		file: TFile,
+		fm: Record<string, unknown>,
+		links: { goalTitle?: string; goalPath?: string; projectTitle?: string; projectPath?: string }
+	): void {
+		const resolveLink = (link: string): string | null => {
+			if (links.goalTitle && link === links.goalTitle) return links.goalPath ?? null;
+			if (links.projectTitle && link === links.projectTitle) return links.projectPath ?? null;
+			return null;
+		};
+		const result = parseEntity({ path: file.path, basename: file.basename }, fm, resolveLink);
+		if (!result.ok) return;
+		this.store.upsertEntity(result.entity);
+		this.eventBus?.emitEvent("index-updated", [file.path]);
 	}
 
 	/** status変更(Kanban D&D・メニューから) */

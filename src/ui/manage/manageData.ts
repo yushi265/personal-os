@@ -2,7 +2,7 @@
  * Presentation層(ManageView専用データ整形): 統合管理Viewの一覧+フィルタ+ソート(design-ui-first.md §3.2)。
  * ManageView.ts / Manage.svelte から呼ばれる純粋関数群。Obsidian APIには依存しない。
  */
-import { ENTITY_TYPES, type Entity, type EntityType, type Priority } from "../../domain/entity";
+import { ENTITY_TYPES, validStatusesOf, type Entity, type EntityType, type Priority } from "../../domain/entity";
 import type { Todo } from "../../domain/todo";
 import type { IndexStore } from "../../infra/IndexStore";
 import { evaluate, parseQuery, type ParsedQuery, type Period } from "../../domain/query";
@@ -50,7 +50,7 @@ export const EMPTY_MANAGE_FILTER: ManageFilter = {
  * "text" / "parent" が追加されている。UI上ではもう使われないが、SavedView.sort(settings.ts)の型が
  * このunionをそのまま参照しており、旧data.json由来の値を読んでも型エラーにならないよう残置する。
  */
-export type ManageSortKey = "due" | "priority" | "title" | "progress" | "text" | "parent";
+export type ManageSortKey = "due" | "priority" | "title" | "progress" | "status" | "text" | "parent";
 
 export interface ManageSort {
 	key: ManageSortKey;
@@ -70,6 +70,14 @@ const PRIORITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 function priorityRank(p?: Priority): number {
 	return p ? (PRIORITY_RANK[p] ?? 3) : 3;
+}
+
+/** ワークフロー順(PROJECT_STATUSES/TICKET_STATUSESの並び)でのstatusの位置。未知typeやstatusは末尾扱い */
+function statusRank(e: Entity): number {
+	const order = validStatusesOf(e.type);
+	if (!order) return Number.MAX_SAFE_INTEGER;
+	const idx = order.indexOf(e.status);
+	return idx >= 0 ? idx : order.length;
 }
 
 function splitCsv(value: string | undefined): string[] {
@@ -146,6 +154,9 @@ export function sortEntityRows(entities: Entity[], sort: ManageSort): Entity[] {
 				break;
 			case "progress":
 				cmp = (a.progress ?? 0) - (b.progress ?? 0);
+				break;
+			case "status":
+				cmp = statusRank(a) - statusRank(b);
 				break;
 			case "title":
 			default:

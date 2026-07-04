@@ -57,7 +57,6 @@ const MESSAGES = {
 	"dashboard.empty.recentUpdates": "更新履歴はありません。",
 	"dashboard.empty.activityLog": "ログがありません。",
 	"dashboard.todoDisabledNotice": "Tasks / Dataviewプラグインが必要です。",
-	"dashboard.openNote": "ノートを開く",
 
 	"preview.title": "Preview",
 	"preview.empty": "Entityノートを開いてください。",
@@ -333,6 +332,8 @@ const MESSAGES = {
 	"manage.rowMenu.rename": "名前を変更",
 	"manage.rowMenu.promote": "昇格",
 	"manage.rowMenu.archive": "Archive",
+	"manage.rowMenu.changeGoal": "Goalを変更…",
+	"manage.rowMenu.changeProject": "Projectを変更…",
 	"manage.rowMenu.delete": "削除",
 	"manage.savedView.nameLabel": "名前",
 	"manage.savedView.namePlaceholder": "名前を入力...",
@@ -349,7 +350,6 @@ const MESSAGES = {
 	"manage.nav.newProjectInGoal": "詳細作成...",
 	"manage.nav.inlineNewProject": "+ プロジェクトを追加…",
 	"manage.nav.entityGone": "表示していた項目が削除またはアーカイブされたため、上の階層へ戻りました。",
-	"manage.nav.openNote": "ノートを開く",
 	"manage.nav.openDetail": "詳細を開く",
 	"manage.nav.editTitle": "名前を編集",
 	"manage.nav.newProject": "+ 新規プロジェクト",
@@ -361,6 +361,10 @@ const MESSAGES = {
 
 	"command.openEntitySwitcher": "Quick open project/ticket",
 	"modal.entitySwitcher.placeholder": "プロジェクト/チケットを検索...",
+	"modal.parentPicker.placeholderGoal": "Goalを検索...",
+	"modal.parentPicker.placeholderProject": "Projectを検索...",
+	"modal.parentPicker.noneGoal": "Goalなしにする",
+	"modal.parentPicker.noneProject": "Projectなしにする",
 	"manage.toolbar.entitySwitcher": "プロジェクト/チケットを検索",
 	"manage.kbdHint": "⌨ ↑↓ 移動 / Enter 開く / n 新規作成 / Backspace 戻る",
 

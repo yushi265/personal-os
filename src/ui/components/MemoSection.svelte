@@ -166,7 +166,7 @@
 							<span class="pos-memo-datetime">{memo.datetime}</span>
 							<span class="pos-memo-item-actions">
 								<button class="pos-memo-action" onclick={() => startEdit(i, memo)}>{t("memo.edit")}</button>
-								<button class="pos-memo-action mod-warning" onclick={() => requestRemove(memo)}>{t("memo.delete")}</button>
+								<button class="pos-memo-action pos-btn-danger-ghost" onclick={() => requestRemove(memo)}>{t("memo.delete")}</button>
 							</span>
 						</div>
 						<p class="pos-memo-text">{memo.text}</p>

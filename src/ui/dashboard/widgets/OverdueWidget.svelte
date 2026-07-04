@@ -16,7 +16,6 @@
 		entities,
 		onToggle,
 		onNavigate,
-		onOpenNote,
 		onViewAll,
 	}: {
 		plugin: PersonalOSPlugin;
@@ -24,7 +23,6 @@
 		entities: Entity[];
 		onToggle: (todo: Todo) => void;
 		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
-		onOpenNote: (path: string) => void;
 		onViewAll?: () => void;
 	} = $props();
 </script>
@@ -48,16 +46,6 @@
 						{todo.text}
 					</span>
 					<DueLabel value={todo.dueDate} />
-					<button
-						class="pos-widget-open-note"
-						onclick={(e) => {
-							e.stopPropagation();
-							onOpenNote(todo.parentPath);
-						}}
-						aria-label={t("dashboard.openNote")}
-					>
-						↗
-					</button>
 				</li>
 			{/each}
 			{#each entities as entity (entity.path)}
@@ -74,18 +62,6 @@
 						</span>
 						<StatusBadge value={entity.status} label={statusLabelFor(plugin, entity)} />
 						<DueLabel value={entity.due} />
-						{#if entity.type !== "goal"}
-							<button
-								class="pos-widget-open-note"
-								onclick={(e) => {
-									e.stopPropagation();
-									onOpenNote(entity.path);
-								}}
-								aria-label={t("dashboard.openNote")}
-							>
-								↗
-							</button>
-						{/if}
 					</div>
 					{#if entity.type !== "goal"}
 						{@const fraction = entityProgressFraction(plugin.store, entity)}

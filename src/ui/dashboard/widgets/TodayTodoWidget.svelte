@@ -8,13 +8,11 @@
 		todos,
 		onToggle,
 		onNavigate,
-		onOpenNote,
 		onViewAll,
 	}: {
 		todos: Todo[];
 		onToggle: (todo: Todo) => void;
 		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
-		onOpenNote: (path: string) => void;
 		onViewAll?: () => void;
 	} = $props();
 </script>
@@ -38,16 +36,6 @@
 						{todo.text}
 					</span>
 					<DueLabel value={todo.dueDate} />
-					<button
-						class="pos-widget-open-note"
-						onclick={(e) => {
-							e.stopPropagation();
-							onOpenNote(todo.parentPath);
-						}}
-						aria-label={t("dashboard.openNote")}
-					>
-						↗
-					</button>
 				</li>
 			{/each}
 		</ul>

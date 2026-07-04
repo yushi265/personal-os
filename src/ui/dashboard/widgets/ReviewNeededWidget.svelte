@@ -10,13 +10,11 @@
 		plugin,
 		entities,
 		onNavigate,
-		onOpenNote,
 		onViewAll,
 	}: {
 		plugin: PersonalOSPlugin;
 		entities: Entity[];
 		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
-		onOpenNote: (path: string) => void;
 		onViewAll?: () => void;
 	} = $props();
 </script>
@@ -40,18 +38,6 @@
 					</span>
 					<StatusBadge value={entity.status} label={statusLabelFor(plugin, entity)} />
 					<span class="pos-widget-due">({entity.reviewCycle}, last: {entity.lastReviewed ?? "-"})</span>
-					{#if entity.type !== "goal"}
-						<button
-							class="pos-widget-open-note"
-							onclick={(e) => {
-								e.stopPropagation();
-								onOpenNote(entity.path);
-							}}
-							aria-label={t("dashboard.openNote")}
-						>
-							↗
-						</button>
-					{/if}
 				</li>
 			{/each}
 		</ul>

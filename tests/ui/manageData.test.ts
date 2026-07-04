@@ -160,6 +160,35 @@ describe("sortEntityRows", () => {
 
 		expect(sorted.map((e) => e.title)).toEqual(["b", "a"]);
 	});
+
+	it("sorts tickets by status in workflow order (backlog→ready→doing→waiting→review→done→archived)", () => {
+		const done = makeEntity({ path: "done.md", title: "done", status: "done" });
+		const backlog = makeEntity({ path: "backlog.md", title: "backlog", status: "backlog" });
+		const doing = makeEntity({ path: "doing.md", title: "doing", status: "doing" });
+
+		const sorted = sortEntityRows([done, backlog, doing], { key: "status", order: "asc" });
+
+		expect(sorted.map((e) => e.title)).toEqual(["backlog", "doing", "done"]);
+	});
+
+	it("sorts projects by status in their own workflow order (backlog→active→waiting→review→done→archived)", () => {
+		const archived = makeEntity({ path: "archived.md", type: "project", title: "archived", status: "archived" });
+		const active = makeEntity({ path: "active.md", type: "project", title: "active", status: "active" });
+		const backlog = makeEntity({ path: "backlog.md", type: "project", title: "backlog", status: "backlog" });
+
+		const sorted = sortEntityRows([archived, active, backlog], { key: "status", order: "asc" });
+
+		expect(sorted.map((e) => e.title)).toEqual(["backlog", "active", "archived"]);
+	});
+
+	it("reverses status order when order is desc", () => {
+		const backlog = makeEntity({ path: "backlog.md", title: "backlog", status: "backlog" });
+		const done = makeEntity({ path: "done.md", title: "done", status: "done" });
+
+		const sorted = sortEntityRows([backlog, done], { key: "status", order: "desc" });
+
+		expect(sorted.map((e) => e.title)).toEqual(["done", "backlog"]);
+	});
 });
 
 describe("filterToQueryString / queryStringToFilter round trip", () => {

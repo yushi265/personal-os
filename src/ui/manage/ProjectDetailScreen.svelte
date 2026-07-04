@@ -172,10 +172,6 @@
 		</dd>
 	</dl>
 
-	<div class="pos-preview-actions">
-		<button onclick={() => onOpenNote(screen.path)}>{t("manage.nav.openNote")}</button>
-	</div>
-
 	<section class="pos-manage-detail-section">
 		<h3>{t("manage.tab.tickets")}</h3>
 		<ManageFilterBar

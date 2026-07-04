@@ -109,7 +109,7 @@
 
 		{#each plugin.settings.dashboard.widgets.filter((w) => w.visible) as w (w.id)}
 			{#if w.id === "today-todo" && $data.todoFeatures}
-				<TodayTodoWidget todos={$data.todayTodos} onToggle={toggleTodo} onNavigate={handleNavigate} onOpenNote={openPath} onViewAll={viewAll} />
+				<TodayTodoWidget todos={$data.todayTodos} onToggle={toggleTodo} onNavigate={handleNavigate} onViewAll={viewAll} />
 			{:else if w.id === "overdue"}
 				<OverdueWidget
 					{plugin}
@@ -117,7 +117,6 @@
 					entities={$data.overdueEntities}
 					onToggle={toggleTodo}
 					onNavigate={handleNavigate}
-					onOpenNote={openPath}
 					onViewAll={viewAll}
 				/>
 			{:else if w.id === "active-goals"}
@@ -126,7 +125,6 @@
 					type="goal"
 					entities={$data.activeGoals}
 					onNavigate={handleNavigate}
-					onOpenNote={openPath}
 					onViewAll={viewAll}
 				/>
 			{:else if w.id === "active-projects"}
@@ -135,7 +133,6 @@
 					type="project"
 					entities={$data.activeProjects}
 					onNavigate={handleNavigate}
-					onOpenNote={openPath}
 					onViewAll={viewAll}
 				/>
 			{:else if w.id === "active-tickets"}
@@ -144,13 +141,12 @@
 					type="ticket"
 					entities={$data.activeTickets}
 					onNavigate={handleNavigate}
-					onOpenNote={openPath}
 					onViewAll={viewAll}
 				/>
 			{:else if w.id === "review-needed"}
-				<ReviewNeededWidget {plugin} entities={$data.reviewNeeded} onNavigate={handleNavigate} onOpenNote={openPath} onViewAll={viewAll} />
+				<ReviewNeededWidget {plugin} entities={$data.reviewNeeded} onNavigate={handleNavigate} onViewAll={viewAll} />
 			{:else if w.id === "blocked"}
-				<BlockedWidget {plugin} entities={$data.blocked} onNavigate={handleNavigate} onOpenNote={openPath} onViewAll={viewAll} />
+				<BlockedWidget {plugin} entities={$data.blocked} onNavigate={handleNavigate} onViewAll={viewAll} />
 			{:else if w.id === "recent-updates"}
 				<RecentUpdatesWidget entities={$data.recentUpdates} onOpen={(path) => navigateOrOpen(path, false)} onViewAll={viewAll} />
 			{:else if w.id === "activity-log"}

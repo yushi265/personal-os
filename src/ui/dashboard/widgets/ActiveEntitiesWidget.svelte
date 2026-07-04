@@ -15,14 +15,12 @@
 		type,
 		entities,
 		onNavigate,
-		onOpenNote,
 		onViewAll,
 	}: {
 		plugin: PersonalOSPlugin;
 		type: EntityType;
 		entities: Entity[];
 		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
-		onOpenNote: (path: string) => void;
 		onViewAll?: () => void;
 	} = $props();
 
@@ -61,18 +59,6 @@
 						<StatusBadge value={entity.status} label={statusLabelFor(plugin, entity)} />
 						<PriorityLabel value={entity.priority ?? ""} label={entity.priority ?? ""} />
 						<DueLabel value={entity.due} />
-						{#if type !== "goal"}
-							<button
-								class="pos-widget-open-note"
-								onclick={(e) => {
-									e.stopPropagation();
-									onOpenNote(entity.path);
-								}}
-								aria-label={t("dashboard.openNote")}
-							>
-								↗
-							</button>
-						{/if}
 					</div>
 					{#if type !== "goal"}
 						{@const fraction = entityProgressFraction(plugin.store, entity)}
