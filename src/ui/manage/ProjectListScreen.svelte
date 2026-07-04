@@ -165,15 +165,17 @@
 					onOpen={openNote}
 					{onNavigate}
 				/>
-				<InlineCreateRow
-					label={t("manage.nav.inlineNewProject")}
-					inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
-					onSubmit={(title) => createProjectInline(group.goal?.path, title)}
-					focusRequestToken={groupIndex === focusGroupIndex ? focusNewRowToken : undefined}
-				/>
-				<button class="pos-manage-goal-new-btn" onclick={() => createProject(group.goal?.path)}>
-					{t("manage.nav.newProjectInGoal")}
-				</button>
+				<div class="pos-manage-create-row">
+					<InlineCreateRow
+						label={t("manage.nav.inlineNewProject")}
+						inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
+						onSubmit={(title) => createProjectInline(group.goal?.path, title)}
+						focusRequestToken={groupIndex === focusGroupIndex ? focusNewRowToken : undefined}
+					/>
+					<button class="pos-manage-goal-new-btn" onclick={() => createProject(group.goal?.path)}>
+						{t("manage.nav.newProjectInGoal")}
+					</button>
+				</div>
 			{/if}
 		</section>
 	{/each}

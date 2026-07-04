@@ -196,13 +196,15 @@
 			onOpen={onOpenNote}
 			onNavigate={onNavigateTicket}
 		/>
-		<InlineCreateRow
-			label={t("manage.projectDetail.inlineNewTicket")}
-			inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
-			onSubmit={createTicketInline}
-			focusRequestToken={focusNewRowToken}
-		/>
-		<button class="pos-manage-new-btn" onclick={createTicket}>{t("manage.projectDetail.newTicket")}</button>
+		<div class="pos-manage-create-row">
+			<InlineCreateRow
+				label={t("manage.projectDetail.inlineNewTicket")}
+				inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
+				onSubmit={createTicketInline}
+				focusRequestToken={focusNewRowToken}
+			/>
+			<button class="pos-manage-new-btn" onclick={createTicket}>{t("manage.projectDetail.newTicket")}</button>
+		</div>
 	</section>
 
 	{#if plugin.capability.todoFeatures}

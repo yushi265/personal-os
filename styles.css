@@ -1128,13 +1128,20 @@
 
 .pos-manage-new-btn {
 	cursor: pointer;
-	margin-left: auto;
+}
+
+.pos-manage-create-row {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	flex-wrap: wrap;
+	margin: var(--size-4-2) 0 var(--size-4-4);
 }
 
 .pos-manage-inline-create-row {
-	display: block;
-	width: 100%;
-	text-align: left;
+	display: inline-flex;
+	align-items: center;
+	width: auto;
 	cursor: pointer;
 	background: transparent;
 	border: none;
@@ -1153,8 +1160,9 @@
 }
 
 .pos-manage-inline-create-input {
-	display: block;
-	width: 100%;
+	flex: 1 1 auto;
+	min-width: 160px;
+	max-width: 320px;
 }
 
 .pos-manage-row-menu-btn {
@@ -1340,7 +1348,6 @@
 
 .pos-manage-goal-new-btn {
 	cursor: pointer;
-	margin: var(--size-4-2) 0 var(--size-4-4);
 }
 
 .pos-manage-placeholder {
