@@ -13,6 +13,7 @@
 	import TitleCell from "../components/TitleCell.svelte";
 	import RowMenu from "../components/RowMenu.svelte";
 	import RowBadges from "../components/RowBadges.svelte";
+	import ProgressIndicator from "../components/ProgressIndicator.svelte";
 	import { entityProgressFraction, type ManageRowData, type ManageTab } from "./manageData";
 
 	let {
@@ -154,12 +155,7 @@
 		</td>
 		<td onclick={(e) => e.stopPropagation()}>
 			{#if entity.type !== "goal"}
-				<div class="pos-progress-cell">
-					<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
-						<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
-					</div>
-					<span class="pos-progress-label">{entity.progress ?? 0}% ({fraction.done}/{fraction.total})</span>
-				</div>
+				<ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} />
 			{/if}
 		</td>
 		<td onclick={(e) => e.stopPropagation()}>

@@ -16,6 +16,7 @@ const EMPTY_DATA: DashboardData = {
 	todayTodos: [],
 	overdueTodos: [],
 	overdueEntities: [],
+	openTodosCount: 0,
 	activeGoals: [],
 	activeProjects: [],
 	activeTickets: [],

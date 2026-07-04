@@ -5,6 +5,20 @@ import type { Todo } from "../../domain/todo";
 import type PersonalOSPlugin from "../../main";
 import { isManageVaultEmpty } from "../manage/manageData";
 
+/**
+ * statusバッジの表示ラベル(Phase V1: Dashboard Widget共通)。ManageRow.statusOptions()と同じ
+ * kanbanColumnNamesマッピングを表示専用に簡略化したもの(選択肢リストは不要、現在値のラベルのみ)。
+ */
+export function statusLabelFor(plugin: PersonalOSPlugin, entity: Entity): string {
+	const names: Record<string, string> | undefined =
+		entity.type === "project"
+			? plugin.settings.kanbanColumnNames.project
+			: entity.type === "ticket"
+				? plugin.settings.kanbanColumnNames.ticket
+				: undefined;
+	return names?.[entity.status] ?? entity.status;
+}
+
 export interface DashboardData {
 	todoFeatures: boolean;
 	/** オンボーディング判定(Phase U3): Vault内にGoal/Projectが1件も無いかどうか(manageData.isManageVaultEmptyと同一判定) */
@@ -12,6 +26,8 @@ export interface DashboardData {
 	todayTodos: Todo[];
 	overdueTodos: Todo[];
 	overdueEntities: Entity[];
+	/** 上部statライン用(Phase V1): 未完了Todoの総数(todayTodos/overdueTodosは部分集合のため別途集計) */
+	openTodosCount: number;
 	activeGoals: Entity[];
 	activeProjects: Entity[];
 	activeTickets: Entity[];
@@ -73,6 +89,7 @@ export async function buildDashboardData(plugin: PersonalOSPlugin): Promise<Dash
 		todayTodos: todoFeatures ? plugin.todoService.list({ done: false, dueOn: now }) : [],
 		overdueTodos: todoFeatures ? plugin.store.getAllTodos().filter((t) => isTodoOverdue(t, now)) : [],
 		overdueEntities: entities.filter((e) => isOverdue(e, now)),
+		openTodosCount: todoFeatures ? plugin.store.getAllTodos().filter((t) => !t.done).length : 0,
 		activeGoals: plugin.store.listByType("goal").filter((e) => e.status === "active"),
 		activeProjects: plugin.store.listByType("project").filter((e) => e.status === "active"),
 		activeTickets: plugin.store.listByType("ticket").filter((e) => e.status === "doing"),

@@ -34,6 +34,11 @@ const MESSAGES = {
 
 	"dashboard.title": "Personal OS Dashboard",
 	"dashboard.refresh": "更新",
+	"dashboard.viewAll": "すべて見る →",
+	"dashboard.stat.activeProjects": "Active Projects",
+	"dashboard.stat.doingTickets": "Doing Tickets",
+	"dashboard.stat.openTodos": "未完了Todo",
+	"dashboard.stat.overdue": "Overdue",
 	"dashboard.widget.todayTodo": "Today's Todo",
 	"dashboard.widget.overdue": "Overdue",
 	"dashboard.widget.activeGoals": "Active Goals",

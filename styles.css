@@ -40,6 +40,107 @@
 	.pos-dashboard-grid {
 		grid-template-columns: 1fr;
 	}
+
+	.pos-dashboard-stats {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+/* ---- Dashboard stat line(Phase V1) ---- */
+
+.pos-dashboard-stats {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: var(--size-4-3);
+}
+
+.pos-stat-tile {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--size-2-1);
+	background: var(--background-secondary);
+	border: none;
+	box-shadow: none;
+	border-radius: var(--radius-m);
+	padding: var(--size-4-3);
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.1s ease;
+}
+
+.pos-stat-tile:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pos-stat-value {
+	font-size: var(--font-ui-larger, 1.5em);
+	font-weight: var(--font-semibold, 600);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-normal);
+}
+
+.pos-stat-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pos-stat-tile-alert .pos-stat-value {
+	color: var(--color-red);
+}
+
+.pos-stat-tile-ok .pos-stat-value {
+	color: var(--color-green);
+}
+
+/* ---- Widget共通ヘッダ(WidgetHeader、Phase V1) ---- */
+
+.pos-widget-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-2);
+}
+
+.pos-widget-header .pos-widget-title {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.pos-widget-icon {
+	font-size: var(--font-ui-medium);
+}
+
+.pos-widget-count-pill {
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-medium);
+	color: var(--text-muted);
+	background: var(--background-modifier-border);
+	padding: 0 var(--size-4-2);
+	border-radius: var(--radius-pill, 999px);
+}
+
+.pos-widget-viewall {
+	flex-shrink: 0;
+	cursor: pointer;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	padding: 0;
+}
+
+.pos-widget-viewall:hover {
+	color: var(--text-accent);
+}
+
+.pos-widget-empty-ok {
+	color: var(--color-green);
 }
 
 /* ---- Widgets (shared between Dashboard and Preview) ---- */
@@ -331,7 +432,8 @@
 
 .pos-preview-section summary {
 	cursor: pointer;
-	font-weight: var(--font-medium);
+	font-weight: var(--font-semibold, 600);
+	font-size: var(--font-ui-medium);
 	margin-bottom: var(--size-4-2);
 }
 
@@ -416,8 +518,15 @@
 
 .pos-preview-actions {
 	display: flex;
+	align-items: center;
+	justify-content: space-between;
 	gap: var(--size-4-2);
 	margin-bottom: var(--size-4-3);
+}
+
+.pos-preview-actions-primary {
+	display: flex;
+	gap: var(--size-4-2);
 }
 
 .pos-preview-body {
@@ -1259,6 +1368,11 @@
 
 .pos-due-normal {
 	color: var(--text-normal);
+}
+
+.pos-due-label {
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
 }
 
 /* ---- row badges (ManageRow) ---- */

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Notice } from "obsidian";
 	import { t } from "../../i18n/ja";
+	import { statusColorClass } from "./badgeStyles";
 
 	/**
 	 * バッジ表示⇔selectのインライン編集セル(design-ui-first.md §3.1/§3.3)。
@@ -30,17 +31,8 @@
 		return options.find((o) => o.value === display)?.label ?? display;
 	}
 
-	// statusの意味カテゴリでバッジ色を分ける(design-ui-first.md追補: UI磨き込み Phase N5)。
-	// 未知のstatus値は"default"にフォールバックする。
-	const STATUS_COLOR_CLASS: Record<string, string> = {
-		doing: "pos-status-accent",
-		active: "pos-status-accent",
-		waiting: "pos-status-warning",
-		review: "pos-status-review",
-		done: "pos-status-done",
-		archived: "pos-status-done",
-	};
-	const colorClass = $derived(STATUS_COLOR_CLASS[display] ?? "pos-status-default");
+	// statusの意味カテゴリでバッジ色を分ける(design-ui-first.md追補: UI磨き込み Phase N5)
+	const colorClass = $derived(statusColorClass(display));
 
 	async function commit(next: string): Promise<void> {
 		optimistic = { v: next };

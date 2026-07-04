@@ -13,6 +13,7 @@
 	import RecentUpdatesWidget from "./widgets/RecentUpdatesWidget.svelte";
 	import ActivityLogWidget from "./widgets/ActivityLogWidget.svelte";
 	import ParseErrorWidget from "./widgets/ParseErrorWidget.svelte";
+	import DashboardStats from "./widgets/DashboardStats.svelte";
 
 	let {
 		plugin,
@@ -58,6 +59,11 @@
 	function openManage(): void {
 		void plugin.openManage();
 	}
+
+	// Widget「すべて見る」/statライン共通の遷移先(Phase V1): 絞り込み画面が無いため一律で管理Viewの入口を開く
+	function viewAll(): void {
+		void plugin.openManage();
+	}
 </script>
 
 <div class="pos-dashboard">
@@ -93,19 +99,36 @@
 	{:else}
 		<div class="pos-dashboard-grid">
 
+		<DashboardStats
+			activeProjects={$data.activeProjects.length}
+			doingTickets={$data.activeTickets.length}
+			openTodos={$data.openTodosCount}
+			overdue={$data.overdueTodos.length + $data.overdueEntities.length}
+			onClick={viewAll}
+		/>
+
 		{#each plugin.settings.dashboard.widgets.filter((w) => w.visible) as w (w.id)}
 			{#if w.id === "today-todo" && $data.todoFeatures}
-				<TodayTodoWidget todos={$data.todayTodos} onToggle={toggleTodo} onNavigate={handleNavigate} onOpenNote={openPath} />
+				<TodayTodoWidget todos={$data.todayTodos} onToggle={toggleTodo} onNavigate={handleNavigate} onOpenNote={openPath} onViewAll={viewAll} />
 			{:else if w.id === "overdue"}
 				<OverdueWidget
+					{plugin}
 					todos={$data.overdueTodos}
 					entities={$data.overdueEntities}
 					onToggle={toggleTodo}
 					onNavigate={handleNavigate}
 					onOpenNote={openPath}
+					onViewAll={viewAll}
 				/>
 			{:else if w.id === "active-goals"}
-				<ActiveEntitiesWidget {plugin} type="goal" entities={$data.activeGoals} onNavigate={handleNavigate} onOpenNote={openPath} />
+				<ActiveEntitiesWidget
+					{plugin}
+					type="goal"
+					entities={$data.activeGoals}
+					onNavigate={handleNavigate}
+					onOpenNote={openPath}
+					onViewAll={viewAll}
+				/>
 			{:else if w.id === "active-projects"}
 				<ActiveEntitiesWidget
 					{plugin}
@@ -113,6 +136,7 @@
 					entities={$data.activeProjects}
 					onNavigate={handleNavigate}
 					onOpenNote={openPath}
+					onViewAll={viewAll}
 				/>
 			{:else if w.id === "active-tickets"}
 				<ActiveEntitiesWidget
@@ -121,15 +145,16 @@
 					entities={$data.activeTickets}
 					onNavigate={handleNavigate}
 					onOpenNote={openPath}
+					onViewAll={viewAll}
 				/>
 			{:else if w.id === "review-needed"}
-				<ReviewNeededWidget entities={$data.reviewNeeded} onNavigate={handleNavigate} onOpenNote={openPath} />
+				<ReviewNeededWidget {plugin} entities={$data.reviewNeeded} onNavigate={handleNavigate} onOpenNote={openPath} onViewAll={viewAll} />
 			{:else if w.id === "blocked"}
-				<BlockedWidget entities={$data.blocked} onNavigate={handleNavigate} onOpenNote={openPath} />
+				<BlockedWidget {plugin} entities={$data.blocked} onNavigate={handleNavigate} onOpenNote={openPath} onViewAll={viewAll} />
 			{:else if w.id === "recent-updates"}
-				<RecentUpdatesWidget entities={$data.recentUpdates} onOpen={(path) => navigateOrOpen(path, false)} />
+				<RecentUpdatesWidget entities={$data.recentUpdates} onOpen={(path) => navigateOrOpen(path, false)} onViewAll={viewAll} />
 			{:else if w.id === "activity-log"}
-				<ActivityLogWidget lines={$data.activityLogLines} />
+				<ActivityLogWidget lines={$data.activityLogLines} onViewAll={viewAll} />
 			{:else if w.id === "parse-error" && $data.parseErrors.length > 0}
 				<ParseErrorWidget errors={$data.parseErrors} onOpen={openPath} />
 			{/if}

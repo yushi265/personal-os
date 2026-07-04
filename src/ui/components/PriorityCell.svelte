@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Notice } from "obsidian";
 	import { t } from "../../i18n/ja";
+	import { PRIORITY_ICON, priorityColorClass } from "./badgeStyles";
 
 	/**
 	 * priority(high/medium/low/未設定)のインライン編集セル(design-ui-first.md §3.1/§3.3)。
@@ -30,9 +31,8 @@
 	}
 
 	// priority値ごとに矢印アイコン+色を出す(design-ui-first.md追補: UI磨き込み Phase N5)
-	const PRIORITY_ICON: Record<string, string> = { high: "↑", low: "↓" };
 	const icon = $derived(display ? (PRIORITY_ICON[display] ?? "") : "");
-	const colorClass = $derived(`pos-priority-${display || "unset"}`);
+	const colorClass = $derived(priorityColorClass(display));
 
 	async function commit(next: string): Promise<void> {
 		optimistic = { v: next };

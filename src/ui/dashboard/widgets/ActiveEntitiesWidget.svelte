@@ -3,6 +3,12 @@
 	import type PersonalOSPlugin from "../../../main";
 	import { t } from "../../../i18n/ja";
 	import { entityProgressFraction } from "../../manage/manageData";
+	import { statusLabelFor } from "../dashboardData";
+	import StatusBadge from "../../components/StatusBadge.svelte";
+	import PriorityLabel from "../../components/PriorityLabel.svelte";
+	import DueLabel from "../../components/DueLabel.svelte";
+	import ProgressIndicator from "../../components/ProgressIndicator.svelte";
+	import WidgetHeader from "./WidgetHeader.svelte";
 
 	let {
 		plugin,
@@ -10,12 +16,14 @@
 		entities,
 		onNavigate,
 		onOpenNote,
+		onViewAll,
 	}: {
 		plugin: PersonalOSPlugin;
 		type: EntityType;
 		entities: Entity[];
 		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
 		onOpenNote: (path: string) => void;
+		onViewAll?: () => void;
 	} = $props();
 
 	const titleKey = {
@@ -23,12 +31,19 @@
 		project: "dashboard.widget.activeProjects",
 		ticket: "dashboard.widget.activeTickets",
 	} as const;
+
+	const icon = { goal: "🎯", project: "📁", ticket: "🎫" } as const;
 </script>
 
 <section class="pos-widget">
-	<h3 class="pos-widget-title">{t(titleKey[type as "goal" | "project" | "ticket"])}</h3>
+	<WidgetHeader
+		icon={icon[type as "goal" | "project" | "ticket"]}
+		title={t(titleKey[type as "goal" | "project" | "ticket"])}
+		count={entities.length}
+		{onViewAll}
+	/>
 	{#if entities.length === 0}
-		<p class="pos-widget-empty">{t("dashboard.empty.active")}</p>
+		<p class="pos-widget-empty pos-widget-empty-ok">✓ {t("dashboard.empty.active")}</p>
 	{:else}
 		<ul class="pos-widget-list">
 			{#each entities as entity (entity.path)}
@@ -43,6 +58,9 @@
 						>
 							▸ {entity.title}
 						</span>
+						<StatusBadge value={entity.status} label={statusLabelFor(plugin, entity)} />
+						<PriorityLabel value={entity.priority ?? ""} label={entity.priority ?? ""} />
+						<DueLabel value={entity.due} />
 						{#if type !== "goal"}
 							<button
 								class="pos-widget-open-note"
@@ -58,10 +76,7 @@
 					</div>
 					{#if type !== "goal"}
 						{@const fraction = entityProgressFraction(plugin.store, entity)}
-						<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
-							<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
-						</div>
-						<span class="pos-progress-label">{entity.progress ?? 0}% ({fraction.done}/{fraction.total})</span>
+						<ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} />
 					{/if}
 				</li>
 			{/each}

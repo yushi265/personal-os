@@ -5,7 +5,7 @@
 	import type { PreviewData } from "./previewData";
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, REVIEW_CYCLES, validStatusesOf } from "../../domain/entity";
-	import { collectKnownLabels, collectKnownTags } from "../manage/manageData";
+	import { collectKnownLabels, collectKnownTags, entityProgressFraction } from "../manage/manageData";
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
 	import { PromoteTicketModal } from "../modals/PromoteModal";
 	import { ReviewModal } from "../modals/ReviewModal";
@@ -19,6 +19,8 @@
 	import BlockerList from "../components/BlockerList.svelte";
 	import TodoList from "../components/TodoList.svelte";
 	import MemoSection from "../components/MemoSection.svelte";
+	import ProgressIndicator from "../components/ProgressIndicator.svelte";
+	import DueLabel from "../components/DueLabel.svelte";
 
 	let {
 		plugin,
@@ -190,13 +192,9 @@
 				</dd>
 
 				{#if entity.type === "project" || entity.type === "ticket"}
+					{@const fraction = entityProgressFraction(plugin.store, entity)}
 					<dt>{t("preview.field.progress")}</dt>
-					<dd>
-						<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
-							<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
-						</div>
-						{entity.progress ?? 0}%
-					</dd>
+					<dd><ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} /></dd>
 				{/if}
 
 				<dt>{t("preview.field.due")}</dt>
@@ -273,6 +271,11 @@
 							>
 								▸ {child.title}
 							</span>
+							<DueLabel value={child.due} />
+							{#if child.type !== "goal"}
+								{@const childFraction = entityProgressFraction(plugin.store, child)}
+								<ProgressIndicator progress={child.progress ?? 0} done={childFraction.done} total={childFraction.total} />
+							{/if}
 							<StatusCell value={child.status} options={statusOptions(child)} onCommit={(next) => commitChildStatus(child, next)} />
 						</li>
 					{/each}
@@ -303,10 +306,12 @@
 		{/if}
 
 		<div class="pos-preview-actions">
-			<button onclick={() => archiveEntity(entity)}>{t("preview.action.archive")}</button>
-			{#if entity.type === "ticket"}
-				<button onclick={() => promoteEntity(entity)}>{t("preview.action.promote")}</button>
-			{/if}
+			<div class="pos-preview-actions-primary">
+				<button class="mod-cta" onclick={() => archiveEntity(entity)}>{t("preview.action.archive")}</button>
+				{#if entity.type === "ticket"}
+					<button onclick={() => promoteEntity(entity)}>{t("preview.action.promote")}</button>
+				{/if}
+			</div>
 			<button class="mod-warning" onclick={() => deleteEntity(entity)}>{t("preview.action.delete")}</button>
 		</div>
 

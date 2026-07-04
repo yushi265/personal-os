@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from "../../../i18n/ja";
+	import WidgetHeader from "./WidgetHeader.svelte";
 
 	let {
 		errors,
@@ -11,7 +12,7 @@
 </script>
 
 <section class="pos-widget pos-widget-danger">
-	<h3 class="pos-widget-title">{t("dashboard.widget.parseError")} ({errors.length})</h3>
+	<WidgetHeader icon="⚠️" title={t("dashboard.widget.parseError")} count={errors.length} />
 	<ul class="pos-widget-list">
 		{#each errors as err (err.path)}
 			<li class="pos-widget-item pos-widget-item-column">
