@@ -21,18 +21,27 @@
 	 */
 	let {
 		plugin,
+		refreshTick,
 		screen,
 		onScreenChange,
 		onOpenNote,
 	}: {
 		plugin: PersonalOSPlugin;
+		refreshTick: number;
 		screen: Extract<ManageScreen, { kind: "ticket-detail" }>;
 		onScreenChange: (next: Extract<ManageScreen, { kind: "ticket-detail" }>) => void;
 		onOpenNote: (path: string) => void;
 	} = $props();
 
-	const entity = $derived(plugin.store.get(screen.path));
-	const todos = $derived(plugin.store.getTodos(screen.path));
+	// IndexStoreは素のMapでリアクティブでないため、refreshTickを明示的に参照して再計算のトリガとする(Manage.svelte参照)
+	const entity = $derived.by(() => {
+		void refreshTick;
+		return plugin.store.get(screen.path);
+	});
+	const todos = $derived.by(() => {
+		void refreshTick;
+		return plugin.store.getTodos(screen.path);
+	});
 
 	function statusOptions(e: Entity): { value: string; label: string }[] {
 		const valid = validStatusesOf(e.type) ?? [e.status];

@@ -133,6 +133,7 @@
 			settings: plugin.settings,
 			initialType: entity.type === "goal" ? "project" : "ticket",
 			initialParentPath: entity.path,
+			openAfterCreate: false,
 		}).open();
 	}
 

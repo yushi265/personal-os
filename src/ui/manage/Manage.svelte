@@ -56,6 +56,10 @@
 		return plugin.savedViewService.list().filter(isManageSavedViewVisible);
 	});
 
+	// IndexStoreは素のMapでリアクティブでないため、各ドリルダウン画面のIndexStore読み出し系$derivedは
+	// このrefreshTickを明示的に参照して再計算のトリガとする(design-drilldown-nav.md、manageSavedViewsと同じパターン)
+	const refreshTick = $derived($refreshToken.token);
+
 	const breadcrumbs = $derived(
 		stack.map((screen, i) => ({
 			label: breadcrumbLabel(screen),
@@ -189,6 +193,7 @@
 
 		<ProjectListScreen
 			{plugin}
+			{refreshTick}
 			filter={listFilter}
 			sort={listSort}
 			{collapsedGoals}
@@ -200,12 +205,13 @@
 	{:else if current.kind === "project-detail"}
 		<ProjectDetailScreen
 			{plugin}
+			{refreshTick}
 			screen={current}
 			onScreenChange={updateCurrentScreen}
 			onNavigateTicket={goToTicketDetail}
 			onOpenNote={openPath}
 		/>
 	{:else if current.kind === "ticket-detail"}
-		<TicketDetailScreen {plugin} screen={current} onScreenChange={updateCurrentScreen} onOpenNote={openPath} />
+		<TicketDetailScreen {plugin} {refreshTick} screen={current} onScreenChange={updateCurrentScreen} onOpenNote={openPath} />
 	{/if}
 </div>

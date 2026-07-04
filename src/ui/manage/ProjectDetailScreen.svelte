@@ -23,21 +23,33 @@
 	 */
 	let {
 		plugin,
+		refreshTick,
 		screen,
 		onScreenChange,
 		onNavigateTicket,
 		onOpenNote,
 	}: {
 		plugin: PersonalOSPlugin;
+		refreshTick: number;
 		screen: Extract<ManageScreen, { kind: "project-detail" }>;
 		onScreenChange: (next: Extract<ManageScreen, { kind: "project-detail" }>) => void;
 		onNavigateTicket: (path: string) => void;
 		onOpenNote: (path: string) => void;
 	} = $props();
 
-	const entity = $derived(plugin.store.get(screen.path));
-	const ticketRows = $derived(buildProjectTicketRows(plugin, screen.path, screen.ticketFilter, screen.ticketSort));
-	const todos = $derived(collectProjectTodos(plugin.store, screen.path, screen.todoScope));
+	// IndexStoreは素のMapでリアクティブでないため、refreshTickを明示的に参照して再計算のトリガとする(Manage.svelte参照)
+	const entity = $derived.by(() => {
+		void refreshTick;
+		return plugin.store.get(screen.path);
+	});
+	const ticketRows = $derived.by(() => {
+		void refreshTick;
+		return buildProjectTicketRows(plugin, screen.path, screen.ticketFilter, screen.ticketSort);
+	});
+	const todos = $derived.by(() => {
+		void refreshTick;
+		return collectProjectTodos(plugin.store, screen.path, screen.todoScope);
+	});
 
 	function statusOptions(e: Entity): { value: string; label: string }[] {
 		const valid = validStatusesOf(e.type) ?? [e.status];
@@ -97,6 +109,7 @@
 			settings: plugin.settings,
 			initialType: "ticket",
 			initialParentPath: screen.path,
+			openAfterCreate: false,
 		}).open();
 	}
 </script>

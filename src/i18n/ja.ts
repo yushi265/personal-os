@@ -285,6 +285,11 @@ export function t(key: MessageKey): string {
 	return MESSAGES[key];
 }
 
+/** チケット等作成成功時のNotice文言(タイトル埋め込みのためt()とは別関数とする) */
+export function entityCreatedNotice(title: string): string {
+	return `${title} を作成しました`;
+}
+
 /** AI Export成功時のNotice文言(文字数埋め込みのためt()とは別関数とする) */
 export function aiContextCopiedNotice(charCount: number): string {
 	return `AIコンテキストをコピーしました(${charCount}文字)`;

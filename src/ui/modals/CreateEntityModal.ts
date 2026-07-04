@@ -4,7 +4,7 @@ import { PRIORITIES } from "../../domain/entity";
 import type { EntityService } from "../../services/EntityService";
 import type { IndexStore } from "../../infra/IndexStore";
 import type { POSSettings } from "../../settings/settings";
-import { t } from "../../i18n/ja";
+import { entityCreatedNotice, t } from "../../i18n/ja";
 
 class EntitySuggest extends AbstractInputSuggest<Entity> {
 	constructor(
@@ -40,6 +40,8 @@ export interface CreateEntityModalOptions {
 	/** 呼び出し元(ManageViewの「+ 新規」等)が親を事前セットするためのオプション(design-ui-first.md §4.2) */
 	initialParentPath?: string;
 	onCreated?: (path: string) => void;
+	/** 作成後にノートを開くかどうか(デフォルトtrue)。ドリルダウンUIからの作成では画面遷移させたくないためfalseを渡す */
+	openAfterCreate?: boolean;
 }
 
 export class CreateEntityModal extends Modal {
@@ -178,6 +180,10 @@ export class CreateEntityModal extends Modal {
 		const file = await this.opts.entityService.create(input);
 		this.close();
 		this.opts.onCreated?.(file.path);
-		await this.app.workspace.getLeaf(false).openFile(file);
+		if (this.opts.openAfterCreate ?? true) {
+			await this.app.workspace.getLeaf(false).openFile(file);
+		} else {
+			new Notice(entityCreatedNotice(this.title.trim()));
+		}
 	}
 }

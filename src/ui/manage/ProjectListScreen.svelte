@@ -9,6 +9,7 @@
 
 	let {
 		plugin,
+		refreshTick,
 		filter,
 		sort,
 		collapsedGoals,
@@ -18,6 +19,7 @@
 		onNavigate,
 	}: {
 		plugin: PersonalOSPlugin;
+		refreshTick: number;
 		filter: ManageFilter;
 		sort: ManageSort;
 		collapsedGoals: Set<string>;
@@ -27,7 +29,11 @@
 		onNavigate: (path: string) => void;
 	} = $props();
 
-	const groups = $derived(groupProjectsByGoal(plugin, filter, sort));
+	// IndexStoreは素のMapでリアクティブでないため、refreshTickを明示的に参照して再計算のトリガとする(Manage.svelte参照)
+	const groups = $derived.by(() => {
+		void refreshTick;
+		return groupProjectsByGoal(plugin, filter, sort);
+	});
 
 	function groupKey(goal: Entity | null): string {
 		return goal?.path ?? "__unclassified__";
@@ -48,6 +54,7 @@
 			settings: plugin.settings,
 			initialType: "project",
 			initialParentPath: goalPath,
+			openAfterCreate: false,
 		}).open();
 	}
 </script>
