@@ -17,6 +17,7 @@ import { MemoPanel } from "@/components/MemoPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NotFoundScreen } from "@/components/NotFoundScreen";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { obsidianOpenUri } from "@/lib/obsidian";
 import { confirmArchiveMessage, confirmDeleteMessage, t } from "@i18n/ja";
 
@@ -42,7 +43,17 @@ export function TicketDetail() {
     if (entityQuery.error instanceof ApiError && entityQuery.error.status === 404) return <NotFoundScreen />;
     return <p className="text-destructive">{t("webapp.loadError")}</p>;
   }
-  if (!entityQuery.data) return <p className="text-muted-foreground">{t("webapp.loading")}</p>;
+  if (!entityQuery.data) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
 
   const entity = entityQuery.data;
 

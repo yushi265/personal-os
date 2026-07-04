@@ -1,7 +1,11 @@
+import * as React from "react";
 import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ConnectionBanner } from "@/components/ConnectionBanner";
+import { ConnectionDot } from "@/components/ConnectionDot";
+import { CommandPalette } from "@/components/CommandPalette";
+import { PageTransition } from "@/components/PageTransition";
 import { useEntity } from "@/hooks/useEntity";
 import { useSseSync } from "@/hooks/useSseSync";
 import { t } from "@i18n/ja";
@@ -39,11 +43,22 @@ function useBreadcrumbItems(): { label: string; to?: string }[] {
 export function Layout() {
   const items = useBreadcrumbItems();
   const { connected } = useSseSync();
+  const [scrolled, setScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
       {!connected && <ConnectionBanner />}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header
+        className={`sticky top-0 z-10 border-b bg-background/70 backdrop-blur-md transition-shadow duration-200 supports-[backdrop-filter]:bg-background/60 ${
+          scrolled ? "shadow-sm" : "shadow-none"
+        }`}
+      >
         <div className="container flex h-14 items-center justify-between">
           <Breadcrumb>
             <BreadcrumbList>
@@ -63,12 +78,21 @@ export function Layout() {
               ))}
             </BreadcrumbList>
           </Breadcrumb>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <ConnectionDot connected={connected} />
+            <kbd className="hidden select-none items-center gap-1 rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-flex">
+              ⌘K
+            </kbd>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main className="container py-6">
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
+      <CommandPalette />
     </div>
   );
 }

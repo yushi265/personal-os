@@ -57,3 +57,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ダークモード切替のスムーズ化(design P6-C13)。色トークンのみをtransition対象にし、
+   transform/opacityを使う他のマイクロインタラクション(ホバー・押下等)とは干渉させない。 */
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+body,
+.border-border,
+[class*="bg-"],
+[class*="border-"],
+[class*="text-"] {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

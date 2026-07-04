@@ -4,6 +4,7 @@ import { useMemos } from "@/hooks/useMemos";
 import { useAddMemo, useRemoveMemoMutation, useUpdateMemoMutation } from "@/hooks/useMemoMutations";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@i18n/ja";
 
 interface MemoPanelProps {
@@ -22,7 +23,14 @@ export function MemoPanel({ path }: MemoPanelProps) {
   const [editing, setEditing] = React.useState<Memo | null>(null);
   const [editDraft, setEditDraft] = React.useState("");
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">{t("webapp.loading")}</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-16 w-full" />
+      </div>
+    );
+  }
 
   const submitAdd = () => {
     if (!draft.trim()) return;

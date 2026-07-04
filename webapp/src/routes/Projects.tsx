@@ -1,22 +1,28 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight, FolderKanban } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { PROJECT_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { useProjectsGroupedByGoal } from "@/hooks/useEntities";
 import { useCreateEntity } from "@/hooks/useEntityMutations";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PriorityBadge } from "@/components/PriorityBadge";
 import { DueLabel } from "@/components/DueLabel";
 import { ProgressBar } from "@/components/ProgressBar";
+import { EmptyState } from "@/components/EmptyState";
+import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { t } from "@i18n/ja";
+
+const MotionTableRow = motion.create(TableRow);
 
 function matchesFilter(project: Entity, keyword: string, statuses: Set<string>): boolean {
   if (statuses.size > 0 && !statuses.has(project.status)) return false;
@@ -35,9 +41,32 @@ export function Projects() {
   const [collapsed, setCollapsed] = React.useState<Set<string>>(new Set());
   const [newProjectTitles, setNewProjectTitles] = React.useState<Record<string, string>>({});
   const now = today();
+  const reduced = useReducedMotion();
 
-  if (isLoading) return <p className="text-muted-foreground">{t("webapp.loading")}</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-semibold">{t("webapp.projects.title")}</h1>
+        <div className="space-y-2">
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </div>
+    );
+  }
   if (isError) return <p className="text-destructive">{t("webapp.loadError")}</p>;
+  if ((groups ?? []).length === 0) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-semibold">{t("webapp.projects.title")}</h1>
+        <EmptyState
+          icon={FolderKanban}
+          title={t("webapp.empty.projects.title")}
+          body={t("webapp.empty.projects.body")}
+        />
+      </div>
+    );
+  }
 
   const toggleStatus = (status: string) => {
     setStatuses((prev) => {
@@ -114,11 +143,18 @@ export function Projects() {
                     <TableHead>Priority</TableHead>
                     <TableHead>Progress</TableHead>
                     <TableHead>Due</TableHead>
+                    <TableHead className="w-6" />
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
                   {visibleProjects.map((project) => (
-                    <TableRow key={project.path} className="cursor-pointer" onClick={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}>
+                    <MotionTableRow
+                      key={project.path}
+                      variants={staggerItem}
+                      transition={listTransition(!!reduced)}
+                      className="group cursor-pointer"
+                      onClick={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}
+                    >
                       <TableCell className="font-medium">{project.title}</TableCell>
                       <TableCell>
                         <StatusBadge status={project.status} />
@@ -132,10 +168,13 @@ export function Projects() {
                       <TableCell>
                         <DueLabel due={project.due} today={now} />
                       </TableCell>
-                    </TableRow>
+                      <TableCell>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
+                      </TableCell>
+                    </MotionTableRow>
                   ))}
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={6}>
                       <Input
                         value={newProjectTitles[key] ?? ""}
                         onChange={(e) => setNewProjectTitles((prev) => ({ ...prev, [key]: e.target.value }))}
@@ -156,7 +195,7 @@ export function Projects() {
                       />
                     </TableCell>
                   </TableRow>
-                </TableBody>
+                </motion.tbody>
               </Table>
             </CollapsibleContent>
           </Collapsible>

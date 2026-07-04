@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { ChevronRight } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { PROJECT_STATUSES } from "@domain/entity";
 import { today } from "@domain/date";
 import { ApiError } from "@/api/client";
@@ -24,11 +26,15 @@ import { TodoListPanel } from "@/components/TodoListPanel";
 import { MemoPanel } from "@/components/MemoPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NotFoundScreen } from "@/components/NotFoundScreen";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { obsidianOpenUri } from "@/lib/obsidian";
+import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { confirmArchiveMessage, confirmDeleteMessage, t } from "@i18n/ja";
+
+const MotionTableRow = motion.create(TableRow);
 
 // プロジェクト詳細画面(design-browser-ui.md §9 P4行、requirements §3.2/§3.3)。
 export function ProjectDetail() {
@@ -50,12 +56,23 @@ export function ProjectDetail() {
   const [todoScope, setTodoScope] = React.useState<"direct" | "all">("direct");
   const [confirmAction, setConfirmAction] = React.useState<"archive" | "delete" | null>(null);
   const [newTicketTitle, setNewTicketTitle] = React.useState("");
+  const reduced = useReducedMotion();
 
   if (entityQuery.isError) {
     if (entityQuery.error instanceof ApiError && entityQuery.error.status === 404) return <NotFoundScreen />;
     return <p className="text-destructive">{t("webapp.loadError")}</p>;
   }
-  if (!entityQuery.data) return <p className="text-muted-foreground">{t("webapp.loading")}</p>;
+  if (!entityQuery.data) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
 
   const entity = entityQuery.data;
   const tickets = (childrenQuery.data ?? []).filter((c) => c.type === "ticket");
@@ -117,11 +134,18 @@ export function ProjectDetail() {
               <TableHead>Priority</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Due</TableHead>
+              <TableHead className="w-6" />
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
             {tickets.map((ticket) => (
-              <TableRow key={ticket.path} className="cursor-pointer" onClick={() => navigate(`/tickets/${encodeURIComponent(ticket.path)}`)}>
+              <MotionTableRow
+                key={ticket.path}
+                variants={staggerItem}
+                transition={listTransition(!!reduced)}
+                className="group cursor-pointer"
+                onClick={() => navigate(`/tickets/${encodeURIComponent(ticket.path)}`)}
+              >
                 <TableCell className="font-medium">{ticket.title}</TableCell>
                 <TableCell>
                   <span className="rounded-full border px-2.5 py-0.5 text-xs font-semibold">{ticket.status}</span>
@@ -133,10 +157,13 @@ export function ProjectDetail() {
                 <TableCell>
                   <DueLabel due={ticket.due} today={now} />
                 </TableCell>
-              </TableRow>
+                <TableCell>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
+                </TableCell>
+              </MotionTableRow>
             ))}
             <TableRow>
-              <TableCell colSpan={5}>
+              <TableCell colSpan={6}>
                 <Input
                   value={newTicketTitle}
                   onChange={(e) => setNewTicketTitle(e.target.value)}
@@ -148,7 +175,7 @@ export function ProjectDetail() {
                 />
               </TableCell>
             </TableRow>
-          </TableBody>
+          </motion.tbody>
         </Table>
       </section>
 

@@ -1,5 +1,7 @@
 import * as React from "react";
 import { toast } from "sonner";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { PartyPopper } from "lucide-react";
 import type { Priority } from "@domain/entity";
 import type { Todo } from "@domain/todo";
 import { useTodos } from "@/hooks/useTodos";
@@ -7,10 +9,12 @@ import { useAddTodo, useRemoveTodo, useToggleTodo, useUpdateTodo } from "@/hooks
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TitleEditable } from "@/components/EditableCell/TitleEditable";
 import { DateEdit } from "@/components/EditableCell/DateEdit";
 import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { PromoteTodoDialog } from "@/components/PromoteTodoDialog";
+import { listTransition } from "@/lib/motion";
 import { t } from "@i18n/ja";
 
 interface TodoListPanelProps {
@@ -20,20 +24,46 @@ interface TodoListPanelProps {
 }
 
 // Todo一覧+全操作(完了トグル/text・due・priorityインライン編集/削除/昇格/追加)。design §9 P4行、TodoList.svelte互換。
+// design P6-B4: 完了チェックのマイクロインタラクション(spring・取り消し線・行フェード)+全件完了時の小さなお祝い演出。
 export function TodoListPanel({ parent, scope, today }: TodoListPanelProps) {
   const { data: todos, isLoading } = useTodos(parent, scope);
   const toggle = useToggleTodo();
   const update = useUpdateTodo();
   const remove = useRemoveTodo();
   const add = useAddTodo(parent);
+  const reduced = useReducedMotion();
 
   const [showDone, setShowDone] = React.useState(false);
   const [promoting, setPromoting] = React.useState<Todo | null>(null);
   const [draftText, setDraftText] = React.useState("");
   const [draftDue, setDraftDue] = React.useState("");
   const [draftPriority, setDraftPriority] = React.useState<Priority | undefined>(undefined);
+  const [celebrate, setCelebrate] = React.useState(false);
+  const wasAllDone = React.useRef<boolean | null>(null);
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">{t("webapp.loading")}</p>;
+  React.useEffect(() => {
+    if (!todos || todos.length === 0) {
+      wasAllDone.current = null;
+      return;
+    }
+    const allDone = todos.every((todo) => todo.done);
+    if (allDone && wasAllDone.current === false) {
+      setCelebrate(true);
+      const timer = setTimeout(() => setCelebrate(false), 1100);
+      return () => clearTimeout(timer);
+    }
+    wasAllDone.current = allDone;
+  }, [todos]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
+  }
 
   const visible = (todos ?? []).filter((todo) => showDone || !todo.done);
 
@@ -56,7 +86,7 @@ export function TodoListPanel({ parent, scope, today }: TodoListPanelProps) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="relative space-y-2">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-muted-foreground">{t("preview.section.todos")}</h3>
         <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -65,29 +95,64 @@ export function TodoListPanel({ parent, scope, today }: TodoListPanelProps) {
         </label>
       </div>
 
+      <AnimatePresence>
+        {celebrate && (
+          <motion.div
+            initial={reduced ? false : { opacity: 0, scale: 0.8, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={reduced ? undefined : { opacity: 0, scale: 0.8, y: -6 }}
+            className="pointer-events-none absolute right-0 top-0 z-10 flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+          >
+            <PartyPopper className="h-3.5 w-3.5" />
+            {t("webapp.celebration.allDone")}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {visible.length === 0 && <p className="text-sm text-muted-foreground">{t("preview.empty.todos")}</p>}
 
       <ul className="space-y-1">
-        {visible.map((todo) => (
-          <li key={`${todo.filePath}:${todo.line}`} className="flex items-center gap-2 rounded-md px-1 py-1 hover:bg-accent/50">
-            <Checkbox checked={todo.done} onCheckedChange={() => toggle.mutate(todo)} />
-            <div className="flex-1">
-              <TitleEditable
-                value={todo.text}
-                onCommit={(text) => update.mutate({ todo, patch: { text } })}
-                className={todo.done ? "text-muted-foreground line-through" : undefined}
+        <AnimatePresence initial={false}>
+          {visible.map((todo) => (
+            <motion.li
+              key={`${todo.filePath}:${todo.line}`}
+              layout={!reduced}
+              initial={reduced ? false : { opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduced ? undefined : { opacity: 0, y: -4 }}
+              transition={listTransition(!!reduced)}
+              className="flex items-center gap-2 rounded-md px-1 py-1 transition-colors hover:bg-accent/50"
+            >
+              <Checkbox
+                checked={todo.done}
+                onCheckedChange={() => toggle.mutate(todo)}
+                className="data-[state=checked]:animate-in data-[state=checked]:zoom-in-50 data-[state=checked]:duration-200"
               />
-            </div>
-            <PrioritySelect priority={todo.priority} onCommit={(priority) => update.mutate({ todo, patch: { priority: priority ?? null } })} />
-            <DateEdit value={todo.dueDate} today={today} onCommit={(due) => update.mutate({ todo, patch: { dueDate: due ?? null } })} />
-            <Button variant="ghost" size="sm" onClick={() => setPromoting(todo)}>
-              {t("preview.todo.promote")}
-            </Button>
-            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => remove.mutate(todo)}>
-              {t("preview.todo.delete")}
-            </Button>
-          </li>
-        ))}
+              <div className="relative flex-1">
+                <TitleEditable
+                  value={todo.text}
+                  onCommit={(text) => update.mutate({ todo, patch: { text } })}
+                  className={`transition-colors duration-200 ${todo.done ? "text-muted-foreground" : ""}`}
+                />
+                <motion.span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-1 top-1/2 h-px origin-left bg-muted-foreground"
+                  initial={false}
+                  animate={{ scaleX: todo.done ? 1 : 0 }}
+                  transition={reduced ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }}
+                />
+              </div>
+              <PrioritySelect priority={todo.priority} onCommit={(priority) => update.mutate({ todo, patch: { priority: priority ?? null } })} />
+              <DateEdit value={todo.dueDate} today={today} onCommit={(due) => update.mutate({ todo, patch: { dueDate: due ?? null } })} />
+              <Button variant="ghost" size="sm" onClick={() => setPromoting(todo)}>
+                {t("preview.todo.promote")}
+              </Button>
+              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => remove.mutate(todo)}>
+                {t("preview.todo.delete")}
+              </Button>
+            </motion.li>
+          ))}
+        </AnimatePresence>
       </ul>
 
       <div className="flex items-center gap-2 pt-1">
