@@ -29,6 +29,7 @@ import { PreviewView, VIEW_TYPE_PREVIEW } from "./ui/preview/PreviewView";
 import { KanbanView, VIEW_TYPE_KANBAN } from "./ui/kanban/KanbanView";
 import { SearchView, VIEW_TYPE_SEARCH } from "./ui/search/SearchView";
 import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
+import { ManageView, VIEW_TYPE_MANAGE } from "./ui/manage/ManageView";
 import { t } from "./i18n/ja";
 
 interface Capability {
@@ -124,6 +125,7 @@ export default class PersonalOSPlugin extends Plugin {
 		this.registerView(VIEW_TYPE_KANBAN, (leaf) => new KanbanView(leaf, this));
 		this.registerView(VIEW_TYPE_SEARCH, (leaf) => new SearchView(leaf, this));
 		this.registerView(VIEW_TYPE_TIMELINE, (leaf) => new TimelineView(leaf, this));
+		this.registerView(VIEW_TYPE_MANAGE, (leaf) => new ManageView(leaf, this));
 	}
 
 	private registerCommands(): void {
@@ -219,6 +221,11 @@ export default class PersonalOSPlugin extends Plugin {
 			id: "open-timeline",
 			name: t("command.openTimeline"),
 			callback: () => this.openTimeline(),
+		});
+		this.addCommand({
+			id: "open-manage",
+			name: t("command.openManage"),
+			callback: () => this.openManage(),
 		});
 		this.addCommand({
 			id: "export-ai-context",
@@ -322,6 +329,17 @@ export default class PersonalOSPlugin extends Plugin {
 		}
 		const leaf = this.app.workspace.getLeaf(true);
 		await leaf.setViewState({ type: VIEW_TYPE_TIMELINE, active: true });
+		this.app.workspace.revealLeaf(leaf);
+	}
+
+	private async openManage(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_MANAGE);
+		if (existing.length > 0) {
+			this.app.workspace.revealLeaf(existing[0]);
+			return;
+		}
+		const leaf = this.app.workspace.getLeaf(true);
+		await leaf.setViewState({ type: VIEW_TYPE_MANAGE, active: true });
 		this.app.workspace.revealLeaf(leaf);
 	}
 

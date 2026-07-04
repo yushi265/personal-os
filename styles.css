@@ -399,6 +399,140 @@
 	border-radius: var(--radius-s);
 }
 
+/* ---- Manage ---- */
+
+.pos-manage {
+	padding: var(--size-4-4);
+}
+
+.pos-manage-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-4);
+	margin-bottom: var(--size-4-3);
+}
+
+.pos-manage-title {
+	margin: 0;
+	font-size: var(--font-ui-large);
+}
+
+.pos-manage-tabs {
+	display: flex;
+	gap: var(--size-4-1);
+}
+
+.pos-manage-tab-btn {
+	cursor: pointer;
+}
+
+.pos-manage-tab-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.pos-manage-filterbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-3);
+}
+
+.pos-manage-filter-keyword {
+	flex: 1;
+	min-width: 200px;
+}
+
+.pos-manage-filter-select {
+	max-width: 200px;
+}
+
+.pos-manage-filter-toggle {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+}
+
+.pos-manage-filter-clear {
+	cursor: pointer;
+}
+
+.pos-manage-chip-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-2-2);
+}
+
+.pos-manage-chip {
+	cursor: pointer;
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-2);
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	border: none;
+}
+
+.pos-manage-chip-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.pos-manage-chip-static {
+	cursor: default;
+	margin-right: var(--size-2-2);
+}
+
+.pos-manage-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.pos-manage-table th,
+.pos-manage-table td {
+	padding: var(--size-4-1) var(--size-4-2);
+	text-align: left;
+	font-size: var(--font-ui-small);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pos-manage-th-sortable {
+	cursor: pointer;
+	user-select: none;
+}
+
+.pos-manage-th-sortable:hover {
+	color: var(--text-accent);
+}
+
+.pos-manage-row:hover {
+	background: var(--background-secondary);
+}
+
+.pos-manage-title-link {
+	cursor: pointer;
+	color: var(--text-normal);
+}
+
+.pos-manage-title-link:hover {
+	color: var(--text-accent);
+}
+
+.pos-manage-parent-badge {
+	margin-left: var(--size-2-2);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pos-manage-empty {
+	text-align: center;
+	color: var(--text-muted);
+	padding: var(--size-4-4);
+}
+
 .pos-timeline-point {
 	position: absolute;
 	top: -3px;
