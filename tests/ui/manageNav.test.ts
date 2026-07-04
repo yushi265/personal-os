@@ -8,6 +8,7 @@ import {
 	popTo,
 	pushScreen,
 	reconcileStack,
+	resolveNavigateAction,
 	type ManageScreen,
 } from "../../src/ui/manage/manageNav";
 
@@ -145,5 +146,31 @@ describe("reconcileStack (design-drilldown-nav.md §8.2)", () => {
 		const result = reconcileStack(stack, store, [["x", "y"]]);
 		expect(result.truncated).toBe(false);
 		expect(result.stack).toEqual([{ kind: "project-list" }]);
+	});
+});
+
+describe("resolveNavigateAction (design-drilldown-nav.md §4.1 navigateOrOpen routing)", () => {
+	it("D-1: project entity without modifier click routes to project-detail", () => {
+		expect(resolveNavigateAction("project", false)).toBe("project-detail");
+	});
+
+	it("D-2: ticket entity without modifier click routes to ticket-detail", () => {
+		expect(resolveNavigateAction("ticket", false)).toBe("ticket-detail");
+	});
+
+	it("D-3: modifier click always opens the note, even for project/ticket", () => {
+		expect(resolveNavigateAction("project", true)).toBe("open-note");
+		expect(resolveNavigateAction("ticket", true)).toBe("open-note");
+	});
+
+	it("D-4: goal/review/resource/inbox entities always open the note (Goal detail is out of scope)", () => {
+		expect(resolveNavigateAction("goal", false)).toBe("open-note");
+		expect(resolveNavigateAction("review", false)).toBe("open-note");
+		expect(resolveNavigateAction("resource", false)).toBe("open-note");
+		expect(resolveNavigateAction("inbox", false)).toBe("open-note");
+	});
+
+	it("D-5: undefined entity type (e.g. parse-error path not in store) opens the note", () => {
+		expect(resolveNavigateAction(undefined, false)).toBe("open-note");
 	});
 });

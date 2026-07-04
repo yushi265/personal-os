@@ -5,11 +5,13 @@
 	let {
 		todos,
 		onToggle,
-		onOpen,
+		onNavigate,
+		onOpenNote,
 	}: {
 		todos: Todo[];
 		onToggle: (todo: Todo) => void;
-		onOpen: (path: string) => void;
+		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
+		onOpenNote: (path: string) => void;
 	} = $props();
 </script>
 
@@ -26,12 +28,22 @@
 						class="pos-widget-item-text"
 						role="link"
 						tabindex="0"
-						onclick={() => onOpen(todo.parentPath)}
-						onkeydown={(e) => e.key === "Enter" && onOpen(todo.parentPath)}
+						onclick={(e) => onNavigate(todo.parentPath, e)}
+						onkeydown={(e) => e.key === "Enter" && onNavigate(todo.parentPath, e)}
 					>
 						{todo.text}
 					</span>
 					{#if todo.dueDate}<span class="pos-widget-due">📅 {todo.dueDate}</span>{/if}
+					<button
+						class="pos-widget-open-note"
+						onclick={(e) => {
+							e.stopPropagation();
+							onOpenNote(todo.parentPath);
+						}}
+						aria-label={t("dashboard.openNote")}
+					>
+						↗
+					</button>
 				</li>
 			{/each}
 		</ul>

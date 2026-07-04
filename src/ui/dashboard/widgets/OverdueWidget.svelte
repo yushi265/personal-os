@@ -7,12 +7,14 @@
 		todos,
 		entities,
 		onToggle,
-		onOpen,
+		onNavigate,
+		onOpenNote,
 	}: {
 		todos: Todo[];
 		entities: Entity[];
 		onToggle: (todo: Todo) => void;
-		onOpen: (path: string) => void;
+		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
+		onOpenNote: (path: string) => void;
 	} = $props();
 </script>
 
@@ -29,12 +31,22 @@
 						class="pos-widget-item-text"
 						role="link"
 						tabindex="0"
-						onclick={() => onOpen(todo.parentPath)}
-						onkeydown={(e) => e.key === "Enter" && onOpen(todo.parentPath)}
+						onclick={(e) => onNavigate(todo.parentPath, e)}
+						onkeydown={(e) => e.key === "Enter" && onNavigate(todo.parentPath, e)}
 					>
 						{todo.text}
 					</span>
 					<span class="pos-widget-due">📅 {todo.dueDate}</span>
+					<button
+						class="pos-widget-open-note"
+						onclick={(e) => {
+							e.stopPropagation();
+							onOpenNote(todo.parentPath);
+						}}
+						aria-label={t("dashboard.openNote")}
+					>
+						↗
+					</button>
 				</li>
 			{/each}
 			{#each entities as entity (entity.path)}
@@ -43,12 +55,24 @@
 						class="pos-widget-item-text"
 						role="link"
 						tabindex="0"
-						onclick={() => onOpen(entity.path)}
-						onkeydown={(e) => e.key === "Enter" && onOpen(entity.path)}
+						onclick={(e) => onNavigate(entity.path, e)}
+						onkeydown={(e) => e.key === "Enter" && onNavigate(entity.path, e)}
 					>
 						▸ {entity.title}
 					</span>
 					<span class="pos-widget-due">due: {entity.due}</span>
+					{#if entity.type !== "goal"}
+						<button
+							class="pos-widget-open-note"
+							onclick={(e) => {
+								e.stopPropagation();
+								onOpenNote(entity.path);
+							}}
+							aria-label={t("dashboard.openNote")}
+						>
+							↗
+						</button>
+					{/if}
 				</li>
 			{/each}
 		</ul>

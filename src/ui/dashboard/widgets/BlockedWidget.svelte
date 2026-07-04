@@ -4,10 +4,12 @@
 
 	let {
 		entities,
-		onOpen,
+		onNavigate,
+		onOpenNote,
 	}: {
 		entities: Entity[];
-		onOpen: (path: string) => void;
+		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
+		onOpenNote: (path: string) => void;
 	} = $props();
 </script>
 
@@ -19,15 +21,29 @@
 		<ul class="pos-widget-list">
 			{#each entities as entity (entity.path)}
 				<li class="pos-widget-item pos-widget-item-column">
-					<span
-						class="pos-widget-item-text"
-						role="link"
-						tabindex="0"
-						onclick={() => onOpen(entity.path)}
-						onkeydown={(e) => e.key === "Enter" && onOpen(entity.path)}
-					>
-						▸ {entity.title}
-					</span>
+					<div class="pos-widget-item-row">
+						<span
+							class="pos-widget-item-text"
+							role="link"
+							tabindex="0"
+							onclick={(e) => onNavigate(entity.path, e)}
+							onkeydown={(e) => e.key === "Enter" && onNavigate(entity.path, e)}
+						>
+							▸ {entity.title}
+						</span>
+						{#if entity.type !== "goal"}
+							<button
+								class="pos-widget-open-note"
+								onclick={(e) => {
+									e.stopPropagation();
+									onOpenNote(entity.path);
+								}}
+								aria-label={t("dashboard.openNote")}
+							>
+								↗
+							</button>
+						{/if}
+					</div>
 					<span class="pos-widget-due">{entity.blockers[0]}{entity.blockers.length > 1 ? ` (+${entity.blockers.length - 1})` : ""}</span>
 				</li>
 			{/each}

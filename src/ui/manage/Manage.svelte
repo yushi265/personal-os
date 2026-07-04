@@ -26,6 +26,7 @@
 	import type { ManageRefreshToken } from "./ManageView";
 	import ProjectListScreen from "./ProjectListScreen.svelte";
 	import ProjectDetailScreen from "./ProjectDetailScreen.svelte";
+	import TicketDetailScreen from "./TicketDetailScreen.svelte";
 
 	let {
 		plugin,
@@ -204,11 +205,6 @@
 			onOpenNote={openPath}
 		/>
 	{:else if current.kind === "ticket-detail"}
-		{@const entity = plugin.store.get(current.path)}
-		<div class="pos-manage-placeholder">
-			<h3>{entity?.title ?? t("manage.nav.unknown")}</h3>
-			<p>{t("manage.nav.placeholderNotice")}</p>
-			<button onclick={() => openPath(current.path)}>{t("manage.nav.openNote")}</button>
-		</div>
+		<TicketDetailScreen {plugin} screen={current} onScreenChange={updateCurrentScreen} onOpenNote={openPath} />
 	{/if}
 </div>

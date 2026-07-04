@@ -47,6 +47,7 @@ const MESSAGES = {
 	"dashboard.empty.recentUpdates": "更新履歴はありません。",
 	"dashboard.empty.activityLog": "ログがありません。",
 	"dashboard.todoDisabledNotice": "Tasks / Dataviewプラグインが必要です。",
+	"dashboard.openNote": "ノートを開く",
 
 	"preview.title": "Preview",
 	"preview.empty": "Entityノートを開いてください。",

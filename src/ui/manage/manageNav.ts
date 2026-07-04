@@ -50,6 +50,19 @@ export function popOne(stack: ManageScreen[]): ManageScreen[] {
 	return popTo(stack, stack.length - 2);
 }
 
+export type NavigateAction = "project-detail" | "ticket-detail" | "open-note";
+
+/**
+ * Dashboard等からの行クリック時の遷移先を決定する純粋関数(design-drilldown-nav.md §4.1)。
+ * project/ticketは対応する詳細画面へ、それ以外(goal/review/resource/inbox、またはundefined=store未登録)
+ * または修飾クリック時はノートを開く。
+ */
+export function resolveNavigateAction(entityType: EntityType | undefined, modifierClick: boolean): NavigateAction {
+	if (!modifierClick && entityType === "project") return "project-detail";
+	if (!modifierClick && entityType === "ticket") return "ticket-detail";
+	return "open-note";
+}
+
 export function screenPath(screen: ManageScreen): string | undefined {
 	return screen.kind === "project-list" ? undefined : screen.path;
 }

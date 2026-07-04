@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin, TFile } from "obsidian";
+import { MarkdownView, Notice, Plugin, TFile, type WorkspaceLeaf } from "obsidian";
 import type { EntityType } from "./domain/entity";
 import type { Todo } from "./domain/todo";
 import { DEFAULT_SETTINGS, type POSSettings } from "./settings/settings";
@@ -30,6 +30,7 @@ import { KanbanView, VIEW_TYPE_KANBAN } from "./ui/kanban/KanbanView";
 import { SearchView, VIEW_TYPE_SEARCH } from "./ui/search/SearchView";
 import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
 import { ManageView, VIEW_TYPE_MANAGE } from "./ui/manage/ManageView";
+import type { ManageScreen } from "./ui/manage/manageNav";
 import { t } from "./i18n/ja";
 
 interface Capability {
@@ -341,6 +342,20 @@ export default class PersonalOSPlugin extends Plugin {
 		const leaf = this.app.workspace.getLeaf(true);
 		await leaf.setViewState({ type: VIEW_TYPE_MANAGE, active: true });
 		this.app.workspace.revealLeaf(leaf);
+	}
+
+	/** 外部(Dashboard等)からManage Viewの特定画面へ遷移する(design-drilldown-nav.md §2.5)。未オープン時は開いてから遷移する */
+	async openManageAt(screen: ManageScreen): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_MANAGE);
+		let leaf: WorkspaceLeaf;
+		if (existing.length > 0) {
+			leaf = existing[0];
+		} else {
+			leaf = this.app.workspace.getLeaf(true);
+			await leaf.setViewState({ type: VIEW_TYPE_MANAGE, active: true });
+		}
+		this.app.workspace.revealLeaf(leaf);
+		if (leaf.view instanceof ManageView) leaf.view.navigateTo(screen);
 	}
 
 	private async ensurePreviewLeaf(): Promise<void> {

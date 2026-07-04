@@ -116,6 +116,31 @@
 	white-space: nowrap;
 }
 
+.pos-widget-item-row {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	width: 100%;
+}
+
+.pos-widget-open-note {
+	flex-shrink: 0;
+	min-width: var(--size-4-6);
+	min-height: var(--size-4-6);
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-muted);
+	background: transparent;
+	box-shadow: none;
+}
+
+.pos-widget-open-note:hover {
+	color: var(--text-accent);
+	background: var(--background-modifier-hover);
+}
+
 .pos-widget-log-line {
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);

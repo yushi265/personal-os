@@ -4,10 +4,12 @@
 
 	let {
 		entities,
-		onOpen,
+		onNavigate,
+		onOpenNote,
 	}: {
 		entities: Entity[];
-		onOpen: (path: string) => void;
+		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
+		onOpenNote: (path: string) => void;
 	} = $props();
 </script>
 
@@ -23,12 +25,24 @@
 						class="pos-widget-item-text"
 						role="link"
 						tabindex="0"
-						onclick={() => onOpen(entity.path)}
-						onkeydown={(e) => e.key === "Enter" && onOpen(entity.path)}
+						onclick={(e) => onNavigate(entity.path, e)}
+						onkeydown={(e) => e.key === "Enter" && onNavigate(entity.path, e)}
 					>
 						▸ {entity.title}
 					</span>
 					<span class="pos-widget-due">({entity.reviewCycle}, last: {entity.lastReviewed ?? "-"})</span>
+					{#if entity.type !== "goal"}
+						<button
+							class="pos-widget-open-note"
+							onclick={(e) => {
+								e.stopPropagation();
+								onOpenNote(entity.path);
+							}}
+							aria-label={t("dashboard.openNote")}
+						>
+							↗
+						</button>
+					{/if}
 				</li>
 			{/each}
 		</ul>
