@@ -40,6 +40,7 @@ export function Projects() {
   const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = React.useState<Set<string>>(new Set());
   const [newProjectTitles, setNewProjectTitles] = React.useState<Record<string, string>>({});
+  const [newGoalTitle, setNewGoalTitle] = React.useState("");
   const now = today();
   const reduced = useReducedMotion();
 
@@ -201,6 +202,25 @@ export function Projects() {
           </Collapsible>
         );
       })}
+
+      <Input
+        value={newGoalTitle}
+        onChange={(e) => setNewGoalTitle(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+          const title = newGoalTitle.trim();
+          if (!title) return;
+          createProject.mutate(
+            { type: "goal", title },
+            {
+              onSuccess: () => setNewGoalTitle(""),
+              onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+            }
+          );
+        }}
+        placeholder={t("webapp.projects.addGoalPlaceholder")}
+        className="h-8 max-w-xs border-dashed"
+      />
     </div>
   );
 }

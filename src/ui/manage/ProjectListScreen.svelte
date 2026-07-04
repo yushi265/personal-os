@@ -107,6 +107,23 @@
 		new Notice(entityCreatedNotice(title));
 	}
 
+	// Goal作成の導線(ユーザー指摘: コマンドパレットとオンボーディング空状態にしか無く発見しづらい)。
+	// Project/Ticketと同じ「インライン+詳細作成」パターンをGoalセクション一覧の末尾に統一して置く
+	function createGoal(): void {
+		new CreateEntityModal(plugin.app, {
+			entityService: plugin.entityService,
+			store: plugin.store,
+			settings: plugin.settings,
+			initialType: "goal",
+			openAfterCreate: false,
+		}).open();
+	}
+
+	async function createGoalInline(title: string): Promise<void> {
+		await plugin.entityService.create({ type: "goal", title });
+		new Notice(entityCreatedNotice(title));
+	}
+
 	/**
 	 * Goal跨ぎドロップ(design-reorder-and-notes.md A-4, T-6): ドロップ先セクションのgoalが元と異なる場合、
 	 * goal付け替え+ドロップ位置に応じたorder設定を1回のfrontmatter書き込みにまとめる。
@@ -195,4 +212,14 @@
 			{/if}
 		</section>
 	{/each}
-{/if}
+		<div class="pos-manage-create-row pos-manage-goal-create-row">
+			<InlineCreateRow
+				label={t("manage.nav.inlineNewGoal")}
+				inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
+				onSubmit={createGoalInline}
+			/>
+			<button class="pos-manage-goal-new-btn" onclick={createGoal}>
+				{t("manage.nav.newGoalDetail")}
+			</button>
+		</div>
+	{/if}
