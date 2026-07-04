@@ -3,6 +3,7 @@
 	import type { Writable } from "svelte/store";
 	import type PersonalOSPlugin from "../../main";
 	import { t } from "../../i18n/ja";
+	import { makeProjectDetailScreen, makeTicketDetailScreen, resolveNavigateAction } from "../manage/manageNav";
 	import { moveEntityStatus, type KanbanData, type KanbanMode } from "./kanbanData";
 	import KanbanColumn from "./KanbanColumn.svelte";
 
@@ -20,6 +21,24 @@
 
 	function openPath(path: string): void {
 		void plugin.app.workspace.openLinkText(path, "", false);
+	}
+
+	/**
+	 * カード本体クリック時の遷移(design-drilldown-nav.md §4.1と同じ操作言語)。
+	 * KanbanのentityはTicket/Projectのみのため、修飾クリック時以外は必ず管理View詳細へ遷移する。
+	 */
+	function navigate(path: string, modifierClick: boolean): void {
+		const entity = plugin.store.get(path);
+		const action = resolveNavigateAction(entity?.type, modifierClick);
+		if (action === "project-detail") {
+			void plugin.openManageAt(makeProjectDetailScreen(path));
+			return;
+		}
+		if (action === "ticket-detail") {
+			void plugin.openManageAt(makeTicketDetailScreen(path));
+			return;
+		}
+		openPath(path);
 	}
 
 	/** 楽観的更新: 即時にUIを移動 → 失敗時は元の状態へ戻す(detail-design.md §5.3) */
@@ -71,12 +90,14 @@
 	<div class="pos-kanban-columns">
 		{#each $data.columns as column (column.status)}
 			<KanbanColumn
+				{plugin}
 				status={column.status}
 				label={column.label}
 				entities={column.entities}
 				{statuses}
 				{columnNames}
-				onOpen={openPath}
+				onNavigate={navigate}
+				onOpenNote={openPath}
 				onMove={move}
 				onDrop={handleDrop}
 			/>

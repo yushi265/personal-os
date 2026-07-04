@@ -4,6 +4,11 @@
 	import type { Entity } from "../../domain/entity";
 	import type { Todo } from "../../domain/todo";
 	import type { SavedView } from "../../settings/settings";
+	import { statusLabelFor } from "../dashboard/dashboardData";
+	import { makeProjectDetailScreen, makeTicketDetailScreen, resolveNavigateAction } from "../manage/manageNav";
+	import StatusBadge from "../components/StatusBadge.svelte";
+	import PriorityLabel from "../components/PriorityLabel.svelte";
+	import DueLabel from "../components/DueLabel.svelte";
 
 	let { plugin }: { plugin: PersonalOSPlugin } = $props();
 
@@ -74,6 +79,21 @@
 		void plugin.app.workspace.openLinkText(path, "", false);
 	}
 
+	/** entity行クリック: 管理View詳細へ。修飾クリック時のみノートを開く(design-drilldown-nav.md §4.1と同じ操作言語) */
+	function navigateEntity(path: string, modifierClick: boolean): void {
+		const entity = plugin.store.get(path);
+		const action = resolveNavigateAction(entity?.type, modifierClick);
+		if (action === "project-detail") {
+			void plugin.openManageAt(makeProjectDetailScreen(path));
+			return;
+		}
+		if (action === "ticket-detail") {
+			void plugin.openManageAt(makeTicketDetailScreen(path));
+			return;
+		}
+		openPath(path);
+	}
+
 	runSearch();
 </script>
 
@@ -100,7 +120,7 @@
 			onkeydown={(e) => e.key === "Enter" && runSearch()}
 		/>
 
-		<button onclick={runSearch}>{t("search.run")}</button>
+		<button class="mod-cta" onclick={runSearch}>{t("search.run")}</button>
 		<button onclick={saveCurrentQuery}>{t("search.save")}</button>
 
 		<select bind:value={sortKey} onchange={runSearch}>
@@ -124,13 +144,18 @@
 				{#each entityResults as entity (entity.path)}
 					<li class="pos-widget-item">
 						<span
-							class="pos-widget-item-text"
+							class="pos-widget-item-text pos-search-result-title"
 							role="link"
 							tabindex="0"
-							onclick={() => openPath(entity.path)}
-							onkeydown={(e) => e.key === "Enter" && openPath(entity.path)}
+							onclick={(e) => navigateEntity(entity.path, e.metaKey || e.ctrlKey)}
+							onkeydown={(e) => e.key === "Enter" && navigateEntity(entity.path, e.metaKey || e.ctrlKey)}
 						>
-							{entity.title} ({entity.type}/{entity.status})
+							{entity.title}
+						</span>
+						<span class="pos-search-result-meta">
+							<StatusBadge value={entity.status} label={statusLabelFor(plugin, entity)} />
+							<PriorityLabel value={entity.priority ?? ""} label={entity.priority ?? ""} />
+							<DueLabel value={entity.due} />
 						</span>
 					</li>
 				{/each}
@@ -147,13 +172,16 @@
 				{#each todoResults as todo (`${todo.filePath}:${todo.line}`)}
 					<li class="pos-widget-item">
 						<span
-							class="pos-widget-item-text"
+							class="pos-widget-item-text pos-search-result-title"
 							role="link"
 							tabindex="0"
 							onclick={() => openPath(todo.parentPath)}
 							onkeydown={(e) => e.key === "Enter" && openPath(todo.parentPath)}
 						>
-							{todo.text}
+							{todo.done ? "☑" : "☐"} {todo.text}
+						</span>
+						<span class="pos-search-result-meta">
+							<DueLabel value={todo.dueDate} />
 						</span>
 					</li>
 				{/each}

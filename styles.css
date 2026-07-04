@@ -333,6 +333,13 @@
 	padding: var(--size-4-3);
 	min-width: 240px;
 	flex: 1 0 240px;
+	border: 2px solid transparent;
+	transition: border-color 0.1s ease, background-color 0.1s ease;
+}
+
+.pos-kanban-column-dragover {
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
 }
 
 .pos-kanban-column-title {
@@ -343,17 +350,21 @@
 	gap: var(--size-4-1);
 }
 
-.pos-kanban-column-count {
-	color: var(--text-muted);
-	font-size: var(--font-ui-smaller);
-	font-weight: normal;
-}
-
 .pos-kanban-column-cards {
 	display: flex;
 	flex-direction: column;
 	gap: var(--size-4-2);
 	min-height: 40px;
+}
+
+.pos-kanban-column-empty {
+	margin: 0;
+	padding: var(--size-4-3);
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	text-align: center;
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
 }
 
 .pos-kanban-card {
@@ -365,15 +376,36 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--size-2-2);
+	box-shadow: var(--shadow-s);
+	transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
 }
 
 .pos-kanban-card:hover {
-	box-shadow: var(--shadow-s);
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-l, 0 4px 12px rgba(0, 0, 0, 0.15));
+}
+
+.pos-kanban-card-dragging {
+	opacity: 0.5;
+	transform: rotate(2deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pos-kanban-card {
+		transition: none;
+	}
+	.pos-kanban-card:hover {
+		transform: none;
+	}
+	.pos-kanban-card-dragging {
+		transform: none;
+	}
 }
 
 .pos-kanban-card-title {
 	font-size: var(--font-ui-small);
 	color: var(--text-normal);
+	padding-right: var(--size-4-6);
 }
 
 .pos-kanban-card-meta {
@@ -383,29 +415,6 @@
 	flex-wrap: wrap;
 }
 
-.pos-kanban-badge {
-	font-size: var(--font-ui-smaller);
-	padding: 0 var(--size-4-1);
-	border-radius: var(--radius-s);
-	background: var(--background-modifier-border);
-	color: var(--text-muted);
-}
-
-.pos-kanban-badge-high {
-	background: var(--text-error);
-	color: var(--text-on-accent);
-}
-
-.pos-kanban-badge-medium {
-	background: var(--text-warning);
-	color: var(--text-on-accent);
-}
-
-.pos-kanban-badge-blocked {
-	background: var(--text-error);
-	color: var(--text-on-accent);
-}
-
 .pos-kanban-card-menu {
 	position: absolute;
 	top: var(--size-4-1);
@@ -413,6 +422,14 @@
 	cursor: pointer;
 	background: transparent;
 	border: none;
+	box-shadow: none;
+	color: var(--text-faint);
+	font-size: var(--font-ui-medium);
+	padding: 0 var(--size-4-1);
+}
+
+.pos-kanban-card-menu:hover {
+	color: var(--text-accent);
 }
 
 /* ---- Preview ---- */
@@ -608,11 +625,30 @@
 	align-items: center;
 	gap: var(--size-4-2);
 	margin-bottom: var(--size-4-4);
+	background: var(--background-secondary);
+	border-radius: var(--radius-m);
+	padding: var(--size-4-3);
 }
 
 .pos-search-input {
 	flex: 1;
 	min-width: 240px;
+}
+
+.pos-search-result-title {
+	cursor: pointer;
+	color: var(--text-normal);
+}
+
+.pos-search-result-title:hover {
+	color: var(--text-accent);
+}
+
+.pos-search-result-meta {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	margin-left: var(--size-4-2);
 }
 
 /* ---- Timeline ---- */
@@ -640,9 +676,56 @@
 }
 
 .pos-timeline-rows {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: var(--size-4-2);
+	padding-top: 1.6em;
+}
+
+.pos-timeline-grid {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: calc(160px + var(--size-4-3));
+	right: 0;
+	pointer-events: none;
+}
+
+.pos-timeline-month-line {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: var(--background-modifier-border);
+}
+
+.pos-timeline-month-label {
+	position: absolute;
+	top: -1.4em;
+	left: var(--size-2-2);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
+}
+
+.pos-timeline-today-line {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background: var(--text-error);
+	z-index: 1;
+}
+
+.pos-timeline-today-label {
+	position: absolute;
+	top: -1.4em;
+	left: var(--size-2-2);
+	color: var(--text-error);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-medium);
+	white-space: nowrap;
 }
 
 .pos-timeline-row {
@@ -678,6 +761,22 @@
 	height: 100%;
 	background: var(--interactive-accent);
 	border-radius: var(--radius-s);
+}
+
+.pos-timeline-bar.pos-status-warning {
+	background: var(--color-orange);
+}
+
+.pos-timeline-bar.pos-status-review {
+	background: var(--color-purple);
+}
+
+.pos-timeline-bar.pos-status-done {
+	background: var(--text-muted);
+}
+
+.pos-timeline-bar.pos-status-default {
+	background: var(--text-faint);
 }
 
 /* ---- Manage ---- */
@@ -1419,6 +1518,22 @@
 	margin-left: -8px;
 	background: var(--interactive-accent);
 	border-radius: 50%;
+}
+
+.pos-timeline-point.pos-status-warning {
+	background: var(--color-orange);
+}
+
+.pos-timeline-point.pos-status-review {
+	background: var(--color-purple);
+}
+
+.pos-timeline-point.pos-status-done {
+	background: var(--text-muted);
+}
+
+.pos-timeline-point.pos-status-default {
+	background: var(--text-faint);
 }
 
 /* ---- タイムスタンプ付きメモ(design-memo.md §4) ---- */

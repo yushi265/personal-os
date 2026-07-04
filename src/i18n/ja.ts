@@ -221,6 +221,8 @@ const MESSAGES = {
 	"kanban.modeProject": "Project",
 	"kanban.moveFailed": "移動に失敗しました。",
 	"kanban.moveStatus": "ステータスを変更",
+	"kanban.columnEmpty": "ここへドロップして移動",
+	"kanban.cardMenuLabel": "操作",
 
 	"modal.promoteTodo.title": "TicketへPromote",
 	"modal.promoteTodo.newTitle": "新Ticket名",
@@ -271,6 +273,7 @@ const MESSAGES = {
 
 	"timeline.title": "Timeline",
 	"timeline.empty": "start/dueを持つProject・Ticketはありません。",
+	"timeline.today": "今日",
 
 	"manage.field.titleRequired": "タイトルを入力してください。",
 	"manage.field.invalidStatus": "不正なstatusです。",
