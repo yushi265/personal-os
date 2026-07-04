@@ -1,14 +1,17 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import { PROJECT_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { useProjectsGroupedByGoal } from "@/hooks/useEntities";
+import { useCreateEntity } from "@/hooks/useEntityMutations";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PriorityBadge } from "@/components/PriorityBadge";
 import { DueLabel } from "@/components/DueLabel";
@@ -26,9 +29,11 @@ function matchesFilter(project: Entity, keyword: string, statuses: Set<string>):
 export function Projects() {
   const { data: groups, isLoading, isError } = useProjectsGroupedByGoal();
   const navigate = useNavigate();
+  const createProject = useCreateEntity();
   const [keyword, setKeyword] = React.useState("");
   const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = React.useState<Set<string>>(new Set());
+  const [newProjectTitles, setNewProjectTitles] = React.useState<Record<string, string>>({});
   const now = today();
 
   if (isLoading) return <p className="text-muted-foreground">{t("webapp.loading")}</p>;
@@ -129,6 +134,28 @@ export function Projects() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Input
+                        value={newProjectTitles[key] ?? ""}
+                        onChange={(e) => setNewProjectTitles((prev) => ({ ...prev, [key]: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+                          const title = (newProjectTitles[key] ?? "").trim();
+                          if (!title) return;
+                          createProject.mutate(
+                            { type: "project", title, goal: group.goal?.path },
+                            {
+                              onSuccess: () => setNewProjectTitles((prev) => ({ ...prev, [key]: "" })),
+                              onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+                            }
+                          );
+                        }}
+                        placeholder={t("webapp.detail.addProjectPlaceholder")}
+                        className="h-8 border-none bg-transparent shadow-none focus-visible:ring-0"
+                      />
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </CollapsibleContent>

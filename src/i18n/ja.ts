@@ -179,6 +179,19 @@ const MESSAGES = {
 	"webapp.loading": "読み込み中...",
 	"webapp.loadError": "読み込みに失敗しました。",
 	"webapp.placeholder.comingSoon": "この画面はP4で実装予定です。",
+	"webapp.detail.openInObsidian": "Obsidianで開く",
+	"webapp.detail.tickets": "チケット",
+	"webapp.detail.addTicketPlaceholder": "+ チケットを追加...",
+	"webapp.detail.addProjectPlaceholder": "+ プロジェクトを追加...",
+	"webapp.detail.addTodoPlaceholder": "+ Todoを追加",
+	"webapp.detail.noParent": "(未設定)",
+	"webapp.confirm.cancel": "キャンセル",
+	"webapp.confirm.confirm": "実行",
+	"webapp.notFound.title": "見つかりません",
+	"webapp.notFound.body": "このページは存在しないか、削除された可能性があります。",
+	"webapp.notFound.backLink": "一覧へ戻る",
+	"webapp.dateEdit.clear": "クリア",
+	"webapp.dateEdit.confirm": "OK",
 
 	"settings.section.capability": "依存プラグイン",
 	"settings.capability.dataview": "Dataview",
@@ -442,6 +455,16 @@ export function serverStartedNotice(url: string): string {
 /** ブラウザUIサーバー起動失敗時のNotice文言 */
 export function serverStartFailedNotice(reason: string): string {
 	return `Personal OS: ブラウザUIサーバーの起動に失敗しました(${reason})`;
+}
+
+/** webapp: Archive確認ダイアログの本文(design-browser-ui.md §6.4 ConfirmModal。タイトル埋め込みのためt()とは別関数とする) */
+export function confirmArchiveMessage(title: string): string {
+	return `「${title}」をアーカイブしますか?`;
+}
+
+/** webapp: 削除確認ダイアログの本文 */
+export function confirmDeleteMessage(title: string): string {
+	return `「${title}」を削除しますか?この操作は元に戻せません。`;
 }
 
 /** 解析エラーノートを開いた場合のPreview表示メッセージ(design-ui-first.md §4.7) */

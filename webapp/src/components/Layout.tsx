@@ -1,26 +1,34 @@
 import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useEntity } from "@/hooks/useEntity";
 import { t } from "@i18n/ja";
 
-// パンくず(design-browser-ui.md §6.2)。P3時点ではルート単位の簡易対応。詳細画面のGoal/Project名を挟んだ
-// 動的パンくずはP4(実データを持つ画面)で拡張する。
+// パンくず(design-browser-ui.md §6.2)。詳細画面は 一覧 > Goal名(project) / Project名(ticket) > 自身の名前 とする(P4)。
 function useBreadcrumbItems(): { label: string; to?: string }[] {
   const location = useLocation();
   const params = useParams();
+  const path = params.path ? decodeURIComponent(params.path) : undefined;
+  const isProject = location.pathname.startsWith("/projects/");
+  const isTicket = location.pathname.startsWith("/tickets/");
+
+  const { data: entity } = useEntity(isProject || isTicket ? path : undefined);
+  const { data: parent } = useEntity(entity?.goal ?? entity?.project);
 
   if (location.pathname === "/") return [{ label: t("webapp.home.title") }];
   if (location.pathname === "/projects") return [{ label: t("webapp.projects.title") }];
-  if (location.pathname.startsWith("/projects/")) {
+  if (isProject) {
     return [
       { label: t("webapp.projects.title"), to: "/projects" },
-      { label: params.path ? decodeURIComponent(params.path) : "" },
+      ...(parent ? [{ label: parent.title }] : []),
+      { label: entity?.title ?? path ?? "" },
     ];
   }
-  if (location.pathname.startsWith("/tickets/")) {
+  if (isTicket) {
     return [
       { label: t("webapp.projects.title"), to: "/projects" },
-      { label: params.path ? decodeURIComponent(params.path) : "" },
+      ...(parent ? [{ label: parent.title, to: `/projects/${encodeURIComponent(parent.path)}` }] : []),
+      { label: entity?.title ?? path ?? "" },
     ];
   }
   return [];

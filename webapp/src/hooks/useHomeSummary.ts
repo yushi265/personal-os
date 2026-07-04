@@ -30,14 +30,25 @@ export function useHomeSummary() {
   const allEntities = [...(goals.data ?? []), ...(projects.data ?? []), ...(tickets.data ?? [])];
   const allTodos = todoQueries.flatMap((q) => q.data ?? []);
 
+  const todayTodos = allTodos.filter((t) => !t.done && t.dueDate === now);
+  const overdueTodos = allTodos.filter((t) => isTodoOverdue(t, now));
+  const overdueEntities = allEntities.filter((e) => isOverdue(e, now));
+  const reviewNeededEntities = allEntities.filter((e) => isReviewNeeded(e, now));
+  const blockedEntities = allEntities.filter((e) => isBlocked(e));
+
   return {
     isLoading,
     isError,
-    todayTodoCount: allTodos.filter((t) => !t.done && t.dueDate === now).length,
-    overdueTodoCount: allTodos.filter((t) => isTodoOverdue(t, now)).length,
-    overdueEntityCount: allEntities.filter((e) => isOverdue(e, now)).length,
-    reviewNeededCount: allEntities.filter((e) => isReviewNeeded(e, now)).length,
-    blockedCount: allEntities.filter((e) => isBlocked(e)).length,
+    todayTodoCount: todayTodos.length,
+    todayTodos,
+    overdueTodoCount: overdueTodos.length,
+    overdueTodos,
+    overdueEntityCount: overdueEntities.length,
+    overdueEntities,
+    reviewNeededCount: reviewNeededEntities.length,
+    reviewNeededEntities,
+    blockedCount: blockedEntities.length,
+    blockedEntities,
     activeProjectCount: (projects.data ?? []).filter((p) => p.status === "active").length,
   };
 }

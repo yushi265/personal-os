@@ -1,0 +1,99 @@
+import * as React from "react";
+import { toast } from "sonner";
+import type { Todo } from "@domain/todo";
+import { stripMetadata } from "@domain/todo";
+import type { SourceTodoAction } from "@/api/types";
+import { useEntities } from "@/hooks/useEntities";
+import { usePromoteTodoMutation } from "@/hooks/useTodoMutations";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { t } from "@i18n/ja";
+
+const NONE = "__none__";
+
+interface PromoteTodoDialogProps {
+  todo: Todo | null;
+  onOpenChange: (open: boolean) => void;
+}
+
+// Todo→Ticket昇格の簡易ダイアログ(design §9 P4行、PromoteTodoModal.ts相当)。
+// フィールド: 新タイトル(prefill: stripMetadata)/所属Project/元Todoの扱い(delete/complete/link)。
+export function PromoteTodoDialog({ todo, onOpenChange }: PromoteTodoDialogProps) {
+  const { data: projects } = useEntities("project");
+  const promote = usePromoteTodoMutation();
+  const [newTitle, setNewTitle] = React.useState("");
+  const [projectPath, setProjectPath] = React.useState<string | undefined>(undefined);
+  const [sourceAction, setSourceAction] = React.useState<SourceTodoAction>("link");
+
+  React.useEffect(() => {
+    if (todo) {
+      setNewTitle(stripMetadata(todo.text));
+      setProjectPath(todo.parentType === "project" ? todo.parentPath : undefined);
+      setSourceAction("link");
+    }
+  }, [todo]);
+
+  const submit = () => {
+    if (!todo) return;
+    if (!newTitle.trim()) {
+      toast.error(t("modal.createEntity.titleRequired"));
+      return;
+    }
+    promote.mutate(
+      { todo, options: { newTitle: newTitle.trim(), projectPath, sourceAction } },
+      { onSuccess: () => onOpenChange(false) }
+    );
+  };
+
+  return (
+    <Dialog open={!!todo} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("modal.promoteTodo.title")}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <label className="text-sm text-muted-foreground">{t("modal.promoteTodo.newTitle")}</label>
+            <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} autoFocus />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm text-muted-foreground">{t("modal.promoteTodo.project")}</label>
+            <Select value={projectPath ?? NONE} onValueChange={(v) => setProjectPath(v === NONE ? undefined : v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>{t("manage.field.unset")}</SelectItem>
+                {(projects ?? []).map((p) => (
+                  <SelectItem key={p.path} value={p.path}>
+                    {p.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm text-muted-foreground">{t("modal.promoteTodo.sourceAction")}</label>
+            <Select value={sourceAction} onValueChange={(v) => setSourceAction(v as SourceTodoAction)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="delete">{t("modal.promoteTodo.sourceAction.delete")}</SelectItem>
+                <SelectItem value="complete">{t("modal.promoteTodo.sourceAction.complete")}</SelectItem>
+                <SelectItem value="link">{t("modal.promoteTodo.sourceAction.link")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={submit} disabled={promote.isPending}>
+            {t("modal.promoteTodo.submit")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

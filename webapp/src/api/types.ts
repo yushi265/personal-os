@@ -1,4 +1,4 @@
-import type { Entity } from "@domain/entity";
+import type { Entity, EntityType, Priority } from "@domain/entity";
 
 /**
  * サーバー(src/ui/manage/manageData.ts groupProjectsByGoal)が返す形状(design-browser-ui.md §5.1.1)。
@@ -13,4 +13,44 @@ export interface MetaResponse {
   vaultName: string;
   capability: { todoFeatures: boolean };
   port: number;
+}
+
+/**
+ * src/services/EntityFieldService.ts の型再掲(webappはsrc/services配下をimportできない — Obsidian API依存の
+ * infra層を経由してしまうため。domain層と同様にレスポンス/リクエスト形状としてここに複製する、design §5.2)。
+ */
+export type EntityFieldKey =
+  | "status"
+  | "priority"
+  | "due"
+  | "start"
+  | "reviewCycle"
+  | "goal"
+  | "project"
+  | "title"
+  | "tags"
+  | "labels"
+  | "blockers";
+
+export type EntityFieldValue = string | string[] | undefined;
+
+/** src/services/EntityService.ts CreateEntityInput の再掲 */
+export interface CreateEntityInput {
+  type: EntityType;
+  title: string;
+  goal?: string;
+  project?: string;
+  priority?: Priority;
+  due?: string;
+  templateName?: string;
+}
+
+/** src/services/PromoteService.ts SourceTodoAction / PromoteOptions の再掲 */
+export type SourceTodoAction = "delete" | "complete" | "link";
+
+export interface PromoteOptions {
+  newTitle: string;
+  projectPath?: string;
+  sourceAction: SourceTodoAction;
+  template?: string;
 }
