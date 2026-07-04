@@ -4,3 +4,6 @@ main.js
 .DS_Store
 dist/
 *.tsbuildinfo
+
+# local test vault (contains copied community plugins)
+test-vault/
