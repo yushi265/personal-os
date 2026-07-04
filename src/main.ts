@@ -11,8 +11,11 @@ import { DataviewAdapter } from "./infra/DataviewAdapter";
 import { TasksAdapter } from "./infra/TasksAdapter";
 import { EntityService } from "./services/EntityService";
 import { TodoService } from "./services/TodoService";
+import { ProgressService } from "./services/ProgressService";
 import { CreateEntityModal } from "./ui/modals/CreateEntityModal";
 import { QuickAddModal } from "./ui/modals/QuickAddModal";
+import { DashboardView, VIEW_TYPE_DASHBOARD } from "./ui/dashboard/DashboardView";
+import { PreviewView, VIEW_TYPE_PREVIEW } from "./ui/preview/PreviewView";
 import { t } from "./i18n/ja";
 
 interface Capability {
@@ -30,6 +33,7 @@ export default class PersonalOSPlugin extends Plugin {
 	tasksAdapter!: TasksAdapter;
 	entityService!: EntityService;
 	todoService!: TodoService;
+	progressService!: ProgressService;
 	capability: Capability = { todoFeatures: false };
 
 	async onload() {
@@ -41,16 +45,18 @@ export default class PersonalOSPlugin extends Plugin {
 		this.store = new IndexStore();
 		this.dataviewAdapter = new DataviewAdapter(this.app, this.store);
 		this.tasksAdapter = new TasksAdapter(this.app);
+		this.progressService = new ProgressService(this.repo, this.store);
 		this.indexer = new Indexer(
 			this.app,
 			this.repo,
 			this.store,
 			this.eventBus,
 			this.selfWriteGuard,
-			this.dataviewAdapter
+			this.dataviewAdapter,
+			this.progressService
 		);
-		// ActivityLogService/ProgressServiceはPhase 3/4で追加し、EntityServiceへ注入する。
-		this.entityService = new EntityService(this.repo, this.store, this.settings);
+		// ActivityLogServiceはPhase 4で追加し、EntityServiceへ注入する。
+		this.entityService = new EntityService(this.repo, this.store, this.settings, undefined, this.progressService);
 		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
 
 		this.registerViews();
@@ -63,6 +69,7 @@ export default class PersonalOSPlugin extends Plugin {
 			await this.waitDataviewReady();
 			await this.indexer.fullScan();
 			this.registerVaultEvents();
+			await this.ensurePreviewLeaf();
 		});
 	}
 
@@ -79,7 +86,9 @@ export default class PersonalOSPlugin extends Plugin {
 	}
 
 	private registerViews(): void {
-		// Dashboard/Kanban/Preview/Timeline Viewの登録場所(Phase 3〜5で追加)
+		this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this));
+		this.registerView(VIEW_TYPE_PREVIEW, (leaf) => new PreviewView(leaf, this));
+		// Kanban/Timeline Viewの登録場所(Phase 4〜5で追加)
 	}
 
 	private registerCommands(): void {
@@ -128,8 +137,22 @@ export default class PersonalOSPlugin extends Plugin {
 		}).open();
 	}
 
-	private openDashboard(): void {
-		new Notice(t("notice.dashboardPlaceholder"));
+	private async openDashboard(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_DASHBOARD);
+		if (existing.length > 0) {
+			this.app.workspace.revealLeaf(existing[0]);
+			return;
+		}
+		const leaf = this.app.workspace.getLeaf(true);
+		await leaf.setViewState({ type: VIEW_TYPE_DASHBOARD, active: true });
+		this.app.workspace.revealLeaf(leaf);
+	}
+
+	private async ensurePreviewLeaf(): Promise<void> {
+		if (this.app.workspace.getLeavesOfType(VIEW_TYPE_PREVIEW).length > 0) return;
+		const leaf = this.app.workspace.getRightLeaf(false);
+		if (!leaf) return;
+		await leaf.setViewState({ type: VIEW_TYPE_PREVIEW, active: false });
 	}
 
 	private openQuickAddModal(): void {
