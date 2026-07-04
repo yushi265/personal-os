@@ -158,6 +158,13 @@ export default class PersonalOSPlugin extends Plugin {
 			const port = await this.httpServer.start(this.settings.server.port, this.authGuard, {
 				getVaultName: () => this.app.vault.getName(),
 				getCapability: () => this.capability,
+				getPort: () => this.httpServer.actualPort,
+				store: this.store,
+				entityService: this.entityService,
+				entityFieldService: this.entityFieldService,
+				todoService: this.todoService,
+				memoService: this.memoService,
+				promoteService: this.promoteService,
 			});
 			if (port === -1) return;
 			console.log(`Personal OS: browser UI server listening on http://127.0.0.1:${port}`);

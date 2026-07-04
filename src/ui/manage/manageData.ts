@@ -6,7 +6,16 @@ import { ENTITY_TYPES, type Entity, type EntityType, type Priority } from "../..
 import type { Todo } from "../../domain/todo";
 import type { IndexStore } from "../../infra/IndexStore";
 import { evaluate, parseQuery, type ParsedQuery, type Period } from "../../domain/query";
-import type PersonalOSPlugin from "../../main";
+
+/**
+ * buildManageRows/groupProjectsByGoal等が実際に参照するのは`store`のみ(Obsidian API非依存)。
+ * PersonalOSPlugin本体を型注釈に使うとテスト・サーバー側(ApiRouter、design-browser-ui.md §8)で
+ * フルインスタンスの用意が必要になるため、必要最小限のこのインターフェースを受け取る形にする。
+ * 実際のプラグインインスタンスは構造的にこれを満たすため、既存呼び出し箇所は無変更で動く。
+ */
+export interface ManageDataPlugin {
+	store: IndexStore;
+}
 
 export type ManageTab = "project" | "ticket";
 
@@ -148,14 +157,14 @@ export function sortEntityRows(entities: Entity[], sort: ManageSort): Entity[] {
 }
 
 /** entityのgoal/project(tabに応じてどちらか一方)のtitleを解決する */
-function resolveEntityParentTitle(plugin: PersonalOSPlugin, tab: ManageTab, entity: Entity): string | undefined {
+function resolveEntityParentTitle(plugin: ManageDataPlugin, tab: ManageTab, entity: Entity): string | undefined {
 	const parentPath = tab === "project" ? entity.goal : entity.project;
 	if (!parentPath) return undefined;
 	return plugin.store.get(parentPath)?.title ?? parentPath;
 }
 
 /** タブ・フィルタ・ソートに応じた表示行を構築する(index-updated契機の再描画から呼ばれる想定) */
-export function buildManageRows(plugin: PersonalOSPlugin, tab: ManageTab, filter: ManageFilter, sort: ManageSort): ManageRowData[] {
+export function buildManageRows(plugin: ManageDataPlugin, tab: ManageTab, filter: ManageFilter, sort: ManageSort): ManageRowData[] {
 	const type: EntityType = tab;
 	let entities = plugin.store.listByType(type);
 	if (!filter.showArchived) entities = entities.filter((e) => e.status !== "archived");
@@ -175,7 +184,7 @@ export interface GoalGroup {
 
 const GOAL_STATUS_RANK: Record<string, number> = { active: 0, paused: 1, done: 2, archived: 3 };
 
-function goalKeyOf(plugin: PersonalOSPlugin, project: Entity): string | null {
+function goalKeyOf(plugin: ManageDataPlugin, project: Entity): string | null {
 	return project.goal && plugin.store.get(project.goal) ? project.goal : null;
 }
 
@@ -186,7 +195,7 @@ function goalKeyOf(plugin: PersonalOSPlugin, project: Entity): string | null {
  * Goalセクション自体の有無は「archived除外」(構造的な絞り込み)のみで決め、キーワード/status/priority/tags/period
  * といった内容フィルタで0件になっても、そのGoalセクションは`projects: []`のまま残す(§3.6・§8.3 G-5)。
  */
-export function groupProjectsByGoal(plugin: PersonalOSPlugin, filter: ManageFilter, sort: ManageSort): GoalGroup[] {
+export function groupProjectsByGoal(plugin: ManageDataPlugin, filter: ManageFilter, sort: ManageSort): GoalGroup[] {
 	let allProjects = plugin.store.listByType("project");
 	if (!filter.showArchived) allProjects = allProjects.filter((e) => e.status !== "archived");
 
@@ -218,7 +227,7 @@ export function groupProjectsByGoal(plugin: PersonalOSPlugin, filter: ManageFilt
  * 全チケットを走査してから絞るのではなく、getChildren(projectPath)を起点にそのプロジェクトの子のみを対象にする。
  */
 export function buildProjectTicketRows(
-	plugin: PersonalOSPlugin,
+	plugin: ManageDataPlugin,
 	projectPath: string,
 	filter: ManageFilter,
 	sort: ManageSort

@@ -44,14 +44,15 @@
 	}
 
 	// ---- 書き込み経路(design-ui-first.md §4.5): TodoService.updateInline/toggle/remove ----
-	function commitTodoText(todo: Todo, next: string): Promise<void> {
-		return plugin.todoService.updateInline(todo, { text: next });
+	// 戻り値(TodoWriteResult)はブラウザUIサーバー(ApiRouter)のline-mismatch判定用。UI側は従来通り結果を見ない。
+	async function commitTodoText(todo: Todo, next: string): Promise<void> {
+		await plugin.todoService.updateInline(todo, { text: next });
 	}
-	function commitTodoDue(todo: Todo, next: string | undefined): Promise<void> {
-		return plugin.todoService.updateInline(todo, { dueDate: next ?? null });
+	async function commitTodoDue(todo: Todo, next: string | undefined): Promise<void> {
+		await plugin.todoService.updateInline(todo, { dueDate: next ?? null });
 	}
-	function commitTodoPriority(todo: Todo, next: string): Promise<void> {
-		return plugin.todoService.updateInline(todo, { priority: (next || null) as Priority | null });
+	async function commitTodoPriority(todo: Todo, next: string): Promise<void> {
+		await plugin.todoService.updateInline(todo, { priority: (next || null) as Priority | null });
 	}
 
 	function toggleTodo(todo: Todo): void {

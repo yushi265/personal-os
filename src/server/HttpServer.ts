@@ -1,13 +1,13 @@
 import { Platform } from "obsidian";
 import type { AuthGuard } from "./AuthGuard";
-import type { ApiRequestInfo } from "./types";
+import { ApiRouter } from "./ApiRouter";
+import type { ApiDeps, ApiRequestInfo } from "./types";
 
 export const MAX_PORT_RETRIES = 20;
+/** JSONボディの上限(design-browser-ui.md §5 実装時の追加判断: 想定外の巨大bodyでメモリを食い潰さないための防御) */
+export const MAX_BODY_BYTES = 1024 * 1024;
 
-export interface ApiDeps {
-	getVaultName: () => string;
-	getCapability: () => { todoFeatures: boolean };
-}
+export type { ApiDeps };
 
 function isEaddrinuse(err: unknown): boolean {
 	return typeof err === "object" && err !== null && (err as { code?: string }).code === "EADDRINUSE";
@@ -98,12 +98,12 @@ export class HttpServer {
 		await new Promise<void>((resolve) => server.close(() => resolve()));
 	}
 
-	private handleRequest(
+	private async handleRequest(
 		req: import("http").IncomingMessage,
 		res: import("http").ServerResponse,
 		authGuard: AuthGuard,
 		deps: ApiDeps
-	): void {
+	): Promise<void> {
 		const url = new URL(req.url ?? "/", `http://127.0.0.1:${this.port}`);
 		const query: Record<string, string> = {};
 		url.searchParams.forEach((value, key) => (query[key] = value));
@@ -124,23 +124,73 @@ export class HttpServer {
 			return;
 		}
 
-		this.route(req.method ?? "GET", url.pathname, deps, res);
+		let body: unknown;
+		try {
+			body = await this.readJsonBody(req);
+		} catch (e) {
+			this.writeJson(res, 400, { error: e instanceof Error ? e.message : String(e) });
+			return;
+		}
+
+		await this.route(req.method ?? "GET", url.pathname, query, body, deps, res);
+	}
+
+	/** ApiRouter.handle() への委譲(design-browser-ui.md §9 P2: P1の骨組みをここで差し替え) */
+	private async route(
+		method: string,
+		pathname: string,
+		query: Record<string, string>,
+		body: unknown,
+		deps: ApiDeps,
+		res: import("http").ServerResponse
+	): Promise<void> {
+		const result = await ApiRouter.handle(method, pathname, query, body, deps);
+		this.writeJson(res, result.status, result.body);
 	}
 
 	/**
-	 * P1時点のルーティング骨組み。P2で ApiRouter.ts に差し替える想定の差し込みポイント
-	 * (design-browser-ui.md §9 P2行): このメソッドの中身を ApiRouter へ委譲するだけの薄い呼び出しに置き換える。
+	 * GET/HEAD以外はJSONボディを読む。Content-Typeが指定されていてapplication/json以外ならエラー、
+	 * サイズ上限(MAX_BODY_BYTES)超過はソケットを破棄してエラーにする(design-browser-ui.md §5実装判断)。
+	 * ボディが空の場合はundefinedを返す(DELETE等でボディなしの呼び出しを許容するため)。
 	 */
-	private route(method: string, pathname: string, deps: ApiDeps, res: import("http").ServerResponse): void {
-		if (method === "GET" && pathname === "/api/meta") {
-			this.writeJson(res, 200, {
-				vaultName: deps.getVaultName(),
-				capability: deps.getCapability(),
-				port: this.port,
+	private readJsonBody(req: import("http").IncomingMessage): Promise<unknown> {
+		return new Promise((resolve, reject) => {
+			const method = req.method ?? "GET";
+			if (method === "GET" || method === "HEAD") {
+				resolve(undefined);
+				return;
+			}
+
+			const contentType = req.headers["content-type"];
+			const chunks: Buffer[] = [];
+			let size = 0;
+
+			req.on("data", (chunk: Buffer) => {
+				size += chunk.length;
+				if (size > MAX_BODY_BYTES) {
+					req.destroy();
+					reject(new Error("request body too large"));
+					return;
+				}
+				chunks.push(chunk);
 			});
-			return;
-		}
-		this.writeJson(res, 404, { error: "not found", code: "E102" });
+			req.on("end", () => {
+				if (chunks.length === 0) {
+					resolve(undefined);
+					return;
+				}
+				if (contentType && !contentType.includes("application/json")) {
+					reject(new Error("unsupported content type"));
+					return;
+				}
+				try {
+					resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+				} catch {
+					reject(new Error("invalid JSON body"));
+				}
+			});
+			req.on("error", reject);
+		});
 	}
 
 	private writeJson(res: import("http").ServerResponse, status: number, body: unknown): void {

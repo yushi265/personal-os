@@ -17,6 +17,8 @@ export interface QuickAddInput {
 	priority?: Priority;
 }
 
+export type TodoWriteResult = "ok" | "conflict";
+
 export interface TodoFilter {
 	done?: boolean;
 	parentPath?: string;
@@ -45,19 +47,19 @@ export class TodoService {
 		await this.repo.processBody(input.target, (body) => `${body.replace(/\n+$/, "")}\n${line}\n`);
 	}
 
-	/** 完了トグル */
-	async toggle(todo: Todo): Promise<void> {
+	/** 完了トグル。戻り値はline-mismatch(行内容の不一致)検知用(design-browser-ui.md §5.4のTodo 409判定にも利用) */
+	async toggle(todo: Todo): Promise<TodoWriteResult> {
 		const expected = rebuildTodoLine(todo);
 		const next = toggleTodoLine(expected, today());
 		const result = await this.repo.editLine(todo.filePath, todo.line, expected, next);
-		await this.handleMismatch(result, todo.filePath);
+		return this.handleMismatch(result, todo.filePath);
 	}
 
 	/** 削除 */
-	async remove(todo: Todo): Promise<void> {
+	async remove(todo: Todo): Promise<TodoWriteResult> {
 		const expected = rebuildTodoLine(todo);
 		const result = await this.repo.editLine(todo.filePath, todo.line, expected, null);
-		await this.handleMismatch(result, todo.filePath);
+		return this.handleMismatch(result, todo.filePath);
 	}
 
 	/** Preview「その場でTodo追加」: 指定ノートの "## Todo" セクション末尾へ追記する(design-ui-first.md §4.4) */
@@ -75,11 +77,11 @@ export class TodoService {
 	}
 
 	/** インライン編集(text/due/priority): ManageView/Previewの両方から共通利用(design-ui-first.md §4.5) */
-	async updateInline(todo: Todo, patch: TodoPatch): Promise<void> {
+	async updateInline(todo: Todo, patch: TodoPatch): Promise<TodoWriteResult> {
 		const expected = rebuildTodoLine(todo);
 		const next = updateTodoLine(todo, patch);
 		const result = await this.repo.editLine(todo.filePath, todo.line, expected, next);
-		await this.handleMismatch(result, todo.filePath);
+		return this.handleMismatch(result, todo.filePath);
 	}
 
 	/** フィルタ済み一覧(Dashboard/Todo管理画面用) */
@@ -94,11 +96,12 @@ export class TodoService {
 		});
 	}
 
-	private async handleMismatch(result: EditLineResult, path: string): Promise<void> {
-		if (result !== "line-mismatch") return;
+	private async handleMismatch(result: EditLineResult, path: string): Promise<TodoWriteResult> {
+		if (result !== "line-mismatch") return "ok";
 		new Notice(t("E003"));
 		const file = this.repo.getFile(path);
 		if (file) await this.indexer.reindexFile(file);
+		return "conflict";
 	}
 
 	private inboxPath(): string {
