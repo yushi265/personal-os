@@ -4,11 +4,16 @@
   "description": "A life/work/learning management system built entirely on Markdown for Obsidian.",
   "main": "main.js",
   "type": "module",
+  "workspaces": [
+    "webapp"
+  ],
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc --noEmit && node esbuild.config.mjs production",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json"
+    "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json --config ./svelte.config.js",
+    "webapp:dev": "npm run dev --workspace webapp",
+    "webapp:build": "npm run build --workspace webapp"
   },
   "keywords": [],
   "author": "",

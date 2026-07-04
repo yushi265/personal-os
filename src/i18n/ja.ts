@@ -163,6 +163,23 @@ const MESSAGES = {
 	"settings.server.notifyOnStart": "起動時にURLを通知する",
 	"settings.server.notRunningNotice": "サーバーが起動していません。",
 
+	// design-browser-ui.md §6.5: webapp(webapp/src/)から直接importする新規文言。ここに追記して一元管理する。
+	"webapp.unauthorized.title": "トークンが無効です",
+	"webapp.unauthorized.body": "設定画面から再度開いてください。",
+	"webapp.home.title": "ホーム",
+	"webapp.home.todayTodo": "今日のTodo",
+	"webapp.home.overdue": "Overdue",
+	"webapp.home.reviewNeeded": "Review Needed",
+	"webapp.home.blocked": "Blocked",
+	"webapp.home.activeProjects": "Active Projects",
+	"webapp.projects.title": "プロジェクト一覧",
+	"webapp.projects.unclassified": "未分類",
+	"webapp.projects.filterKeyword": "キーワードで絞り込み",
+	"webapp.projects.filterStatus": "Status",
+	"webapp.loading": "読み込み中...",
+	"webapp.loadError": "読み込みに失敗しました。",
+	"webapp.placeholder.comingSoon": "この画面はP4で実装予定です。",
+
 	"settings.section.capability": "依存プラグイン",
 	"settings.capability.dataview": "Dataview",
 	"settings.capability.tasks": "Tasks",

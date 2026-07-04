@@ -1,0 +1,140 @@
+import * as React from "react";
+import { useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
+import { PROJECT_STATUSES, type Entity } from "@domain/entity";
+import { today } from "@domain/date";
+import { useProjectsGroupedByGoal } from "@/hooks/useEntities";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/StatusBadge";
+import { PriorityBadge } from "@/components/PriorityBadge";
+import { DueLabel } from "@/components/DueLabel";
+import { ProgressBar } from "@/components/ProgressBar";
+import { t } from "@i18n/ja";
+
+function matchesFilter(project: Entity, keyword: string, statuses: Set<string>): boolean {
+  if (statuses.size > 0 && !statuses.has(project.status)) return false;
+  if (!keyword.trim()) return true;
+  return project.title.toLowerCase().includes(keyword.trim().toLowerCase());
+}
+
+// プロジェクト一覧(design-browser-ui.md §6.2・§6.4)。Goalグルーピング+Collapsible+Table。
+// フィルタは簡易(キーワード+statusチップ、design §9 P3行の指定通り)。
+export function Projects() {
+  const { data: groups, isLoading, isError } = useProjectsGroupedByGoal();
+  const navigate = useNavigate();
+  const [keyword, setKeyword] = React.useState("");
+  const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
+  const [collapsed, setCollapsed] = React.useState<Set<string>>(new Set());
+  const now = today();
+
+  if (isLoading) return <p className="text-muted-foreground">{t("webapp.loading")}</p>;
+  if (isError) return <p className="text-destructive">{t("webapp.loadError")}</p>;
+
+  const toggleStatus = (status: string) => {
+    setStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  };
+
+  const toggleCollapsed = (key: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">{t("webapp.projects.title")}</h1>
+
+      <div className="flex items-center gap-2">
+        <input
+          className="h-9 w-64 rounded-md border border-input bg-background px-3 text-sm"
+          placeholder={t("webapp.projects.filterKeyword")}
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm">
+              {t("webapp.projects.filterStatus")}
+              {statuses.size > 0 ? ` (${statuses.size})` : ""}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56">
+            <div className="space-y-2">
+              {PROJECT_STATUSES.map((status) => (
+                <label key={status} className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={statuses.has(status)} onCheckedChange={() => toggleStatus(status)} />
+                  {status}
+                </label>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {(groups ?? []).map((group) => {
+        const key = group.goal?.path ?? "__unclassified__";
+        const isOpen = !collapsed.has(key);
+        const visibleProjects = group.projects.filter((p) => matchesFilter(p, keyword, statuses));
+        if (keyword.trim() || statuses.size > 0) {
+          if (visibleProjects.length === 0) return null;
+        }
+
+        return (
+          <Collapsible key={key} open={isOpen} onOpenChange={() => toggleCollapsed(key)}>
+            <CollapsibleTrigger asChild>
+              <button className="flex w-full items-center gap-2 rounded-md py-2 text-left font-medium hover:bg-accent">
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
+                {group.goal?.title ?? t("webapp.projects.unclassified")}
+                <span className="text-sm font-normal text-muted-foreground">({visibleProjects.length})</span>
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Due</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleProjects.map((project) => (
+                    <TableRow key={project.path} className="cursor-pointer" onClick={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}>
+                      <TableCell className="font-medium">{project.title}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={project.status} />
+                      </TableCell>
+                      <TableCell>
+                        <PriorityBadge priority={project.priority} />
+                      </TableCell>
+                      <TableCell>
+                        <ProgressBar value={project.progress} />
+                      </TableCell>
+                      <TableCell>
+                        <DueLabel due={project.due} today={now} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CollapsibleContent>
+          </Collapsible>
+        );
+      })}
+    </div>
+  );
+}
