@@ -14,6 +14,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^26.1.0",
     "builtin-modules": "^4.0.0",
     "esbuild": "^0.24.2",
     "esbuild-svelte": "^0.9.5",

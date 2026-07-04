@@ -34,7 +34,10 @@ import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
 import { ManageView, VIEW_TYPE_MANAGE } from "./ui/manage/ManageView";
 import { makeProjectDetailScreen, makeTicketDetailScreen, type ManageScreen } from "./ui/manage/manageNav";
 import { EntitySwitcherModal } from "./ui/modals/EntitySwitcherModal";
-import { statusBarTodoTitle, t } from "./i18n/ja";
+import { statusBarTodoTitle, serverStartedNotice, serverStartFailedNotice, t } from "./i18n/ja";
+import { TokenStore } from "./server/TokenStore";
+import { AuthGuard } from "./server/AuthGuard";
+import { HttpServer } from "./server/HttpServer";
 
 const STATUSBAR_REFRESH_DEBOUNCE_MS = 100;
 
@@ -62,6 +65,9 @@ export default class PersonalOSPlugin extends Plugin {
 	savedViewService!: SavedViewService;
 	reviewService!: ReviewService;
 	exportService!: ExportService;
+	tokenStore!: TokenStore;
+	authGuard!: AuthGuard;
+	httpServer!: HttpServer;
 	capability: Capability = { todoFeatures: false };
 	private capabilityDetected = false;
 	private statusBarEl: HTMLElement | undefined;
@@ -102,6 +108,12 @@ export default class PersonalOSPlugin extends Plugin {
 		this.savedViewService = new SavedViewService(this.settings, () => this.saveSettings());
 		this.reviewService = new ReviewService(this.repo, this.store, this.activityLogService);
 		this.exportService = new ExportService(this.store);
+		this.tokenStore = new TokenStore(this.settings, () => this.saveSettings());
+		this.authGuard = new AuthGuard(
+			() => this.tokenStore.get(),
+			() => this.httpServer.actualPort
+		);
+		this.httpServer = new HttpServer();
 
 		this.registerViews();
 		this.registerCommands();
@@ -115,12 +127,47 @@ export default class PersonalOSPlugin extends Plugin {
 			this.registerVaultEvents();
 			await this.ensurePreviewLeaf();
 			if (!Platform.isMobile) this.setupStatusBar();
+			this.registerEvent(this.eventBus.onEvent("settings-updated", () => void this.syncServerState()));
+			await this.syncServerState();
 		});
 	}
 
 	onunload() {
 		// Viewはdetachせず放置(Obsidian推奨)。イベントはregisterEventで自動解除される。
 		if (this.statusBarDebounceTimer !== undefined) window.clearTimeout(this.statusBarDebounceTimer);
+		void this.httpServer?.stop();
+	}
+
+	/**
+	 * ブラウザUIサーバーの状態を settings.server.enabled に合わせる(design-browser-ui.md §4.3)。
+	 * 初回起動時に加え、設定画面での変更(settings-updated)のたびに呼ばれる。既に希望ポートで起動中なら
+	 * 何もしない(無関係な設定変更のたびに再起動して既存接続を切らないため)。
+	 */
+	private async syncServerState(): Promise<void> {
+		if (!Platform.isDesktopApp) return;
+
+		if (!this.settings.server.enabled) {
+			if (this.httpServer.isRunning) await this.httpServer.stop();
+			return;
+		}
+
+		if (this.httpServer.isRunning && this.httpServer.actualPort === this.settings.server.port) return;
+
+		await this.tokenStore.ensureToken();
+		try {
+			const port = await this.httpServer.start(this.settings.server.port, this.authGuard, {
+				getVaultName: () => this.app.vault.getName(),
+				getCapability: () => this.capability,
+			});
+			if (port === -1) return;
+			console.log(`Personal OS: browser UI server listening on http://127.0.0.1:${port}`);
+			if (this.settings.server.notifyOnStart) {
+				new Notice(serverStartedNotice(`http://127.0.0.1:${port}/?token=${this.tokenStore.get()}`));
+			}
+		} catch (err) {
+			console.error("Personal OS: failed to start browser UI server", err);
+			new Notice(serverStartFailedNotice(err instanceof Error ? err.message : String(err)));
+		}
 	}
 
 	async loadSettings(): Promise<void> {

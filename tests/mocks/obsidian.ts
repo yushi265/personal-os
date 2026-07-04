@@ -36,4 +36,5 @@ export class Events {
 
 export const Platform = {
 	isMobile: false,
+	isDesktopApp: true,
 };

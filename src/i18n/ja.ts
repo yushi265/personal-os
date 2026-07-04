@@ -11,6 +11,8 @@ const MESSAGES = {
 	E005: "アーカイブフォルダへの移動に失敗しました(status変更は完了)。",
 	E006: "コピーに失敗しました。",
 	E007: "メモの内容が変更されています。一覧を最新の状態に更新しました。",
+	E101: "トークンが無効です。",
+	E104: "許可されていないOriginからのアクセスです。",
 
 	"ribbon.openDashboard": "Open Personal OS Dashboard",
 
@@ -142,6 +144,22 @@ const MESSAGES = {
 
 	"settings.section.kanban": "Kanban",
 	"settings.kanban.note": "列名の表示ラベルのみ変更できます(status値は固定です)。",
+
+	"settings.section.server": "ブラウザUI",
+	"settings.server.enabled": "ブラウザUIを有効にする",
+	"settings.server.enabledDesc": "ローカルHTTPサーバーを起動し、ブラウザから操作できるようにします(127.0.0.1限定)。",
+	"settings.server.port": "ポート",
+	"settings.server.portDesc": "使用中の場合は自動的に次のポートへ繰り上がります。",
+	"settings.server.actualPortRunning": "起動中: ",
+	"settings.server.actualPortStopped": "停止中",
+	"settings.server.openInBrowser": "ブラウザで開く",
+	"settings.server.openInBrowserDesc": "トークン付きURLをデフォルトブラウザで開きます。",
+	"settings.server.regenerateToken": "トークンを再生成",
+	"settings.server.regenerateTokenDesc": "既存の接続は次回のリクエストから無効になります。",
+	"settings.server.regenerateConfirm": "トークンを再生成しますか?既存の接続は次回のリクエストから無効になります。",
+	"settings.server.regenerateDone": "トークンを再生成しました。",
+	"settings.server.notifyOnStart": "起動時にURLを通知する",
+	"settings.server.notRunningNotice": "サーバーが起動していません。",
 
 	"settings.section.capability": "依存プラグイン",
 	"settings.capability.dataview": "Dataview",
@@ -395,6 +413,16 @@ export function parseErrorInvalidStatus(status: string): string {
 /** ステータスバー項目のtitle属性(今日以前の未完了Todo件数、Phase U3。値埋め込みのためt()とは別関数とする) */
 export function statusBarTodoTitle(count: number): string {
 	return `今日のTodo ${count}件`;
+}
+
+/** ブラウザUIサーバー起動成功時のNotice文言(URL埋め込みのためt()とは別関数とする。design-browser-ui.md §4.3) */
+export function serverStartedNotice(url: string): string {
+	return `Personal OS: ブラウザUIを起動しました\n${url}`;
+}
+
+/** ブラウザUIサーバー起動失敗時のNotice文言 */
+export function serverStartFailedNotice(reason: string): string {
+	return `Personal OS: ブラウザUIサーバーの起動に失敗しました(${reason})`;
 }
 
 /** 解析エラーノートを開いた場合のPreview表示メッセージ(design-ui-first.md §4.7) */

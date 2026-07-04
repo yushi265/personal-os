@@ -51,6 +51,12 @@ export interface POSSettings {
 	};
 	language: "ja";
 	savedViews: SavedView[];
+	server: {
+		enabled: boolean;
+		port: number;
+		token: string;
+		notifyOnStart: boolean;
+	};
 }
 
 export const DEFAULT_SETTINGS: POSSettings = {
@@ -103,4 +109,10 @@ export const DEFAULT_SETTINGS: POSSettings = {
 	},
 	language: "ja",
 	savedViews: [],
+	server: {
+		enabled: false,
+		port: 27141,
+		token: "",
+		notifyOnStart: true,
+	},
 };

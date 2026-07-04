@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, type App } from "obsidian";
+import { Notice, Platform, PluginSettingTab, Setting, type App } from "obsidian";
 import type PersonalOSPlugin from "../main";
 import type { POSSettings } from "./settings";
 import { t } from "../i18n/ja";
@@ -24,6 +24,7 @@ export class POSSettingsTab extends PluginSettingTab {
 		this.renderDefaultsSection(containerEl);
 		this.renderKanbanSection(containerEl);
 		this.renderCapabilitySection(containerEl);
+		if (Platform.isDesktopApp) this.renderServerSection(containerEl);
 	}
 
 	private async save(): Promise<void> {
@@ -167,5 +168,69 @@ export class POSSettingsTab extends PluginSettingTab {
 				})
 			);
 		}
+	}
+
+	/** ブラウザUIサーバー設定(design-browser-ui.md §4.5)。Platform.isDesktopAppがfalseの場合はdisplay()側でこのメソッド自体を呼ばない。 */
+	private renderServerSection(containerEl: HTMLElement): void {
+		new Setting(containerEl).setName(t("settings.section.server")).setHeading();
+
+		new Setting(containerEl)
+			.setName(t("settings.server.enabled"))
+			.setDesc(t("settings.server.enabledDesc"))
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.server.enabled).onChange(async (value) => {
+					this.plugin.settings.server.enabled = value;
+					await this.save();
+					this.display();
+				})
+			);
+
+		const actualPortText = this.plugin.httpServer.isRunning
+			? `${t("settings.server.actualPortRunning")}${this.plugin.httpServer.actualPort}`
+			: t("settings.server.actualPortStopped");
+		new Setting(containerEl)
+			.setName(t("settings.server.port"))
+			.setDesc(`${t("settings.server.portDesc")} (${actualPortText})`)
+			.addText((text) =>
+				text.setValue(String(this.plugin.settings.server.port)).onChange(async (value) => {
+					const n = Number(value);
+					if (Number.isInteger(n) && n > 0) {
+						this.plugin.settings.server.port = n;
+						await this.save();
+					}
+				})
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.server.openInBrowser"))
+			.setDesc(t("settings.server.openInBrowserDesc"))
+			.addButton((btn) =>
+				btn.setButtonText(t("settings.server.openInBrowser")).onClick(() => {
+					if (!this.plugin.httpServer.isRunning) {
+						new Notice(t("settings.server.notRunningNotice"));
+						return;
+					}
+					const url = `http://127.0.0.1:${this.plugin.httpServer.actualPort}/?token=${this.plugin.tokenStore.get()}`;
+					window.open(url);
+				})
+			);
+
+		new Setting(containerEl)
+			.setName(t("settings.server.regenerateToken"))
+			.setDesc(t("settings.server.regenerateTokenDesc"))
+			.addButton((btn) =>
+				btn.setButtonText(t("settings.server.regenerateToken")).onClick(async () => {
+					if (!window.confirm(t("settings.server.regenerateConfirm"))) return;
+					await this.plugin.tokenStore.regenerate();
+					new Notice(t("settings.server.regenerateDone"));
+				})
+			);
+
+		new Setting(containerEl).setName(t("settings.server.notifyOnStart")).addToggle((toggle) =>
+			toggle.setValue(this.plugin.settings.server.notifyOnStart).onChange(async (value) => {
+				this.plugin.settings.server.notifyOnStart = value;
+				await this.save();
+			})
+		);
 	}
 }
