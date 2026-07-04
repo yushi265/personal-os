@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Writable } from "svelte/store";
 	import type PersonalOSPlugin from "../../main";
-	import { manageDeleteConfirmMessage, previewParseErrorMessage, t } from "../../i18n/ja";
+	import { archivedUndoNotice, deletedUndoNotice, previewParseErrorMessage, t } from "../../i18n/ja";
 	import type { PreviewData } from "./previewData";
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, REVIEW_CYCLES, validStatusesOf } from "../../domain/entity";
@@ -9,7 +9,7 @@
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
 	import { PromoteTicketModal } from "../modals/PromoteModal";
 	import { ReviewModal } from "../modals/ReviewModal";
-	import { ConfirmModal } from "../modals/ConfirmModal";
+	import { showUndoNotice } from "../undoNotice";
 	import StatusCell from "../components/StatusCell.svelte";
 	import PriorityCell from "../components/PriorityCell.svelte";
 	import DateCell from "../components/DateCell.svelte";
@@ -99,8 +99,13 @@
 	}
 
 	// ---- 操作行(design-ui-first.md §4.2) ----
-	function archiveEntity(entity: Entity): void {
-		void plugin.entityService.archive(entity.path);
+	async function archiveEntity(entity: Entity): Promise<void> {
+		const originalPath = entity.path;
+		const originalStatus = entity.status;
+		const newPath = await plugin.entityService.archive(originalPath);
+		showUndoNotice(archivedUndoNotice(entity.title), () =>
+			plugin.entityService.restoreFromArchive(newPath, originalPath, originalStatus)
+		);
 	}
 
 	function promoteEntity(entity: Entity): void {
@@ -111,11 +116,12 @@
 		}).open();
 	}
 
-	function deleteEntity(entity: Entity): void {
-		new ConfirmModal(plugin.app, {
-			message: manageDeleteConfirmMessage(entity.title),
-			onConfirm: () => plugin.entityService.delete(entity.path),
-		}).open();
+	async function deleteEntity(entity: Entity): Promise<void> {
+		const savedContent = await plugin.repo.readBody(entity.path);
+		await plugin.entityService.delete(entity.path);
+		showUndoNotice(deletedUndoNotice(entity.title), async () => {
+			await plugin.repo.restoreFile(entity.path, savedContent);
+		});
 	}
 
 	function openReview(entity: Entity): void {
@@ -194,7 +200,7 @@
 				{/if}
 
 				<dt>{t("preview.field.due")}</dt>
-				<dd><DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} /></dd>
+				<dd><DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} relative /></dd>
 
 				<dt>{t("preview.field.start")}</dt>
 				<dd><DateCell value={entity.start} onCommit={(next) => commitStart(entity, next)} /></dd>

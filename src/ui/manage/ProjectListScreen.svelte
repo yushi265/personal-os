@@ -6,7 +6,14 @@
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
 	import ManageFilterBar from "./ManageFilterBar.svelte";
 	import ManageTable from "./ManageTable.svelte";
-	import { groupProjectsByGoal, type ManageFilter, type ManageRowData, type ManageSort, type ManageSortKey } from "./manageData";
+	import {
+		goalGroupProgress,
+		groupProjectsByGoal,
+		type ManageFilter,
+		type ManageRowData,
+		type ManageSort,
+		type ManageSortKey,
+	} from "./manageData";
 
 	let {
 		plugin,
@@ -87,12 +94,21 @@
 	{#each groups as group (groupKey(group.goal))}
 		{@const key = groupKey(group.goal)}
 		{@const collapsed = collapsedGoals.has(key)}
+		{@const groupProgress = goalGroupProgress(group.projects)}
 		<section class="pos-manage-goal-section">
 			<button class="pos-manage-goal-header" onclick={() => onToggleGoal(key)}>
 				<span class="pos-manage-goal-toggle" class:pos-manage-goal-toggle-open={!collapsed}>▶</span>
 				<span class="pos-manage-goal-title">{group.goal?.title ?? t("manage.nav.unclassified")}</span>
 				{#if group.goal}<span class="pos-manage-goal-status">{group.goal.status}</span>{/if}
 				<span class="pos-manage-goal-count">{group.projects.length}{t("manage.nav.itemsSuffix")}</span>
+				{#if groupProgress !== null}
+					<span class="pos-progress-cell pos-manage-goal-progress">
+						<span class="pos-progress-bar" aria-label="{groupProgress}%">
+							<span class="pos-progress-bar-fill" style="width: {groupProgress}%"></span>
+						</span>
+						<span class="pos-progress-label">{groupProgress}%</span>
+					</span>
+				{/if}
 			</button>
 			{#if !collapsed}
 				<ManageTable

@@ -11,10 +11,14 @@ import {
 	collectProjectTodos,
 	DEFAULT_ENTITY_SORT,
 	EMPTY_MANAGE_FILTER,
+	entityProgressFraction,
 	filterToQueryString,
+	goalGroupProgress,
 	groupProjectsByGoal,
+	projectTodoFraction,
 	queryStringToFilter,
 	sortEntityRows,
+	ticketTodoFraction,
 	type ManageFilter,
 } from "../../src/ui/manage/manageData";
 
@@ -382,5 +386,76 @@ describe("collectProjectTodos (design-drilldown-nav.md §8.4)", () => {
 		const todos = collectProjectTodos(store, "p1.md", "all");
 
 		expect(todos.map((t) => t.text)).toEqual(["direct"]);
+	});
+});
+
+describe("ticketTodoFraction", () => {
+	it("F-1: returns done/total from the ticket's own todos", () => {
+		const store = new IndexStore();
+		store.setTodos("t1.md", [makeTodo({ done: true }), makeTodo({ done: false }), makeTodo({ done: false })]);
+
+		expect(ticketTodoFraction(store, "t1.md")).toEqual({ done: 1, total: 3 });
+	});
+
+	it("F-2: returns 0/0 when the ticket has no todos", () => {
+		const store = new IndexStore();
+		expect(ticketTodoFraction(store, "t1.md")).toEqual({ done: 0, total: 0 });
+	});
+});
+
+describe("projectTodoFraction", () => {
+	it("F-3: aggregates direct todos and non-archived child tickets' todos", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", type: "ticket", title: "t1", project: "p1.md", status: "doing" }));
+		store.upsertEntity(makeEntity({ path: "t2.md", type: "ticket", title: "t2", project: "p1.md", status: "archived" }));
+		store.setTodos("p1.md", [makeTodo({ done: true })]);
+		store.setTodos("t1.md", [makeTodo({ done: false }), makeTodo({ done: true })]);
+		store.setTodos("t2.md", [makeTodo({ done: false })]); // archived子は除外される
+
+		expect(projectTodoFraction(store, "p1.md")).toEqual({ done: 2, total: 3 });
+	});
+
+	it("F-4: returns 0/0 when there are no direct todos and no child tickets", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+
+		expect(projectTodoFraction(store, "p1.md")).toEqual({ done: 0, total: 0 });
+	});
+});
+
+describe("entityProgressFraction", () => {
+	it("F-5: delegates to projectTodoFraction for project entities", () => {
+		const store = new IndexStore();
+		const project = makeEntity({ path: "p1.md", type: "project", title: "p1" });
+		store.upsertEntity(project);
+		store.setTodos("p1.md", [makeTodo({ done: true }), makeTodo({ done: false })]);
+
+		expect(entityProgressFraction(store, project)).toEqual({ done: 1, total: 2 });
+	});
+
+	it("F-6: delegates to ticketTodoFraction for ticket entities", () => {
+		const store = new IndexStore();
+		const ticket = makeEntity({ path: "t1.md", type: "ticket", title: "t1" });
+		store.upsertEntity(ticket);
+		store.setTodos("t1.md", [makeTodo({ done: true })]);
+
+		expect(entityProgressFraction(store, ticket)).toEqual({ done: 1, total: 1 });
+	});
+});
+
+describe("goalGroupProgress", () => {
+	it("G-1: returns null for an empty project list (Goal section hidden)", () => {
+		expect(goalGroupProgress([])).toBeNull();
+	});
+
+	it("G-2: averages progress across projects, rounding to the nearest integer", () => {
+		const projects = [makeEntity({ path: "a.md", type: "project", progress: 100 }), makeEntity({ path: "b.md", type: "project", progress: 33 })];
+		expect(goalGroupProgress(projects)).toBe(67);
+	});
+
+	it("G-3: treats a missing progress value as 0", () => {
+		const projects = [makeEntity({ path: "a.md", type: "project" }), makeEntity({ path: "b.md", type: "project", progress: 50 })];
+		expect(goalGroupProgress(projects)).toBe(25);
 	});
 });

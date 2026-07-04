@@ -1,5 +1,6 @@
 import type { App, TFile } from "obsidian";
 import { parseEntity, type EntityType } from "../domain/entity";
+import { countMemoHeadings, type HeadingLike } from "../domain/memo";
 import type { POSEventBus } from "./EventBus";
 import type { IndexStore } from "./IndexStore";
 import type { SelfWriteGuard } from "./SelfWriteGuard";
@@ -46,6 +47,7 @@ export class Indexer {
 			if (hasTodos(result.entity.type) && this.todoProvider) {
 				this.store.setTodos(file.path, await this.todoProvider.getTodos(file.path));
 			}
+			this.store.setMemoCount(file.path, this.countMemos(file));
 		} else {
 			this.store.addParseError(file.path, result.reason);
 		}
@@ -72,6 +74,7 @@ export class Indexer {
 			const todos =
 				hasTodos(result.entity.type) && this.todoProvider ? await this.todoProvider.getTodos(file.path) : [];
 			this.store.handleRename(oldPath, result.entity, todos);
+			this.store.setMemoCount(file.path, this.countMemos(file));
 		} else {
 			this.store.remove(oldPath);
 			this.store.addParseError(file.path, result.reason);
@@ -85,6 +88,12 @@ export class Indexer {
 		if (!this.repo.isUnderRoot(file.path)) return;
 		this.store.remove(file.path);
 		this.eventBus.emitEvent("index-updated", [file.path]);
+	}
+
+	/** 本文を読まずmetadataCache.headingsのみから"## Memo"配下の件数を数える(パフォーマンス設計原則) */
+	private countMemos(file: TFile): number {
+		const headings = (this.app.metadataCache.getFileCache(file)?.headings ?? []) as HeadingLike[];
+		return countMemoHeadings(headings);
 	}
 
 	private resolveLink(sourcePath: string): (link: string) => string | null {

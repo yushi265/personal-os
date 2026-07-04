@@ -996,6 +996,11 @@
 	border-radius: var(--radius-pill, 999px);
 }
 
+.pos-manage-goal-progress {
+	flex: 0 0 auto;
+	width: 96px;
+}
+
 .pos-manage-goal-new-btn {
 	cursor: pointer;
 	margin: var(--size-4-2) 0 var(--size-4-4);
@@ -1105,6 +1110,57 @@
 .pos-priority-low {
 	background: var(--background-modifier-border);
 	color: var(--text-muted);
+}
+
+/* ---- due relative label (DateCell relative=true / dashboard widgets) ---- */
+
+.pos-due-overdue {
+	color: var(--color-red);
+	font-weight: var(--font-medium);
+}
+
+.pos-due-today {
+	color: var(--color-orange);
+	font-weight: var(--font-medium);
+}
+
+.pos-due-soon {
+	color: var(--color-yellow);
+}
+
+.pos-due-normal {
+	color: var(--text-normal);
+}
+
+/* ---- row badges (ManageRow) ---- */
+
+.pos-row-badges {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-2-1);
+	margin-left: var(--size-4-2);
+}
+
+.pos-row-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 var(--size-4-1);
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
+}
+
+.pos-row-badge-blocker {
+	background: color-mix(in srgb, var(--color-red) 16%, transparent);
+	color: var(--color-red);
+}
+
+/* ---- undo toast (undoNotice.ts) ---- */
+
+.pos-undo-toast-btn {
+	margin-left: var(--size-4-2);
 }
 
 .pos-priority-unset {

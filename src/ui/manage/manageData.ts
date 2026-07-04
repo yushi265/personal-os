@@ -253,6 +253,43 @@ export function collectKnownTags(store: IndexStore): string[] {
 	return Array.from(set).sort();
 }
 
+export interface ProgressFraction {
+	done: number;
+	total: number;
+}
+
+/** Ticketの進捗分数(完了Todo数/総数)。ManageRow等の「%」表示に添える(design: 進捗の分数表示) */
+export function ticketTodoFraction(store: IndexStore, ticketPath: string): ProgressFraction {
+	const todos = store.getTodos(ticketPath);
+	return { done: todos.filter((t) => t.done).length, total: todos.length };
+}
+
+/** Projectの進捗分数: 配下の非archivedチケットの全Todo + 直下Todoを合算する(calcProjectProgressの集計対象と揃える) */
+export function projectTodoFraction(store: IndexStore, projectPath: string): ProgressFraction {
+	const direct = store.getTodos(projectPath);
+	const ticketTodos = store
+		.getChildren(projectPath)
+		.filter((e) => e.type === "ticket" && e.status !== "archived")
+		.flatMap((ticket) => store.getTodos(ticket.path));
+	const all = [...direct, ...ticketTodos];
+	return { done: all.filter((t) => t.done).length, total: all.length };
+}
+
+/** entity.typeに応じてticketTodoFraction/projectTodoFractionのどちらかを返す(ManageRow/詳細ヘッダ共通) */
+export function entityProgressFraction(store: IndexStore, entity: Entity): ProgressFraction {
+	return entity.type === "project" ? projectTodoFraction(store, entity.path) : ticketTodoFraction(store, entity.path);
+}
+
+/**
+ * Goalヘッダの配下Project集計進捗(design: Goalセクションの集計進捗)。
+ * 0件ならnull(非表示)。projects側で既にarchived除外済みであることを前提とする(groupProjectsByGoal参照)。
+ */
+export function goalGroupProgress(projects: Entity[]): number | null {
+	if (projects.length === 0) return null;
+	const sum = projects.reduce((acc, p) => acc + (p.progress ?? 0), 0);
+	return Math.round(sum / projects.length);
+}
+
 /** Entityのlabelsに加え、Todoのlabelsも集計対象に含める(Todoタブのlabelsフィルタ候補のため) */
 export function collectKnownLabels(store: IndexStore): string[] {
 	const set = new Set<string>();

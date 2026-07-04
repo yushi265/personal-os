@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendMemo, parseMemoSection, removeMemo, updateMemo, type Memo } from "../../src/domain/memo";
+import { appendMemo, countMemoHeadings, parseMemoSection, removeMemo, updateMemo, type HeadingLike, type Memo } from "../../src/domain/memo";
 
 describe("parseMemoSection", () => {
 	it("P-1: returns an empty array when there is no '## Memo' section", () => {
@@ -108,5 +108,34 @@ describe("updateMemo / removeMemo", () => {
 	it("U-4: removing the note's only memo keeps the '## Memo' heading, leaving an empty section", () => {
 		const body = "## Memo\n\n### 2026-07-04 10:00\nonly memo\n";
 		expect(removeMemo(body, make("2026-07-04 10:00", "only memo"))).toBe("## Memo\n");
+	});
+});
+
+describe("countMemoHeadings", () => {
+	function h(heading: string, level: number): HeadingLike {
+		return { heading, level };
+	}
+
+	it("H-1: returns 0 when there is no '## Memo' (level 2) heading", () => {
+		expect(countMemoHeadings([h("Detail", 2), h("2026-07-04 10:00", 3)])).toBe(0);
+	});
+
+	it("H-2: counts valid level-3 datetime headings under '## Memo'", () => {
+		const headings = [h("Detail", 2), h("Memo", 2), h("2026-07-04 10:00", 3), h("2026-07-04 11:00", 3)];
+		expect(countMemoHeadings(headings)).toBe(2);
+	});
+
+	it("H-3: stops counting once a level<=2 heading follows (leaving the Memo section)", () => {
+		const headings = [h("Memo", 2), h("2026-07-04 10:00", 3), h("Next Section", 2), h("2026-07-04 11:00", 3)];
+		expect(countMemoHeadings(headings)).toBe(1);
+	});
+
+	it("H-4: ignores level-3 headings that don't match the datetime pattern (freeform notes)", () => {
+		const headings = [h("Memo", 2), h("not a timestamp", 3), h("2026-07-04 10:00", 3)];
+		expect(countMemoHeadings(headings)).toBe(1);
+	});
+
+	it("H-5: returns 0 for an empty headings array", () => {
+		expect(countMemoHeadings([])).toBe(0);
 	});
 });

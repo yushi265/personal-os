@@ -86,11 +86,23 @@
 					onOpenNote={openPath}
 				/>
 			{:else if w.id === "active-goals"}
-				<ActiveEntitiesWidget type="goal" entities={$data.activeGoals} onNavigate={handleNavigate} onOpenNote={openPath} />
+				<ActiveEntitiesWidget {plugin} type="goal" entities={$data.activeGoals} onNavigate={handleNavigate} onOpenNote={openPath} />
 			{:else if w.id === "active-projects"}
-				<ActiveEntitiesWidget type="project" entities={$data.activeProjects} onNavigate={handleNavigate} onOpenNote={openPath} />
+				<ActiveEntitiesWidget
+					{plugin}
+					type="project"
+					entities={$data.activeProjects}
+					onNavigate={handleNavigate}
+					onOpenNote={openPath}
+				/>
 			{:else if w.id === "active-tickets"}
-				<ActiveEntitiesWidget type="ticket" entities={$data.activeTickets} onNavigate={handleNavigate} onOpenNote={openPath} />
+				<ActiveEntitiesWidget
+					{plugin}
+					type="ticket"
+					entities={$data.activeTickets}
+					onNavigate={handleNavigate}
+					onOpenNote={openPath}
+				/>
 			{:else if w.id === "review-needed"}
 				<ReviewNeededWidget entities={$data.reviewNeeded} onNavigate={handleNavigate} onOpenNote={openPath} />
 			{:else if w.id === "blocked"}

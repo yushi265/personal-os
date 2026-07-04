@@ -14,7 +14,14 @@
 	import ManageFilterBar from "./ManageFilterBar.svelte";
 	import ManageTable from "./ManageTable.svelte";
 	import type { ManageScreen } from "./manageNav";
-	import { buildProjectTicketRows, collectProjectTodos, type ManageFilter, type ManageSort, type ManageSortKey } from "./manageData";
+	import {
+		buildProjectTicketRows,
+		collectProjectTodos,
+		entityProgressFraction,
+		type ManageFilter,
+		type ManageSort,
+		type ManageSortKey,
+	} from "./manageData";
 
 	/**
 	 * プロジェクト詳細画面(design-drilldown-nav.md §3.2)。
@@ -49,6 +56,10 @@
 	const todos = $derived.by(() => {
 		void refreshTick;
 		return collectProjectTodos(plugin.store, screen.path, screen.todoScope);
+	});
+	const progressFraction = $derived.by(() => {
+		void refreshTick;
+		return entity ? entityProgressFraction(plugin.store, entity) : { done: 0, total: 0 };
 	});
 
 	function statusOptions(e: Entity): { value: string; label: string }[] {
@@ -134,7 +145,7 @@
 		<dd><PriorityCell value={entity.priority ?? ""} options={priorityOptions()} onCommit={commitPriority} /></dd>
 
 		<dt>{t("preview.field.due")}</dt>
-		<dd><DateCell value={entity.due} onCommit={commitDue} /></dd>
+		<dd><DateCell value={entity.due} onCommit={commitDue} relative /></dd>
 
 		<dt>{t("preview.field.goal")}</dt>
 		<dd><ParentCell value={entity.goal} options={goalOptions()} onCommit={commitGoal} /></dd>
@@ -145,7 +156,7 @@
 				<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
 					<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
 				</div>
-				<span class="pos-progress-label">{entity.progress ?? 0}%</span>
+				<span class="pos-progress-label">{entity.progress ?? 0}% ({progressFraction.done}/{progressFraction.total})</span>
 			</div>
 		</dd>
 	</dl>

@@ -3,9 +3,10 @@
 	import type { Priority } from "../../domain/entity";
 	import { PRIORITIES } from "../../domain/entity";
 	import type { Todo } from "../../domain/todo";
+	import { rebuildTodoLine } from "../../domain/todo";
 	import type PersonalOSPlugin from "../../main";
-	import { manageDeleteConfirmMessage, t } from "../../i18n/ja";
-	import { ConfirmModal } from "../modals/ConfirmModal";
+	import { t, todoDeletedUndoNotice } from "../../i18n/ja";
+	import { showUndoNotice } from "../undoNotice";
 	import { PromoteTodoModal } from "../modals/PromoteModal";
 	import TitleCell from "./TitleCell.svelte";
 	import PriorityCell from "./PriorityCell.svelte";
@@ -57,11 +58,10 @@
 		void plugin.todoService.toggle(todo);
 	}
 
-	function deleteTodo(todo: Todo): void {
-		new ConfirmModal(plugin.app, {
-			message: manageDeleteConfirmMessage(todo.text),
-			onConfirm: () => plugin.todoService.remove(todo),
-		}).open();
+	async function deleteTodo(todo: Todo): Promise<void> {
+		const savedLine = rebuildTodoLine(todo, { stripIndent: true });
+		await plugin.todoService.remove(todo);
+		showUndoNotice(todoDeletedUndoNotice(todo.text), () => plugin.todoService.restoreLine(todo.parentPath, savedLine));
 	}
 
 	function promoteTodo(todo: Todo): void {
@@ -130,7 +130,7 @@
 					options={priorityOptions()}
 					onCommit={(next) => commitTodoPriority(todo, next)}
 				/>
-				<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} />
+				<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} relative />
 				<button class="pos-preview-todo-action" onclick={() => promoteTodo(todo)}>{t("preview.todo.promote")}</button>
 				<button class="pos-preview-todo-action mod-warning" onclick={() => deleteTodo(todo)}>
 					{t("preview.todo.delete")}

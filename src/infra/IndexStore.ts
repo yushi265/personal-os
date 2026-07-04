@@ -12,6 +12,7 @@ export class IndexStore {
 	private childrenOf = new Map<string, Set<string>>(); // 親path → 子pathの集合
 	private parentKeysOf = new Map<string, string[]>(); // 逆引き: 子path → 親path[]
 	private parseErrors = new Map<string, string>(); // path → エラー理由
+	private memoCounts = new Map<string, number>(); // path → "## Memo"配下の有効な日時見出し数(本文読み込みなしの軽量集計)
 
 	// ---- 更新系 ----
 
@@ -39,11 +40,16 @@ export class IndexStore {
 		this.todos.set(parentPath, todos);
 	}
 
+	setMemoCount(path: string, count: number): void {
+		this.memoCounts.set(path, count);
+	}
+
 	remove(path: string): void {
 		this.clearIndexLinks(path);
 		this.entities.delete(path);
 		this.todos.delete(path);
 		this.parseErrors.delete(path);
+		this.memoCounts.delete(path);
 	}
 
 	handleRename(oldPath: string, e: Entity, todos: Todo[]): void {
@@ -56,6 +62,7 @@ export class IndexStore {
 		this.clearIndexLinks(path);
 		this.entities.delete(path);
 		this.todos.delete(path);
+		this.memoCounts.delete(path);
 		this.parseErrors.set(path, reason);
 	}
 
@@ -88,6 +95,10 @@ export class IndexStore {
 		const all: Todo[] = [];
 		for (const list of this.todos.values()) all.push(...list);
 		return all;
+	}
+
+	getMemoCount(path: string): number {
+		return this.memoCounts.get(path) ?? 0;
 	}
 
 	getParseErrors(): { path: string; reason: string }[] {

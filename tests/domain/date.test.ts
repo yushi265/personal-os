@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addCycle, addDays, nowStamp, today } from "../../src/domain/date";
+import { addCycle, addDays, describeDue, nowStamp, today } from "../../src/domain/date";
 
 describe("today", () => {
 	it("returns a YYYY-MM-DD formatted string", () => {
@@ -76,5 +76,35 @@ describe("addDays", () => {
 
 	it("supports negative n (subtracting days)", () => {
 		expect(addDays("2026-07-04", -5)).toBe("2026-06-29");
+	});
+});
+
+describe("describeDue", () => {
+	it("D-1: labels a past due date as overdue with the day count", () => {
+		expect(describeDue("2026-07-01", "2026-07-04")).toEqual({ label: "3日超過", tone: "overdue" });
+	});
+
+	it("D-2: labels a 1-day-overdue date correctly", () => {
+		expect(describeDue("2026-07-03", "2026-07-04")).toEqual({ label: "1日超過", tone: "overdue" });
+	});
+
+	it("D-3: labels the same day as today", () => {
+		expect(describeDue("2026-07-04", "2026-07-04")).toEqual({ label: "今日", tone: "today" });
+	});
+
+	it("D-4: labels 1 day ahead as soon", () => {
+		expect(describeDue("2026-07-05", "2026-07-04")).toEqual({ label: "1日後", tone: "soon" });
+	});
+
+	it("D-5: labels exactly 3 days ahead as soon (boundary)", () => {
+		expect(describeDue("2026-07-07", "2026-07-04")).toEqual({ label: "3日後", tone: "soon" });
+	});
+
+	it("D-6: labels 4 days ahead as normal (just past the soon boundary)", () => {
+		expect(describeDue("2026-07-08", "2026-07-04")).toEqual({ label: "4日後", tone: "normal" });
+	});
+
+	it("D-7: rolls over month boundaries correctly when computing the day diff", () => {
+		expect(describeDue("2026-08-01", "2026-07-30")).toEqual({ label: "2日後", tone: "soon" });
 	});
 });

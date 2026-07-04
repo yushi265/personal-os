@@ -12,6 +12,8 @@ export interface Memo {
 const MEMO_SECTION_HEADING = "## Memo";
 /** 有効なメモ見出し。日時形式に一致する行のみメモとして解釈する(表記ゆれは非対応) */
 const MEMO_HEADING_PATTERN = /^### \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+/** metadataCache.headings[].heading(先頭の"### "を含まない見出しテキスト)用パターン。countMemoHeadings専用 */
+const MEMO_HEADING_TEXT_PATTERN = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
 /** Memoセクションからの離脱判定(レベル1-2見出し)。メモ自体はレベル3見出しのため区別する */
 const SECTION_LEAVE_PATTERN = /^#{1,2}\s/;
 /** 個々のメモ本文の終端判定(全レベル見出し) */
@@ -23,6 +25,28 @@ interface MemoBlock {
 	bodyEnd: number; // 本文終端index(末尾空行trim済み、exclusive)
 	datetime: string;
 	text: string;
+}
+
+export interface HeadingLike {
+	heading: string;
+	level: number;
+}
+
+/**
+ * metadataCache由来のheadings配列だけから "## Memo" 配下の有効な日時見出し数を数える(本文読み込みなし、IndexStore.memoCount用)。
+ * `## Memo`(level2)自体が無ければ0。配下でlevel<=2の見出しに達したらそこで打ち切る。
+ */
+export function countMemoHeadings(headings: HeadingLike[]): number {
+	const idx = headings.findIndex((h) => h.level === 2 && h.heading === "Memo");
+	if (idx === -1) return 0;
+
+	let count = 0;
+	for (let i = idx + 1; i < headings.length; i++) {
+		const h = headings[i];
+		if (h.level <= 2) break;
+		if (h.level === 3 && MEMO_HEADING_TEXT_PATTERN.test(h.heading)) count++;
+	}
+	return count;
 }
 
 /**

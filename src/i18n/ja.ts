@@ -283,6 +283,8 @@ const MESSAGES = {
 	"manage.projectDetail.scopeAll": "すべて",
 	"confirmModal.confirm": "実行",
 	"confirmModal.cancel": "キャンセル",
+
+	"undo.action": "元に戻す",
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;
@@ -304,6 +306,60 @@ export function aiContextCopiedNotice(charCount: number): string {
 /** AI Summary成功時のNotice文言 */
 export function aiSummaryCopiedNotice(charCount: number): string {
 	return `AIサマリーをコピーしました(${charCount}文字)`;
+}
+
+/** 期限超過ラベル(describeDue用。値埋め込みのためt()とは別関数とする) */
+export function dueOverdueLabel(days: number): string {
+	return `${days}日超過`;
+}
+
+/** 期限当日ラベル(describeDue用) */
+export function dueTodayLabel(): string {
+	return "今日";
+}
+
+/** 期限N日後ラベル(describeDue用。値埋め込みのためt()とは別関数とする) */
+export function dueInDaysLabel(days: number): string {
+	return `${days}日後`;
+}
+
+/** Undoトースト: Archive完了通知(タイトル埋め込みのためt()とは別関数とする) */
+export function archivedUndoNotice(title: string): string {
+	return `「${title}」をアーカイブしました`;
+}
+
+/** Undoトースト: Entity削除完了通知 */
+export function deletedUndoNotice(title: string): string {
+	return `「${title}」を削除しました`;
+}
+
+/** Undoトースト: Todo削除完了通知(長文は先頭のみ表示、memoDeleteConfirmMessageと同様の方針) */
+export function todoDeletedUndoNotice(text: string): string {
+	const firstLine = text.split("\n")[0];
+	const summary = firstLine.length > 40 ? `${firstLine.slice(0, 40)}...` : firstLine;
+	return `Todo「${summary}」を削除しました`;
+}
+
+/** Undoトースト: メモ削除完了通知 */
+export function memoDeletedUndoNotice(text: string): string {
+	const firstLine = text.split("\n")[0];
+	const summary = firstLine.length > 40 ? `${firstLine.slice(0, 40)}...` : firstLine;
+	return `メモ「${summary}」を削除しました`;
+}
+
+/** 行バッジ(ManageRow)のホバーtitle: Blocker件数 */
+export function rowBadgeBlockerTitle(count: number): string {
+	return `Blocker ${count}件`;
+}
+
+/** 行バッジ(ManageRow)のホバーtitle: メモ件数 */
+export function rowBadgeMemoTitle(count: number): string {
+	return `メモ ${count}件`;
+}
+
+/** 行バッジ(ManageRow)のホバーtitle: 未完了Todo件数 */
+export function rowBadgeTodoTitle(count: number): string {
+	return `未完了Todo ${count}件`;
 }
 
 /**

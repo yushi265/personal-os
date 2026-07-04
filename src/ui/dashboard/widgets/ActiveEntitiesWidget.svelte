@@ -1,13 +1,17 @@
 <script lang="ts">
 	import type { Entity, EntityType } from "../../../domain/entity";
+	import type PersonalOSPlugin from "../../../main";
 	import { t } from "../../../i18n/ja";
+	import { entityProgressFraction } from "../../manage/manageData";
 
 	let {
+		plugin,
 		type,
 		entities,
 		onNavigate,
 		onOpenNote,
 	}: {
+		plugin: PersonalOSPlugin;
 		type: EntityType;
 		entities: Entity[];
 		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
@@ -53,10 +57,11 @@
 						{/if}
 					</div>
 					{#if type !== "goal"}
+						{@const fraction = entityProgressFraction(plugin.store, entity)}
 						<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
 							<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
 						</div>
-						<span class="pos-progress-label">{entity.progress ?? 0}%</span>
+						<span class="pos-progress-label">{entity.progress ?? 0}% ({fraction.done}/{fraction.total})</span>
 					{/if}
 				</li>
 			{/each}

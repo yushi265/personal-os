@@ -134,10 +134,10 @@ export class VaultRepository {
 
 	// ---- 移動/削除 ----
 
-	/** fileManager.renameFile。Archive/内で同名衝突時はサフィックス */
-	async moveToArchive(path: string): Promise<void> {
+	/** fileManager.renameFile。Archive/内で同名衝突時はサフィックス。Undo用に移動後のpathを返す */
+	async moveToArchive(path: string): Promise<string> {
 		const file = this.getFile(path);
-		if (!file) return;
+		if (!file) return path;
 
 		const archiveFolder = `${this.settings.rootDirectory}/${this.settings.folders.archive}`;
 		await this.ensureFolder(archiveFolder);
@@ -150,6 +150,39 @@ export class VaultRepository {
 		}
 
 		await this.app.fileManager.renameFile(file, target);
+		return target;
+	}
+
+	/**
+	 * fileManager.renameFile で任意の完全パスへ移動する(Archive Undo等、呼び出し元が元パスを厳密指定するケース用)。
+	 * 同名衝突時はサフィックス。moveToFolder/moveToArchiveと異なり移動先のファイル名も呼び出し側が指定する。
+	 */
+	async moveToPath(path: string, targetPath: string): Promise<string> {
+		const file = this.getFile(path);
+		if (!file) throw new Error(`File not found: ${path}`);
+
+		const folder = targetPath.substring(0, targetPath.lastIndexOf("/"));
+		if (folder) await this.ensureFolder(folder);
+
+		const ext = file.extension;
+		const base = targetPath.slice(0, targetPath.length - ext.length - 1);
+		let target = targetPath;
+		let suffix = 1;
+		while (this.app.vault.getAbstractFileByPath(target) && target !== path) {
+			target = `${base} ${suffix}.${ext}`;
+			suffix++;
+		}
+		if (target === path) return path;
+
+		await this.app.fileManager.renameFile(file, target);
+		return target;
+	}
+
+	/** Undo用: 削除(trash)前に退避しておいた全文からノートを再作成する */
+	async restoreFile(path: string, content: string): Promise<TFile> {
+		const folder = path.substring(0, path.lastIndexOf("/"));
+		if (folder) await this.ensureFolder(folder);
+		return this.app.vault.create(path, content);
 	}
 
 	/** 同一フォルダ内でのファイル名変更(rename)。フォルダ跨ぎのmoveToFolder/moveToArchiveとは別メソッドとする */

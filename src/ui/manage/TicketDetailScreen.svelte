@@ -12,6 +12,7 @@
 	import TodoList from "../components/TodoList.svelte";
 	import MemoSection from "../components/MemoSection.svelte";
 	import type { ManageScreen } from "./manageNav";
+	import { entityProgressFraction } from "./manageData";
 
 	/**
 	 * チケット詳細画面(design-drilldown-nav.md §3.3)。
@@ -41,6 +42,10 @@
 	const todos = $derived.by(() => {
 		void refreshTick;
 		return plugin.store.getTodos(screen.path);
+	});
+	const progressFraction = $derived.by(() => {
+		void refreshTick;
+		return entity ? entityProgressFraction(plugin.store, entity) : { done: 0, total: 0 };
 	});
 
 	function statusOptions(e: Entity): { value: string; label: string }[] {
@@ -98,7 +103,7 @@
 		<dd><PriorityCell value={entity.priority ?? ""} options={priorityOptions()} onCommit={commitPriority} /></dd>
 
 		<dt>{t("preview.field.due")}</dt>
-		<dd><DateCell value={entity.due} onCommit={commitDue} /></dd>
+		<dd><DateCell value={entity.due} onCommit={commitDue} relative /></dd>
 
 		<dt>{t("preview.field.project")}</dt>
 		<dd><ParentCell value={entity.project} options={projectOptions()} onCommit={commitProject} /></dd>
@@ -109,7 +114,7 @@
 				<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
 					<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
 				</div>
-				<span class="pos-progress-label">{entity.progress ?? 0}%</span>
+				<span class="pos-progress-label">{entity.progress ?? 0}% ({progressFraction.done}/{progressFraction.total})</span>
 			</div>
 		</dd>
 	</dl>

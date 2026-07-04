@@ -26,6 +26,11 @@ export class MemoService {
 		await this.repo.processBody(path, (body) => appendMemo(body, datetime, text.trim()));
 	}
 
+	/** メモ削除のUndo: add()と異なり元のdatetimeをそのまま使って復元する */
+	async restore(path: string, memo: Memo): Promise<void> {
+		await this.repo.processBody(path, (body) => appendMemo(body, memo.datetime, memo.text));
+	}
+
 	/**
 	 * 見出し+本文の内容一致で対象メモを特定し、本文のみ更新する(日時は維持)。
 	 * conflict(0件/複数件一致)時はNoticeのみ行う。一覧の再読込はUI側の責務。

@@ -66,6 +66,14 @@ export class TodoService {
 		await this.repo.processBody(path, (body) => appendTodoToSection(body, line));
 	}
 
+	/**
+	 * Todo削除のUndo: 削除前にrebuildTodoLine()で退避しておいた行をそのまま "## Todo" セクション末尾へ復元する。
+	 * 元の行位置(ネスト位置)は復元しない(末尾での妥協)。
+	 */
+	async restoreLine(parentPath: string, line: string): Promise<void> {
+		await this.repo.processBody(parentPath, (body) => appendTodoToSection(body, line));
+	}
+
 	/** インライン編集(text/due/priority): ManageView/Previewの両方から共通利用(design-ui-first.md §4.5) */
 	async updateInline(todo: Todo, patch: TodoPatch): Promise<void> {
 		const expected = rebuildTodoLine(todo);

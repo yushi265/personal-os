@@ -1,20 +1,27 @@
 <script lang="ts">
 	import { Notice } from "obsidian";
 	import { t } from "../../i18n/ja";
+	import { describeDue, today } from "../../domain/date";
 
-	/** date inputのインライン編集セル(design-ui-first.md §3.1/§3.3)。空入力=削除(onCommitへundefinedを渡す) */
+	/**
+	 * date inputのインライン編集セル(design-ui-first.md §3.1/§3.3)。空入力=削除(onCommitへundefinedを渡す)。
+	 * relative=trueの場合、非編集時にdescribeDue()による相対表示+色を行う(due列専用。絶対日付はtitle属性で保持)。
+	 */
 	let {
 		value,
 		onCommit,
+		relative = false,
 	}: {
 		value: string | undefined;
 		onCommit: (next: string | undefined) => Promise<void>;
+		relative?: boolean;
 	} = $props();
 
 	let editing = $state(false);
 	let optimistic = $state<{ v: string | undefined } | null>(null);
 	let draft = $state("");
 	const display = $derived(optimistic ? optimistic.v : value);
+	const dueInfo = $derived(relative && display ? describeDue(display, today()) : null);
 
 	$effect(() => {
 		if (optimistic && value === optimistic.v) optimistic = null;
@@ -55,6 +62,17 @@
 			if (e.key === "Escape") cancel();
 		}}
 	/>
+{:else if dueInfo}
+	<span
+		class="pos-cell-text pos-due-{dueInfo.tone}"
+		title={display}
+		role="button"
+		tabindex="0"
+		onclick={startEdit}
+		onkeydown={(e) => e.key === "Enter" && startEdit()}
+	>
+		{dueInfo.label}
+	</span>
 {:else}
 	<span
 		class="pos-cell-text"

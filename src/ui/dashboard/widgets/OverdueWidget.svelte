@@ -2,6 +2,7 @@
 	import type { Entity } from "../../../domain/entity";
 	import type { Todo } from "../../../domain/todo";
 	import { t } from "../../../i18n/ja";
+	import { describeDue, today } from "../../../domain/date";
 
 	let {
 		todos,
@@ -25,6 +26,7 @@
 	{:else}
 		<ul class="pos-widget-list">
 			{#each todos as todo (todo.filePath + "#" + todo.line)}
+				{@const info = describeDue(todo.dueDate ?? "", today())}
 				<li class="pos-widget-item">
 					<input type="checkbox" checked={todo.done} onchange={() => onToggle(todo)} />
 					<span
@@ -36,7 +38,7 @@
 					>
 						{todo.text}
 					</span>
-					<span class="pos-widget-due">📅 {todo.dueDate}</span>
+					<span class="pos-widget-due pos-due-{info.tone}" title={todo.dueDate}>📅 {info.label}</span>
 					<button
 						class="pos-widget-open-note"
 						onclick={(e) => {
@@ -50,6 +52,7 @@
 				</li>
 			{/each}
 			{#each entities as entity (entity.path)}
+				{@const info = describeDue(entity.due ?? "", today())}
 				<li class="pos-widget-item">
 					<span
 						class="pos-widget-item-text"
@@ -60,7 +63,7 @@
 					>
 						▸ {entity.title}
 					</span>
-					<span class="pos-widget-due">due: {entity.due}</span>
+					<span class="pos-widget-due pos-due-{info.tone}" title={entity.due}>{info.label}</span>
 					{#if entity.type !== "goal"}
 						<button
 							class="pos-widget-open-note"

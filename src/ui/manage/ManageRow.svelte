@@ -2,9 +2,9 @@
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, validStatusesOf } from "../../domain/entity";
 	import type PersonalOSPlugin from "../../main";
-	import { manageDeleteConfirmMessage, t } from "../../i18n/ja";
+	import { archivedUndoNotice, deletedUndoNotice, t } from "../../i18n/ja";
 	import { VIEW_TYPE_PREVIEW } from "../preview/PreviewView";
-	import { ConfirmModal } from "../modals/ConfirmModal";
+	import { showUndoNotice } from "../undoNotice";
 	import { PromoteTicketModal } from "../modals/PromoteModal";
 	import StatusCell from "../components/StatusCell.svelte";
 	import PriorityCell from "../components/PriorityCell.svelte";
@@ -12,7 +12,8 @@
 	import ParentCell from "../components/ParentCell.svelte";
 	import TitleCell from "../components/TitleCell.svelte";
 	import RowMenu from "../components/RowMenu.svelte";
-	import type { ManageRowData, ManageTab } from "./manageData";
+	import RowBadges from "../components/RowBadges.svelte";
+	import { entityProgressFraction, type ManageRowData, type ManageTab } from "./manageData";
 
 	let {
 		row,
@@ -88,20 +89,36 @@
 		}).open();
 	}
 
-	function archiveEntity(entity: Entity): void {
-		void plugin.entityService.archive(entity.path);
+	async function archiveEntity(entity: Entity): Promise<void> {
+		const originalPath = entity.path;
+		const originalStatus = entity.status;
+		const newPath = await plugin.entityService.archive(originalPath);
+		showUndoNotice(archivedUndoNotice(entity.title), () =>
+			plugin.entityService.restoreFromArchive(newPath, originalPath, originalStatus)
+		);
 	}
 
-	function deleteEntity(entity: Entity): void {
-		new ConfirmModal(plugin.app, {
-			message: manageDeleteConfirmMessage(entity.title),
-			onConfirm: () => plugin.entityService.delete(entity.path),
-		}).open();
+	async function deleteEntity(entity: Entity): Promise<void> {
+		const savedContent = await plugin.repo.readBody(entity.path);
+		await plugin.entityService.delete(entity.path);
+		showUndoNotice(deletedUndoNotice(entity.title), async () => {
+			await plugin.repo.restoreFile(entity.path, savedContent);
+		});
+	}
+
+	function badgeCounts(entity: Entity): { blockers: number; memos: number; todos: number } {
+		return {
+			blockers: entity.blockers.length,
+			memos: plugin.store.getMemoCount(entity.path),
+			todos: plugin.store.getTodos(entity.path).filter((todo) => !todo.done).length,
+		};
 	}
 </script>
 
 {#if row.entity}
 	{@const entity = row.entity}
+	{@const badges = badgeCounts(entity)}
+	{@const fraction = entityProgressFraction(plugin.store, entity)}
 	<tr class="pos-manage-row" class:pos-manage-row-navigable={!!onNavigate} onclick={() => onNavigate?.(entity.path)}>
 		<td onclick={(e) => e.stopPropagation()}>
 			<TitleCell
@@ -110,6 +127,7 @@
 				onNavigate={onNavigate ? () => onNavigate?.(entity.path) : undefined}
 				editRequestToken={editTitleToken}
 			/>
+			<RowBadges blockerCount={badges.blockers} memoCount={badges.memos} todoCount={badges.todos} />
 		</td>
 		<td onclick={(e) => e.stopPropagation()}>
 			<StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} />
@@ -130,11 +148,13 @@
 					<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
 						<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
 					</div>
-					<span class="pos-progress-label">{entity.progress ?? 0}%</span>
+					<span class="pos-progress-label">{entity.progress ?? 0}% ({fraction.done}/{fraction.total})</span>
 				</div>
 			{/if}
 		</td>
-		<td onclick={(e) => e.stopPropagation()}><DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} /></td>
+		<td onclick={(e) => e.stopPropagation()}>
+			<DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} relative />
+		</td>
 		<td onclick={(e) => e.stopPropagation()}>
 			{#each entity.labels as label (label)}
 				<span class="pos-manage-chip pos-manage-chip-static">{label}</span>

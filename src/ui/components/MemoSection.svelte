@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Memo } from "../../domain/memo";
 	import type PersonalOSPlugin from "../../main";
-	import { memoDeleteConfirmMessage, t } from "../../i18n/ja";
-	import { ConfirmModal } from "../modals/ConfirmModal";
+	import { memoDeletedUndoNotice, t } from "../../i18n/ja";
+	import { showUndoNotice } from "../undoNotice";
 
 	/**
 	 * タイムスタンプ付きメモの共通表示・操作部品(design-memo.md §4.1)。
@@ -113,14 +113,13 @@
 		}
 	}
 
-	function requestRemove(memo: Memo): void {
-		new ConfirmModal(plugin.app, {
-			message: memoDeleteConfirmMessage(memo.text),
-			onConfirm: async () => {
-				await plugin.memoService.remove(path, memo);
-				await reload(); // ok/conflictいずれの場合も最新化
-			},
-		}).open();
+	async function requestRemove(memo: Memo): Promise<void> {
+		await plugin.memoService.remove(path, memo);
+		await reload(); // ok/conflictいずれの場合も最新化
+		showUndoNotice(memoDeletedUndoNotice(memo.text), async () => {
+			await plugin.memoService.restore(path, memo);
+			await reload();
+		});
 	}
 
 	function showMore(): void {

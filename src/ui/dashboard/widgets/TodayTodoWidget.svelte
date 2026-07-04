@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Todo } from "../../../domain/todo";
 	import { t } from "../../../i18n/ja";
+	import { describeDue, today } from "../../../domain/date";
 
 	let {
 		todos,
@@ -22,6 +23,7 @@
 	{:else}
 		<ul class="pos-widget-list">
 			{#each todos as todo (todo.filePath + "#" + todo.line)}
+				{@const info = todo.dueDate ? describeDue(todo.dueDate, today()) : null}
 				<li class="pos-widget-item">
 					<input type="checkbox" checked={todo.done} onchange={() => onToggle(todo)} />
 					<span
@@ -33,7 +35,7 @@
 					>
 						{todo.text}
 					</span>
-					{#if todo.dueDate}<span class="pos-widget-due">📅 {todo.dueDate}</span>{/if}
+					{#if info}<span class="pos-widget-due pos-due-{info.tone}" title={todo.dueDate}>📅 {info.label}</span>{/if}
 					<button
 						class="pos-widget-open-note"
 						onclick={(e) => {

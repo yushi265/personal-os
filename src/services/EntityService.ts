@@ -98,10 +98,10 @@ export class EntityService {
 		}
 	}
 
-	/** アーカイブ */
-	async archive(path: string): Promise<void> {
+	/** アーカイブ。Undo用に移動後のpathを返す(元path/元statusは呼び出し側がUndo Notice発行時に保持する) */
+	async archive(path: string): Promise<string> {
 		const entity = this.store.get(path);
-		if (!entity) return;
+		if (!entity) return path;
 
 		// ① fm更新
 		await this.repo.updateFrontmatter(path, (fm) => {
@@ -110,8 +110,9 @@ export class EntityService {
 		});
 
 		// ② 移動(失敗時はNoticeのみで継続。①は維持され再実行で回復可能)
+		let newPath = path;
 		try {
-			await this.repo.moveToArchive(path);
+			newPath = await this.repo.moveToArchive(path);
 		} catch {
 			new Notice(t("E005"));
 		}
@@ -119,6 +120,21 @@ export class EntityService {
 		// ③ ログ
 		if (this.activityLog) {
 			await this.activityLog.log("archive", `${entity.title} をアーカイブ`);
+		}
+
+		return newPath;
+	}
+
+	/** Archive Undo: statusを元に戻し、元のpathへ移動し直す */
+	async restoreFromArchive(currentPath: string, originalPath: string, originalStatus: string): Promise<void> {
+		await this.repo.updateFrontmatter(currentPath, (fm) => {
+			fm.status = originalStatus;
+			delete fm.archived_at;
+		});
+		try {
+			await this.repo.moveToPath(currentPath, originalPath);
+		} catch {
+			new Notice(t("E005"));
 		}
 	}
 
