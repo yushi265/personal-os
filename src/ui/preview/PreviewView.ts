@@ -40,6 +40,7 @@ export class PreviewView extends ItemView {
 
 		this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.refresh()));
 		this.registerEvent(this.plugin.eventBus.onEvent("index-updated", () => this.refresh()));
+		this.registerEvent(this.plugin.eventBus.onEvent("capability-changed", () => this.refresh()));
 
 		this.refresh();
 	}

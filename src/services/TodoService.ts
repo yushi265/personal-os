@@ -1,8 +1,8 @@
 import { Notice } from "obsidian";
 import type { Priority } from "../domain/entity";
 import { today } from "../domain/date";
-import { buildTodoLine, rebuildTodoLine, toggleTodoLine, updateTodoLine } from "../domain/todo";
-import type { Todo, TodoPatch } from "../domain/todo";
+import { appendTodoToSection, buildTodoLine, rebuildTodoLine, toggleTodoLine, updateTodoLine } from "../domain/todo";
+import type { BuildTodoLineInput, Todo, TodoPatch } from "../domain/todo";
 import type { EditLineResult } from "../infra/VaultRepository";
 import type { VaultRepository } from "../infra/VaultRepository";
 import type { IndexStore } from "../infra/IndexStore";
@@ -58,6 +58,12 @@ export class TodoService {
 		const expected = rebuildTodoLine(todo);
 		const result = await this.repo.editLine(todo.filePath, todo.line, expected, null);
 		await this.handleMismatch(result, todo.filePath);
+	}
+
+	/** Preview「その場でTodo追加」: 指定ノートの "## Todo" セクション末尾へ追記する(design-ui-first.md §4.4) */
+	async addToSection(path: string, input: BuildTodoLineInput): Promise<void> {
+		const line = buildTodoLine(input);
+		await this.repo.processBody(path, (body) => appendTodoToSection(body, line));
 	}
 
 	/** インライン編集(text/due/priority): ManageView/Previewの両方から共通利用(design-ui-first.md §4.5) */

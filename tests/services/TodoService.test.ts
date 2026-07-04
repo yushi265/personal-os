@@ -49,6 +49,45 @@ function makeSettings(): POSSettings {
 	} as unknown as POSSettings;
 }
 
+describe("TodoService.addToSection", () => {
+	it("builds the todo line and appends it to the ## Todo section via processBody", async () => {
+		let bodyTransform: ((body: string) => string) | undefined;
+		const repo = makeRepo({
+			processBody: vi.fn().mockImplementation((_path: string, fn: (body: string) => string) => {
+				bodyTransform = fn;
+				return Promise.resolve();
+			}),
+		});
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), makeIndexer());
+
+		await service.addToSection("PersonalOS/Tickets/ticket-a.md", {
+			text: "パンを買う",
+			dueDate: "2026-07-10",
+			priority: "high",
+		});
+
+		expect(repo.processBody).toHaveBeenCalledWith("PersonalOS/Tickets/ticket-a.md", expect.any(Function));
+		expect(bodyTransform?.("# Ticket\n\n## Todo\n- [ ] existing\n")).toBe(
+			"# Ticket\n\n## Todo\n- [ ] existing\n- [ ] パンを買う 📅 2026-07-10 [priority:: high]\n"
+		);
+	});
+
+	it("creates the ## Todo section when the note has none, matching appendTodoToSection", async () => {
+		let bodyTransform: ((body: string) => string) | undefined;
+		const repo = makeRepo({
+			processBody: vi.fn().mockImplementation((_path: string, fn: (body: string) => string) => {
+				bodyTransform = fn;
+				return Promise.resolve();
+			}),
+		});
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), makeIndexer());
+
+		await service.addToSection("PersonalOS/Tickets/ticket-a.md", { text: "牛乳を買う" });
+
+		expect(bodyTransform?.("# Ticket\n\nSome content\n")).toBe("# Ticket\n\nSome content\n\n## Todo\n- [ ] 牛乳を買う\n");
+	});
+});
+
 describe("TodoService.updateInline", () => {
 	it("rebuilds the expected line from the todo and writes the patched next line via editLine", async () => {
 		const repo = makeRepo();

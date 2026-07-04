@@ -337,6 +337,33 @@
 	gap: var(--size-4-2);
 }
 
+.pos-preview-todo-row {
+	flex-wrap: wrap;
+}
+
+.pos-preview-todo-text {
+	flex: 1 1 auto;
+	min-width: 6em;
+}
+
+.pos-preview-todo-action {
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-2);
+}
+
+.pos-preview-todo-add {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-2);
+}
+
+.pos-preview-todo-add-text {
+	flex: 1 1 auto;
+	min-width: 10em;
+}
+
 .pos-preview-actions {
 	display: flex;
 	gap: var(--size-4-2);
