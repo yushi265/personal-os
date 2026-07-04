@@ -37,3 +37,9 @@ export function addDays(date: string, n: number): string {
 	base.setDate(base.getDate() + n);
 	return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
 }
+
+/** タイムスタンプ付きメモ用: "YYYY-MM-DD HH:mm" を端末ローカル時刻で返す(today()の時刻拡張) */
+export function nowStamp(): string {
+	const d = new Date();
+	return `${today()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}

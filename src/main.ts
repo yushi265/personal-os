@@ -13,6 +13,7 @@ import { TasksAdapter } from "./infra/TasksAdapter";
 import { EntityService } from "./services/EntityService";
 import { EntityFieldService } from "./services/EntityFieldService";
 import { TodoService } from "./services/TodoService";
+import { MemoService } from "./services/MemoService";
 import { ProgressService } from "./services/ProgressService";
 import { ActivityLogService } from "./services/ActivityLogService";
 import { PromoteService } from "./services/PromoteService";
@@ -49,6 +50,7 @@ export default class PersonalOSPlugin extends Plugin {
 	entityService!: EntityService;
 	entityFieldService!: EntityFieldService;
 	todoService!: TodoService;
+	memoService!: MemoService;
 	progressService!: ProgressService;
 	activityLogService!: ActivityLogService;
 	promoteService!: PromoteService;
@@ -88,6 +90,7 @@ export default class PersonalOSPlugin extends Plugin {
 		);
 		this.entityFieldService = new EntityFieldService(this.repo, this.store, this.activityLogService);
 		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
+		this.memoService = new MemoService(this.repo);
 		this.promoteService = new PromoteService(this.repo, this.store, this.entityService, this.activityLogService);
 		this.searchService = new SearchService(this.store, this.repo);
 		this.savedViewService = new SavedViewService(this.settings, () => this.saveSettings());

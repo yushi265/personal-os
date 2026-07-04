@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { addCycle, addDays, today } from "../../src/domain/date";
+import { addCycle, addDays, nowStamp, today } from "../../src/domain/date";
 
 describe("today", () => {
 	it("returns a YYYY-MM-DD formatted string", () => {
 		expect(today()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+	});
+});
+
+describe("nowStamp", () => {
+	it("returns a YYYY-MM-DD HH:mm formatted string", () => {
+		expect(nowStamp()).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+	});
+
+	it("shares the same date part as today()", () => {
+		expect(nowStamp().startsWith(today())).toBe(true);
 	});
 });
 
