@@ -14,9 +14,18 @@
 		type ManageSort,
 		type ManageSortKey,
 	} from "./manageData";
-	import { makeProjectDetailScreen, popOne, popTo, pushScreen, reconcileStack, type ManageScreen } from "./manageNav";
+	import {
+		makeProjectDetailScreen,
+		makeTicketDetailScreen,
+		popOne,
+		popTo,
+		pushScreen,
+		reconcileStack,
+		type ManageScreen,
+	} from "./manageNav";
 	import type { ManageRefreshToken } from "./ManageView";
 	import ProjectListScreen from "./ProjectListScreen.svelte";
+	import ProjectDetailScreen from "./ProjectDetailScreen.svelte";
 
 	let {
 		plugin,
@@ -63,6 +72,15 @@
 
 	function goToProjectDetail(path: string): void {
 		stack = pushScreen(stack, makeProjectDetailScreen(path));
+	}
+
+	function goToTicketDetail(path: string): void {
+		stack = pushScreen(stack, makeTicketDetailScreen(path));
+	}
+
+	// project-detail/ticket-detailのフレーム固有state(§2.3)は、スタック末尾を丸ごと差し替える形で更新する
+	function updateCurrentScreen(next: ManageScreen): void {
+		stack = [...stack.slice(0, -1), next];
 	}
 
 	function toggleGoal(key: string): void {
@@ -178,12 +196,13 @@
 			onNavigate={goToProjectDetail}
 		/>
 	{:else if current.kind === "project-detail"}
-		{@const entity = plugin.store.get(current.path)}
-		<div class="pos-manage-placeholder">
-			<h3>{entity?.title ?? t("manage.nav.unknown")}</h3>
-			<p>{t("manage.nav.placeholderNotice")}</p>
-			<button onclick={() => openPath(current.path)}>{t("manage.nav.openNote")}</button>
-		</div>
+		<ProjectDetailScreen
+			{plugin}
+			screen={current}
+			onScreenChange={updateCurrentScreen}
+			onNavigateTicket={goToTicketDetail}
+			onOpenNote={openPath}
+		/>
 	{:else if current.kind === "ticket-detail"}
 		{@const entity = plugin.store.get(current.path)}
 		<div class="pos-manage-placeholder">

@@ -262,6 +262,10 @@ const MESSAGES = {
 	"manage.nav.entityGone": "表示していた項目が削除またはアーカイブされたため、上の階層へ戻りました。",
 	"manage.nav.placeholderNotice": "この画面は今後のフェーズで実装予定です。",
 	"manage.nav.openNote": "ノートを開く",
+	"manage.projectDetail.newTicket": "+ 新規チケット",
+	"manage.projectDetail.todoScope": "Todoの範囲",
+	"manage.projectDetail.scopeDirect": "直下",
+	"manage.projectDetail.scopeAll": "すべて",
 	"confirmModal.confirm": "実行",
 	"confirmModal.cancel": "キャンセル",
 } as const;

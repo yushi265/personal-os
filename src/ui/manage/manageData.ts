@@ -264,6 +264,37 @@ export function groupProjectsByGoal(plugin: PersonalOSPlugin, filter: ManageFilt
 	});
 }
 
+/**
+ * プロジェクト詳細画面のチケット一覧(design-drilldown-nav.md §3.2)。
+ * 全チケットを走査してから絞るのではなく、getChildren(projectPath)を起点にそのプロジェクトの子のみを対象にする。
+ */
+export function buildProjectTicketRows(
+	plugin: PersonalOSPlugin,
+	projectPath: string,
+	filter: ManageFilter,
+	sort: ManageSort
+): ManageRowData[] {
+	let tickets = plugin.store.getChildren(projectPath).filter((e) => e.type === "ticket");
+	if (!filter.showArchived) tickets = tickets.filter((e) => e.status !== "archived");
+	const q = filterToQuery(filter, "ticket");
+	tickets = tickets.filter((e) => evaluate(q, e, (p) => plugin.store.get(p)?.title));
+	return sortEntityRows(tickets, sort).map((entity) => ({ kind: "entity", entity }));
+}
+
+/**
+ * プロジェクト詳細画面のTodo一覧(design-drilldown-nav.md §3.2)。
+ * direct: プロジェクト直下のTodoのみ。all: 直下+配下の非archivedチケット全ての未完了Todoを集約する。
+ */
+export function collectProjectTodos(store: IndexStore, projectPath: string, scope: "direct" | "all"): Todo[] {
+	const direct = store.getTodos(projectPath);
+	if (scope === "direct") return direct;
+	const ticketTodos = store
+		.getChildren(projectPath)
+		.filter((e) => e.type === "ticket" && e.status !== "archived")
+		.flatMap((ticket) => store.getTodos(ticket.path));
+	return [...direct, ...ticketTodos];
+}
+
 /** Preview(§4.6)からも使うため、フィルタ候補集計ヘルパーをここに置く */
 export function collectKnownTags(store: IndexStore): string[] {
 	const set = new Set<string>();

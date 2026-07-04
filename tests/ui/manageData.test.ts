@@ -5,8 +5,10 @@ import type { Todo } from "../../src/domain/todo";
 import type PersonalOSPlugin from "../../src/main";
 import {
 	buildManageRows,
+	buildProjectTicketRows,
 	collectKnownLabels,
 	collectKnownTags,
+	collectProjectTodos,
 	DEFAULT_ENTITY_SORT,
 	EMPTY_MANAGE_FILTER,
 	filterToQueryString,
@@ -330,5 +332,100 @@ describe("groupProjectsByGoal (design-drilldown-nav.md §8.3)", () => {
 		expect(groups).toHaveLength(1);
 		expect(groups[0].goal?.title).toBe("Goal A");
 		expect(groups[0].projects).toEqual([]);
+	});
+});
+
+describe("buildProjectTicketRows (design-drilldown-nav.md §3.2)", () => {
+	it("returns only tickets that are direct children of the project", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.upsertEntity(makeEntity({ path: "p2.md", type: "project", title: "p2" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", type: "ticket", title: "t1", project: "p1.md" }));
+		store.upsertEntity(makeEntity({ path: "t2.md", type: "ticket", title: "t2", project: "p2.md" }));
+		const plugin = makePlugin(store);
+
+		const rows = buildProjectTicketRows(plugin, "p1.md", { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
+
+		expect(rows.map((r) => r.entity?.title)).toEqual(["t1"]);
+	});
+
+	it("excludes archived tickets by default", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", type: "ticket", title: "t1", project: "p1.md", status: "doing" }));
+		store.upsertEntity(makeEntity({ path: "t2.md", type: "ticket", title: "t2", project: "p1.md", status: "archived" }));
+		const plugin = makePlugin(store);
+
+		const rows = buildProjectTicketRows(plugin, "p1.md", { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
+
+		expect(rows.map((r) => r.entity?.title)).toEqual(["t1"]);
+	});
+
+	it("applies the given filter (e.g. priority) to the child tickets", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", type: "ticket", title: "t1", project: "p1.md", priority: "high" }));
+		store.upsertEntity(makeEntity({ path: "t2.md", type: "ticket", title: "t2", project: "p1.md", priority: "low" }));
+		const plugin = makePlugin(store);
+
+		const rows = buildProjectTicketRows(
+			plugin,
+			"p1.md",
+			{ ...EMPTY_MANAGE_FILTER, priorities: ["high"] },
+			DEFAULT_ENTITY_SORT
+		);
+
+		expect(rows.map((r) => r.entity?.title)).toEqual(["t1"]);
+	});
+});
+
+describe("collectProjectTodos (design-drilldown-nav.md §8.4)", () => {
+	it("C-1: scope 'direct' returns only todos directly under the project", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", type: "ticket", title: "t1", project: "p1.md" }));
+		store.setTodos("p1.md", [makeTodo({ filePath: "p1.md", parentPath: "p1.md", parentType: "project", text: "direct" })]);
+		store.setTodos("t1.md", [makeTodo({ filePath: "t1.md", parentPath: "t1.md", parentType: "ticket", text: "ticket-todo" })]);
+
+		const todos = collectProjectTodos(store, "p1.md", "direct");
+
+		expect(todos.map((t) => t.text)).toEqual(["direct"]);
+	});
+
+	it("C-2: scope 'all' with two child tickets combines the direct todos and both tickets' todos", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", type: "ticket", title: "t1", project: "p1.md" }));
+		store.upsertEntity(makeEntity({ path: "t2.md", type: "ticket", title: "t2", project: "p1.md" }));
+		store.setTodos("p1.md", [makeTodo({ filePath: "p1.md", parentPath: "p1.md", parentType: "project", text: "direct" })]);
+		store.setTodos("t1.md", [makeTodo({ filePath: "t1.md", parentPath: "t1.md", parentType: "ticket", text: "todo1" })]);
+		store.setTodos("t2.md", [makeTodo({ filePath: "t2.md", parentPath: "t2.md", parentType: "ticket", text: "todo2" })]);
+
+		const todos = collectProjectTodos(store, "p1.md", "all");
+
+		expect(todos.map((t) => t.text).sort()).toEqual(["direct", "todo1", "todo2"]);
+	});
+
+	it("C-3: todos belonging to an archived child ticket are excluded from scope 'all'", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", type: "ticket", title: "t1", project: "p1.md", status: "doing" }));
+		store.upsertEntity(makeEntity({ path: "t2.md", type: "ticket", title: "t2", project: "p1.md", status: "archived" }));
+		store.setTodos("t1.md", [makeTodo({ filePath: "t1.md", parentPath: "t1.md", parentType: "ticket", text: "kept" })]);
+		store.setTodos("t2.md", [makeTodo({ filePath: "t2.md", parentPath: "t2.md", parentType: "ticket", text: "archived-todo" })]);
+
+		const todos = collectProjectTodos(store, "p1.md", "all");
+
+		expect(todos.map((t) => t.text)).toEqual(["kept"]);
+	});
+
+	it("C-4: with zero child tickets, scope 'all' returns only the direct todos without error", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1" }));
+		store.setTodos("p1.md", [makeTodo({ filePath: "p1.md", parentPath: "p1.md", parentType: "project", text: "direct" })]);
+
+		const todos = collectProjectTodos(store, "p1.md", "all");
+
+		expect(todos.map((t) => t.text)).toEqual(["direct"]);
 	});
 });
