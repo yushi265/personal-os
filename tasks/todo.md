@@ -1,5 +1,19 @@
 # Personal OS 実装 TODO
 
+## 第2次機能追加: ドリルダウンナビゲーション(design-drilldown-nav.md v1.0 準拠)
+
+- [x] Phase N1: ナビ基盤(manageNav.ts)+プロジェクト一覧(Goalグルーピング)+ テスト18件(累計186件)→ commit `f2a1a37`
+- [x] Phase N2: プロジェクト詳細+TodoList共通部品化(Preview改修込み)+ テスト7件(累計193件)→ commit `f76d1c2`
+- [x] Phase N3: チケット詳細+Dashboard遷移+自動巻き戻し配線 + テスト5件(累計198件)→ commit `117ea48`
+- [x] Phase N4: 仕上げ(SavedView互換・capability・受け入れ基準12項目チェック)→ commit `645e497`(累計199件)
+
+### ドリルダウンナビゲーション 完了レビュー(2026-07-04)
+
+- 全4 Phase完了。テスト199件全パス、tsc+svelte-check 0エラー0警告、本番ビルド成功。テストVault反映済み
+- 受け入れ基準12項目: 10項目○ / 2項目△(実機確認要: #11 外部編集の自動反映、#12 モバイルタップ)
+- N4でSavedView旧tab互換のpicker絞り込み漏れを発見・修正(設計§5.2)。タブ式時代の死んだコードパスも一掃
+- 実機確認の観点: Goalグルーピングの見た目 / パンくず・戻るの操作感 / Dashboard→詳細ジャンプと↗ボタン / 外部編集の反映 / モバイルタップ領域
+
 ## 第1次機能追加: UIファースト操作(design-ui-first.md v1.0 準拠)
 
 - [x] Phase A1: 共通基盤(updateTodoLine/appendTodoToSection/query period拡張/renameNote/EntityFieldService)+ テスト31件(累計137件)→ commit `43408a4`
