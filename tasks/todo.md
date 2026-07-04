@@ -1,4 +1,25 @@
-# Personal OS MVP 実装 TODO
+# Personal OS 実装 TODO
+
+## 第1次機能追加: UIファースト操作(design-ui-first.md v1.0 準拠)
+
+- [x] Phase A1: 共通基盤(updateTodoLine/appendTodoToSection/query period拡張/renameNote/EntityFieldService)+ テスト31件(累計137件)→ commit `43408a4`
+- [x] Phase A2: 管理View一覧+フィルタ+ソート(読み取り専用)+ テスト16件(累計153件)→ commit `788608b`
+- [x] Phase A3: インライン編集+行メニュー+SavedView連携 + テスト8件(累計161件)→ commit `4622bb0`
+  - UXメモ: Titleクリックは「編集」に変更(ノートを開くのはRowMenu経由)。実機確認時に使用感を評価
+- [x] Phase B1: Preview編集化(プロパティ/Tags/Labels/Blockers)+ テスト5件(累計166件)→ commit `7f811ca`(+NULバイト修正 `d96237b`)
+- [x] Phase B2: Todo追加・配下Entity・Review・本文プレビュー + テスト2件(累計168件)→ commit `fea0a0c`
+- [x] 仕上げ: capability分岐・i18n総点検・受け入れ基準15項目チェック → commit `1e35e43`
+
+### UIファースト操作 完了レビュー(2026-07-04)
+
+- 全6 Phase完了。テスト168件全パス、tsc+svelte-check 0エラー0警告、本番ビルド成功。テストVaultへ反映済み
+- 受け入れ基準15項目: 11項目○ / 4項目△(実機確認要: #11 Git差分の見た目、#13 外部編集の自動反映、#14 モバイルタップ、#15 総合)
+- 実機確認の観点:
+  - Todoインライン編集でメタデータ順序が正規化される仕様(設計§9.2-7)の差分確認
+  - TagChips/BlockerListの×ボタンのタップ当たり判定が小さい懸念(静的指摘)
+  - ManageのTitleクリック=編集(ノートを開くのはRowMenu経由)の使用感
+
+## MVP 実装 TODO(完了)
 
 計画: ~/.claude/plans/greedy-tumbling-planet.md(詳細設計書 v1.0 準拠)
 
