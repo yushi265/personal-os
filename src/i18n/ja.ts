@@ -132,6 +132,41 @@ const MESSAGES = {
 	"modal.promoteTicket.confirmPrefix": "「",
 	"modal.promoteTicket.confirmSuffix": "」をProjectへ昇格しますか?",
 	"modal.promoteTicket.submit": "Promote",
+
+	"modal.review.title": "Review",
+	"modal.review.progress": "Progress",
+	"modal.review.blocker": "Blocker",
+	"modal.review.nextAction": "Next Action",
+	"modal.review.decision": "判断",
+	"modal.review.decision.continue": "Continue",
+	"modal.review.decision.pause": "Pause",
+	"modal.review.decision.complete": "Complete",
+	"modal.review.submit": "Submit",
+	"modal.review.submitted": "レビューを記録しました",
+	"modal.review.notEligible": "GoalまたはProjectのノートを開いてください。",
+
+	"command.openReview": "Open Review",
+	"command.openSearch": "Open Search",
+	"command.openTimeline": "Open Timeline",
+
+	"search.title": "Search",
+	"search.savedViewPlaceholder": "Saved View...",
+	"search.queryPlaceholder": "type:ticket status:doing priority:high ...",
+	"search.run": "検索",
+	"search.save": "現在のクエリを保存",
+	"search.unnamedView": "無題のView",
+	"search.sort.title": "タイトル順",
+	"search.sort.due": "期限順",
+	"search.sort.priority": "優先度順",
+	"search.sort.progress": "進捗順",
+	"search.sort.asc": "昇順",
+	"search.sort.desc": "降順",
+	"search.entities": "Entity",
+	"search.todos": "Todo",
+	"search.empty": "該当する項目はありません。",
+
+	"timeline.title": "Timeline",
+	"timeline.empty": "start/dueを持つProject・Ticketはありません。",
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;

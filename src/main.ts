@@ -15,12 +15,18 @@ import { TodoService } from "./services/TodoService";
 import { ProgressService } from "./services/ProgressService";
 import { ActivityLogService } from "./services/ActivityLogService";
 import { PromoteService } from "./services/PromoteService";
+import { SearchService } from "./services/SearchService";
+import { SavedViewService } from "./services/SavedViewService";
+import { ReviewService } from "./services/ReviewService";
 import { CreateEntityModal } from "./ui/modals/CreateEntityModal";
 import { QuickAddModal } from "./ui/modals/QuickAddModal";
 import { PromoteTicketModal, PromoteTodoModal } from "./ui/modals/PromoteModal";
+import { ReviewModal } from "./ui/modals/ReviewModal";
 import { DashboardView, VIEW_TYPE_DASHBOARD } from "./ui/dashboard/DashboardView";
 import { PreviewView, VIEW_TYPE_PREVIEW } from "./ui/preview/PreviewView";
 import { KanbanView, VIEW_TYPE_KANBAN } from "./ui/kanban/KanbanView";
+import { SearchView, VIEW_TYPE_SEARCH } from "./ui/search/SearchView";
+import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
 import { t } from "./i18n/ja";
 
 interface Capability {
@@ -41,6 +47,9 @@ export default class PersonalOSPlugin extends Plugin {
 	progressService!: ProgressService;
 	activityLogService!: ActivityLogService;
 	promoteService!: PromoteService;
+	searchService!: SearchService;
+	savedViewService!: SavedViewService;
+	reviewService!: ReviewService;
 	capability: Capability = { todoFeatures: false };
 
 	async onload() {
@@ -72,6 +81,9 @@ export default class PersonalOSPlugin extends Plugin {
 		);
 		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
 		this.promoteService = new PromoteService(this.repo, this.store, this.entityService, this.activityLogService);
+		this.searchService = new SearchService(this.store, this.repo);
+		this.savedViewService = new SavedViewService(this.settings, () => this.saveSettings());
+		this.reviewService = new ReviewService(this.repo, this.store, this.activityLogService);
 
 		this.registerViews();
 		this.registerCommands();
@@ -103,7 +115,8 @@ export default class PersonalOSPlugin extends Plugin {
 		this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this));
 		this.registerView(VIEW_TYPE_PREVIEW, (leaf) => new PreviewView(leaf, this));
 		this.registerView(VIEW_TYPE_KANBAN, (leaf) => new KanbanView(leaf, this));
-		// Timeline Viewの登録場所(Phase 5で追加)
+		this.registerView(VIEW_TYPE_SEARCH, (leaf) => new SearchView(leaf, this));
+		this.registerView(VIEW_TYPE_TIMELINE, (leaf) => new TimelineView(leaf, this));
 	}
 
 	private registerCommands(): void {
@@ -177,6 +190,26 @@ export default class PersonalOSPlugin extends Plugin {
 				return true;
 			},
 		});
+		this.addCommand({
+			id: "open-review",
+			name: t("command.openReview"),
+			checkCallback: (checking) => {
+				const entity = this.activeEntity();
+				if (!entity || (entity.type !== "project" && entity.type !== "goal")) return false;
+				if (!checking) this.openReviewModal(entity.path);
+				return true;
+			},
+		});
+		this.addCommand({
+			id: "open-search",
+			name: t("command.openSearch"),
+			callback: () => this.openSearch(),
+		});
+		this.addCommand({
+			id: "open-timeline",
+			name: t("command.openTimeline"),
+			callback: () => this.openTimeline(),
+		});
 	}
 
 	private activeEntity() {
@@ -208,6 +241,16 @@ export default class PersonalOSPlugin extends Plugin {
 		}).open();
 	}
 
+	private openReviewModal(targetPath: string): void {
+		const target = this.store.get(targetPath);
+		if (!target) return;
+		new ReviewModal(this.app, {
+			reviewService: this.reviewService,
+			target,
+			defaultCycle: this.settings.defaultReviewCycle,
+		}).open();
+	}
+
 	private openCreateModal(type: EntityType): void {
 		new CreateEntityModal(this.app, {
 			entityService: this.entityService,
@@ -236,6 +279,28 @@ export default class PersonalOSPlugin extends Plugin {
 		}
 		const leaf = this.app.workspace.getLeaf(true);
 		await leaf.setViewState({ type: VIEW_TYPE_KANBAN, active: true });
+		this.app.workspace.revealLeaf(leaf);
+	}
+
+	private async openSearch(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_SEARCH);
+		if (existing.length > 0) {
+			this.app.workspace.revealLeaf(existing[0]);
+			return;
+		}
+		const leaf = this.app.workspace.getLeaf(true);
+		await leaf.setViewState({ type: VIEW_TYPE_SEARCH, active: true });
+		this.app.workspace.revealLeaf(leaf);
+	}
+
+	private async openTimeline(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_TIMELINE);
+		if (existing.length > 0) {
+			this.app.workspace.revealLeaf(existing[0]);
+			return;
+		}
+		const leaf = this.app.workspace.getLeaf(true);
+		await leaf.setViewState({ type: VIEW_TYPE_TIMELINE, active: true });
 		this.app.workspace.revealLeaf(leaf);
 	}
 

@@ -70,6 +70,14 @@ export class VaultRepository {
 		return this.app.vault.create(path, body);
 	}
 
+	/** 指定パスへ厳密にノートを作成する(Reviewノート等、呼び出し側で一意なパスを決めるケース用)。既存ファイルがあれば例外 */
+	async createNoteAt(path: string, body: string): Promise<TFile> {
+		const folder = path.substring(0, path.lastIndexOf("/"));
+		if (folder) await this.ensureFolder(folder);
+		this.selfWriteGuard.markWrite(path);
+		return this.app.vault.create(path, body);
+	}
+
 	// ---- 更新 ----
 
 	/** frontmatter更新。fn内でfmを直接書き換える */
