@@ -1,6 +1,8 @@
 import { ENTITY_TYPES, type EntityType } from "../domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "../domain/todo";
 import type { Memo } from "../domain/memo";
+import { today } from "../domain/date";
+import { isBlocked, isOverdue, isReviewNeeded, isTodoOverdue } from "../domain/judge";
 import type { CreateEntityInput } from "../services/EntityService";
 import type { EntityFieldKey, EntityFieldValue } from "../services/EntityFieldService";
 import type { PromoteOptions } from "../services/PromoteService";
@@ -40,6 +42,7 @@ export const ApiRouter = {
 
 async function dispatch(method: string, pathname: string, query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
 	if (method === "GET" && pathname === "/api/meta") return handleMeta(deps);
+	if (method === "GET" && pathname === "/api/summary") return handleSummary(deps);
 	if (method === "GET" && pathname === "/api/entities") return handleListEntities(query, deps);
 	if (method === "GET" && pathname === "/api/entity") return handleGetEntity(query, deps);
 	if (method === "GET" && pathname === "/api/entity/children") return handleGetChildren(query, deps);
@@ -66,6 +69,28 @@ async function dispatch(method: string, pathname: string, query: Record<string, 
 
 function handleMeta(deps: ApiDeps): ApiResult {
 	return ok({ vaultName: deps.getVaultName(), capability: deps.getCapability(), port: deps.getPort() });
+}
+
+// ---- summary ----
+
+/**
+ * ホーム画面サマリカード用の集計をサーバー側で1回で返す(P3のクライアントN+1解消。design-browser-ui.md §9 P5行)。
+ * `src/ui/dashboard/dashboardData.ts`のtodayTodos/overdueTodos集計と同じ判定(judge.ts)を用い、
+ * 同じ意味論になるようにする(§8「同じ判断を2箇所に書かない」原則)。
+ */
+function handleSummary(deps: ApiDeps): ApiResult {
+	const now = today();
+	const capability = deps.getCapability();
+	const entities = [...deps.store.listByType("goal"), ...deps.store.listByType("project"), ...deps.store.listByType("ticket")];
+
+	return ok({
+		todayTodos: capability.todoFeatures ? deps.todoService.list({ done: false, dueOn: now }) : [],
+		overdueTodos: capability.todoFeatures ? deps.store.getAllTodos().filter((t) => isTodoOverdue(t, now)) : [],
+		overdueEntities: entities.filter((e) => isOverdue(e, now)),
+		reviewNeededEntities: entities.filter((e) => isReviewNeeded(e, now)),
+		blockedEntities: entities.filter((e) => isBlocked(e)),
+		activeProjectCount: deps.store.listByType("project").filter((e) => e.status === "active").length,
+	});
 }
 
 // ---- entities ----

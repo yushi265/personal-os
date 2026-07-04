@@ -2,10 +2,14 @@ import type { Entity, EntityType } from "@domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "@domain/todo";
 import type { Memo } from "@domain/memo";
 import { apiClient } from "./client";
-import type { CreateEntityInput, EntityFieldKey, EntityFieldValue, GoalGroup, MetaResponse, PromoteOptions } from "./types";
+import type { CreateEntityInput, EntityFieldKey, EntityFieldValue, GoalGroup, HomeSummaryResponse, MetaResponse, PromoteOptions } from "./types";
 
 export function getMeta(): Promise<MetaResponse> {
   return apiClient.get<MetaResponse>("/api/meta");
+}
+
+export function getSummary(): Promise<HomeSummaryResponse> {
+  return apiClient.get<HomeSummaryResponse>("/api/summary");
 }
 
 export function getEntitiesByType(type: EntityType): Promise<Entity[]> {

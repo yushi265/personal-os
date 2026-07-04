@@ -4,6 +4,7 @@ import type { EntityFieldService } from "../services/EntityFieldService";
 import type { TodoService } from "../services/TodoService";
 import type { MemoService } from "../services/MemoService";
 import type { PromoteService } from "../services/PromoteService";
+import type { SseHub } from "./SseHub";
 
 /**
  * サーバー層のリクエスト情報をプレーンオブジェクトとして表現する(design-browser-ui.md §8)。
@@ -37,6 +38,10 @@ export interface ApiDeps {
 	todoService: TodoService;
 	memoService: MemoService;
 	promoteService: PromoteService;
+	/** SSE購読者管理(design-browser-ui.md §4.7)。HttpServerが/api/eventsの購読受付に使う */
+	sseHub: SseHub;
+	/** webapp-dist/ の絶対パス(design-browser-ui.md §3.4)。StaticServerの配信起点 */
+	getWebappDistDir: () => string;
 }
 
 /** ApiRouter.handle()の戻り値。HttpServerはこれをそのままJSONレスポンスへ変換する */

@@ -48,6 +48,7 @@ interface Mocks {
 		toggle: ReturnType<typeof vi.fn>;
 		updateInline: ReturnType<typeof vi.fn>;
 		remove: ReturnType<typeof vi.fn>;
+		list: ReturnType<typeof vi.fn>;
 	};
 	memoService: { list: ReturnType<typeof vi.fn>; add: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; remove: ReturnType<typeof vi.fn> };
 	promoteService: { promoteTodoToTicket: ReturnType<typeof vi.fn>; promoteTicketToProject: ReturnType<typeof vi.fn> };
@@ -67,6 +68,7 @@ function makeMocks(): Mocks {
 		toggle: vi.fn().mockResolvedValue("ok"),
 		updateInline: vi.fn().mockResolvedValue("ok"),
 		remove: vi.fn().mockResolvedValue("ok"),
+		list: vi.fn().mockReturnValue([]),
 	};
 	const memoService = {
 		list: vi.fn().mockResolvedValue([]),
@@ -89,6 +91,8 @@ function makeMocks(): Mocks {
 		todoService: todoService as unknown as TodoService,
 		memoService: memoService as unknown as MemoService,
 		promoteService: promoteService as unknown as PromoteService,
+		sseHub: { subscribe: vi.fn(), closeAll: vi.fn() } as unknown as ApiDeps["sseHub"],
+		getWebappDistDir: () => "/tmp/webapp-dist",
 	};
 
 	return { deps, store, entityService, entityFieldService, todoService, memoService, promoteService };
@@ -99,6 +103,48 @@ describe("ApiRouter.handle: /api/meta", () => {
 		const { deps } = makeMocks();
 		const res = await ApiRouter.handle("GET", "/api/meta", {}, undefined, deps);
 		expect(res).toEqual({ status: 200, body: { vaultName: "test-vault", capability: { todoFeatures: true }, port: 27141 } });
+	});
+});
+
+describe("ApiRouter.handle: GET /api/summary", () => {
+	it("aggregates todos/entities via judge.ts, delegating today's todos to todoService.list", async () => {
+		const { deps, store, todoService } = makeMocks();
+		todoService.list.mockReturnValue([makeTodo({ text: "today", dueDate: "2026-07-04" })]);
+		store.setTodos("ticket-a.md", [makeTodo({ done: false, dueDate: "2026-07-01" })]); // overdue
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", status: "active", blockers: ["x"] }));
+		store.upsertEntity(
+			makeEntity({ path: "p2.md", type: "project", title: "p2", status: "backlog", reviewCycle: "weekly", lastReviewed: undefined })
+		);
+
+		const res = await ApiRouter.handle("GET", "/api/summary", {}, undefined, deps);
+
+		expect(res.status).toBe(200);
+		const body = res.body as {
+			todayTodos: unknown[];
+			overdueTodos: unknown[];
+			blockedEntities: { path: string }[];
+			reviewNeededEntities: { path: string }[];
+			activeProjectCount: number;
+		};
+		expect(todoService.list).toHaveBeenCalledWith({ done: false, dueOn: expect.any(String) });
+		expect(body.todayTodos).toHaveLength(1);
+		expect(body.overdueTodos).toHaveLength(1);
+		expect(body.blockedEntities.map((e) => e.path)).toEqual(["p1.md"]);
+		expect(body.reviewNeededEntities.map((e) => e.path)).toEqual(["p2.md"]);
+		expect(body.activeProjectCount).toBe(1);
+	});
+
+	it("returns empty todo lists when todoFeatures capability is off", async () => {
+		const { deps, store, todoService } = makeMocks();
+		deps.getCapability = () => ({ todoFeatures: false });
+		store.setTodos("ticket-a.md", [makeTodo({ dueDate: "2026-07-01" })]);
+
+		const res = await ApiRouter.handle("GET", "/api/summary", {}, undefined, deps);
+
+		const body = res.body as { todayTodos: unknown[]; overdueTodos: unknown[] };
+		expect(body.todayTodos).toEqual([]);
+		expect(body.overdueTodos).toEqual([]);
+		expect(todoService.list).not.toHaveBeenCalled();
 	});
 });
 

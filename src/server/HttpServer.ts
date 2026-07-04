@@ -1,6 +1,8 @@
 import { Platform } from "obsidian";
 import type { AuthGuard } from "./AuthGuard";
 import { ApiRouter } from "./ApiRouter";
+import { StaticServer } from "./StaticServer";
+import type { SseHub } from "./SseHub";
 import type { ApiDeps, ApiRequestInfo } from "./types";
 
 export const MAX_PORT_RETRIES = 20;
@@ -48,6 +50,8 @@ export async function bindWithPortRetry(
 export class HttpServer {
 	private server: import("http").Server | null = null;
 	private port = -1;
+	private staticServer = new StaticServer();
+	private sseHub: SseHub | null = null;
 
 	/** 現在bind中のポート(未起動なら -1) */
 	get actualPort(): number {
@@ -87,6 +91,7 @@ export class HttpServer {
 
 		this.server = server;
 		this.port = port;
+		this.sseHub = deps.sseHub;
 		return port;
 	}
 
@@ -94,6 +99,8 @@ export class HttpServer {
 		const server = this.server;
 		this.server = null;
 		this.port = -1;
+		this.sseHub?.closeAll();
+		this.sseHub = null;
 		if (!server) return;
 		await new Promise<void>((resolve) => server.close(() => resolve()));
 	}
@@ -108,6 +115,13 @@ export class HttpServer {
 		const query: Record<string, string> = {};
 		url.searchParams.forEach((value, key) => (query[key] = value));
 
+		// 静的アセット(webapp-dist/)は認証不要で配信する(design-browser-ui.md §3.4実装判断:
+		// index.htmlが取れんとトークン処理自体ができんため)。API(/api/)のみ認証対象。
+		if (!url.pathname.startsWith("/api/")) {
+			this.staticServer.serve(url.pathname, res, deps.getWebappDistDir());
+			return;
+		}
+
 		const requestInfo: ApiRequestInfo = {
 			path: url.pathname,
 			query,
@@ -121,6 +135,11 @@ export class HttpServer {
 		if (!auth.ok) {
 			console.warn(`Personal OS server: auth rejected ${req.method} ${url.pathname} (${auth.code})`);
 			this.writeJson(res, auth.status, { error: auth.code, code: auth.code });
+			return;
+		}
+
+		if ((req.method ?? "GET") === "GET" && url.pathname === "/api/events") {
+			deps.sseHub.subscribe(res);
 			return;
 		}
 

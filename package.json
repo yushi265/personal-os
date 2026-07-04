@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "build": "tsc --noEmit && npm run webapp:build && node esbuild.config.mjs production",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json --config ./svelte.config.js",
     "webapp:dev": "npm run dev --workspace webapp",

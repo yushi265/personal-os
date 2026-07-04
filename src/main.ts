@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Platform, Plugin, TFile, type WorkspaceLeaf } from "obsidian";
+import { MarkdownView, Notice, Platform, Plugin, TFile, type FileSystemAdapter, type WorkspaceLeaf } from "obsidian";
 import type { EntityType } from "./domain/entity";
 import type { Todo } from "./domain/todo";
 import { today } from "./domain/date";
@@ -38,6 +38,7 @@ import { statusBarTodoTitle, serverStartedNotice, serverStartFailedNotice, t } f
 import { TokenStore } from "./server/TokenStore";
 import { AuthGuard } from "./server/AuthGuard";
 import { HttpServer } from "./server/HttpServer";
+import { SseHub } from "./server/SseHub";
 
 const STATUSBAR_REFRESH_DEBOUNCE_MS = 100;
 
@@ -68,6 +69,7 @@ export default class PersonalOSPlugin extends Plugin {
 	tokenStore!: TokenStore;
 	authGuard!: AuthGuard;
 	httpServer!: HttpServer;
+	sseHub!: SseHub;
 	capability: Capability = { todoFeatures: false };
 	private capabilityDetected = false;
 	private statusBarEl: HTMLElement | undefined;
@@ -114,6 +116,7 @@ export default class PersonalOSPlugin extends Plugin {
 			() => this.httpServer.actualPort
 		);
 		this.httpServer = new HttpServer();
+		this.sseHub = new SseHub(this.eventBus);
 
 		this.registerViews();
 		this.registerCommands();
@@ -165,6 +168,8 @@ export default class PersonalOSPlugin extends Plugin {
 				todoService: this.todoService,
 				memoService: this.memoService,
 				promoteService: this.promoteService,
+				sseHub: this.sseHub,
+				getWebappDistDir: () => this.getWebappDistDir(),
 			});
 			if (port === -1) return;
 			console.log(`Personal OS: browser UI server listening on http://127.0.0.1:${port}`);
@@ -175,6 +180,13 @@ export default class PersonalOSPlugin extends Plugin {
 			console.error("Personal OS: failed to start browser UI server", err);
 			new Notice(serverStartFailedNotice(err instanceof Error ? err.message : String(err)));
 		}
+	}
+
+	/** webapp-dist/ の絶対パス(design-browser-ui.md §3.4)。プラグインディレクトリ配下に同梱・ビルド時コピーされる */
+	private getWebappDistDir(): string {
+		const adapter = this.app.vault.adapter as FileSystemAdapter;
+		const pluginDir = this.manifest.dir ?? `.obsidian/plugins/${this.manifest.id}`;
+		return `${adapter.getBasePath()}/${pluginDir}/webapp-dist`;
 	}
 
 	async loadSettings(): Promise<void> {

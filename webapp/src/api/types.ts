@@ -1,4 +1,5 @@
 import type { Entity, EntityType, Priority } from "@domain/entity";
+import type { Todo } from "@domain/todo";
 
 /**
  * サーバー(src/ui/manage/manageData.ts groupProjectsByGoal)が返す形状(design-browser-ui.md §5.1.1)。
@@ -13,6 +14,19 @@ export interface MetaResponse {
   vaultName: string;
   capability: { todoFeatures: boolean };
   port: number;
+}
+
+/**
+ * GET /api/summary のレスポンス形状(design-browser-ui.md §9 P5行: N+1解消のためサーバー側でjudge.ts集計済み)。
+ * `src/server/ApiRouter.ts` handleSummary / `src/ui/dashboard/dashboardData.ts` と同じ判定に揃える。
+ */
+export interface HomeSummaryResponse {
+  todayTodos: Todo[];
+  overdueTodos: Todo[];
+  overdueEntities: Entity[];
+  reviewNeededEntities: Entity[];
+  blockedEntities: Entity[];
+  activeProjectCount: number;
 }
 
 /**

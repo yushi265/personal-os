@@ -3,6 +3,7 @@ main.js
 *.js.map
 .DS_Store
 dist/
+webapp-dist/
 *.tsbuildinfo
 
 # local test vault (contains copied community plugins)

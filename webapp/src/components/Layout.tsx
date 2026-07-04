@@ -1,7 +1,9 @@
 import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ConnectionBanner } from "@/components/ConnectionBanner";
 import { useEntity } from "@/hooks/useEntity";
+import { useSseSync } from "@/hooks/useSseSync";
 import { t } from "@i18n/ja";
 
 // パンくず(design-browser-ui.md §6.2)。詳細画面は 一覧 > Goal名(project) / Project名(ticket) > 自身の名前 とする(P4)。
@@ -36,9 +38,11 @@ function useBreadcrumbItems(): { label: string; to?: string }[] {
 
 export function Layout() {
   const items = useBreadcrumbItems();
+  const { connected } = useSseSync();
 
   return (
     <div className="min-h-screen bg-background">
+      {!connected && <ConnectionBanner />}
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
           <Breadcrumb>

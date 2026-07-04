@@ -192,6 +192,7 @@ const MESSAGES = {
 	"webapp.notFound.backLink": "一覧へ戻る",
 	"webapp.dateEdit.clear": "クリア",
 	"webapp.dateEdit.confirm": "OK",
+	"webapp.sse.disconnected": "接続が切れました(Obsidianが起動しているか確認してください)",
 
 	"settings.section.capability": "依存プラグイン",
 	"settings.capability.dataview": "Dataview",
