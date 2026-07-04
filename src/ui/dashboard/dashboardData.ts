@@ -3,9 +3,12 @@ import { isBlocked, isOverdue, isReviewNeeded, isTodoOverdue } from "../../domai
 import { today } from "../../domain/date";
 import type { Todo } from "../../domain/todo";
 import type PersonalOSPlugin from "../../main";
+import { isManageVaultEmpty } from "../manage/manageData";
 
 export interface DashboardData {
 	todoFeatures: boolean;
+	/** オンボーディング判定(Phase U3): Vault内にGoal/Projectが1件も無いかどうか(manageData.isManageVaultEmptyと同一判定) */
+	isEmpty: boolean;
 	todayTodos: Todo[];
 	overdueTodos: Todo[];
 	overdueEntities: Entity[];
@@ -66,6 +69,7 @@ export async function buildDashboardData(plugin: PersonalOSPlugin): Promise<Dash
 
 	return {
 		todoFeatures,
+		isEmpty: isManageVaultEmpty(plugin.store),
 		todayTodos: todoFeatures ? plugin.todoService.list({ done: false, dueOn: now }) : [],
 		overdueTodos: todoFeatures ? plugin.store.getAllTodos().filter((t) => isTodoOverdue(t, now)) : [],
 		overdueEntities: entities.filter((e) => isOverdue(e, now)),

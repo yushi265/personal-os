@@ -9,8 +9,10 @@
 	import ManageTable from "./ManageTable.svelte";
 	import InlineCreateRow from "./InlineCreateRow.svelte";
 	import {
+		firstExpandedGroupIndex,
 		goalGroupProgress,
 		groupProjectsByGoal,
+		isManageVaultEmpty,
 		type ManageFilter,
 		type ManageRowData,
 		type ManageSort,
@@ -54,9 +56,19 @@
 		return groupProjectsByGoal(plugin, filter, sort);
 	});
 
+	// オンボーディング判定(Phase U3): Vault内にGoal/Projectが1件も無い初回起動状態かどうか。フィルタ結果とは独立に判定する
+	const isVaultEmpty = $derived.by(() => {
+		void refreshTick;
+		return isManageVaultEmpty(plugin.store);
+	});
+
 	function groupKey(goal: Entity | null): string {
 		return goal?.path ?? "__unclassified__";
 	}
+
+	// 「n」キーでのインライン新規作成フォーカス(Phase U2→U3改善): 先頭固定ではなく、
+	// 展開中(折りたたまれていない)最初のGoalセクションを優先する(判定はmanageData.tsの純粋関数、テスト参照)
+	const focusGroupIndex = $derived(firstExpandedGroupIndex(groups, collapsedGoals));
 
 	function toRows(entities: Entity[]): ManageRowData[] {
 		return entities.map((entity) => ({ kind: "entity" as const, entity }));
@@ -74,6 +86,16 @@
 			initialType: "project",
 			initialParentPath: goalPath,
 			openAfterCreate: false,
+		}).open();
+	}
+
+	// オンボーディング(Phase U3): 初回起動時の「最初のGoalを作成」ボタン
+	function createFirstGoal(): void {
+		new CreateEntityModal(plugin.app, {
+			entityService: plugin.entityService,
+			store: plugin.store,
+			settings: plugin.settings,
+			initialType: "goal",
 		}).open();
 	}
 
@@ -95,7 +117,19 @@
 	{toolbarExtra}
 />
 
-{#if groups.length === 0}
+{#if isVaultEmpty}
+	<div class="pos-manage-onboarding">
+		<h3 class="pos-manage-onboarding-title">{t("onboarding.welcome.title")}</h3>
+		<ol class="pos-manage-onboarding-steps">
+			<li>{t("onboarding.welcome.step1")}</li>
+			<li>{t("onboarding.welcome.step2")}</li>
+			<li>{t("onboarding.welcome.step3")}</li>
+		</ol>
+		<button type="button" class="pos-manage-onboarding-action" onclick={createFirstGoal}>
+			{t("onboarding.welcome.createGoal")}
+		</button>
+	</div>
+{:else if groups.length === 0}
 	<div class="pos-manage-empty-state">
 		<span class="pos-manage-empty-icon" aria-hidden="true">🗂️</span>
 		<p class="pos-manage-empty">{t("manage.emptyState")}</p>
@@ -135,7 +169,7 @@
 					label={t("manage.nav.inlineNewProject")}
 					inputPlaceholder={t("modal.createEntity.titleFieldPlaceholder")}
 					onSubmit={(title) => createProjectInline(group.goal?.path, title)}
-					focusRequestToken={groupIndex === 0 ? focusNewRowToken : undefined}
+					focusRequestToken={groupIndex === focusGroupIndex ? focusNewRowToken : undefined}
 				/>
 				<button class="pos-manage-goal-new-btn" onclick={() => createProject(group.goal?.path)}>
 					{t("manage.nav.newProjectInGoal")}

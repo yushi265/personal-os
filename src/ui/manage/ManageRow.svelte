@@ -134,6 +134,8 @@
 				onCommit={(next) => commitTitle(entity, next)}
 				onNavigate={onNavigate ? () => onNavigate?.(entity.path) : undefined}
 				editRequestToken={editTitleToken}
+				app={plugin.app}
+				hoverSourcePath={entity.path}
 			/>
 			<RowBadges blockerCount={badges.blockers} memoCount={badges.memos} todoCount={badges.todos} />
 		</td>

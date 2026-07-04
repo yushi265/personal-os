@@ -1,6 +1,7 @@
-import { MarkdownView, Notice, Plugin, TFile, type WorkspaceLeaf } from "obsidian";
+import { MarkdownView, Notice, Platform, Plugin, TFile, type WorkspaceLeaf } from "obsidian";
 import type { EntityType } from "./domain/entity";
 import type { Todo } from "./domain/todo";
+import { today } from "./domain/date";
 import { DEFAULT_SETTINGS, type POSSettings } from "./settings/settings";
 import { POSSettingsTab } from "./settings/SettingsTab";
 import { POSEventBus } from "./infra/EventBus";
@@ -33,7 +34,9 @@ import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
 import { ManageView, VIEW_TYPE_MANAGE } from "./ui/manage/ManageView";
 import { makeProjectDetailScreen, makeTicketDetailScreen, type ManageScreen } from "./ui/manage/manageNav";
 import { EntitySwitcherModal } from "./ui/modals/EntitySwitcherModal";
-import { t } from "./i18n/ja";
+import { statusBarTodoTitle, t } from "./i18n/ja";
+
+const STATUSBAR_REFRESH_DEBOUNCE_MS = 100;
 
 interface Capability {
 	todoFeatures: boolean;
@@ -61,6 +64,8 @@ export default class PersonalOSPlugin extends Plugin {
 	exportService!: ExportService;
 	capability: Capability = { todoFeatures: false };
 	private capabilityDetected = false;
+	private statusBarEl: HTMLElement | undefined;
+	private statusBarDebounceTimer: number | undefined;
 
 	async onload() {
 		await this.loadSettings();
@@ -109,11 +114,13 @@ export default class PersonalOSPlugin extends Plugin {
 			await this.indexer.fullScan();
 			this.registerVaultEvents();
 			await this.ensurePreviewLeaf();
+			if (!Platform.isMobile) this.setupStatusBar();
 		});
 	}
 
 	onunload() {
 		// Viewはdetachせず放置(Obsidian推奨)。イベントはregisterEventで自動解除される。
+		if (this.statusBarDebounceTimer !== undefined) window.clearTimeout(this.statusBarDebounceTimer);
 	}
 
 	async loadSettings(): Promise<void> {
@@ -342,7 +349,8 @@ export default class PersonalOSPlugin extends Plugin {
 		this.app.workspace.revealLeaf(leaf);
 	}
 
-	private async openManage(): Promise<void> {
+	/** DashboardのオンボーディングWelcomeカード(Phase U3)等、View外からも管理Viewを開けるようpublicにする */
+	async openManage(): Promise<void> {
 		const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_MANAGE);
 		if (existing.length > 0) {
 			this.app.workspace.revealLeaf(existing[0]);
@@ -408,6 +416,39 @@ export default class PersonalOSPlugin extends Plugin {
 		if (!this.capability.todoFeatures) {
 			new Notice(t("E001"));
 		}
+	}
+
+	/**
+	 * ステータスバー(Phase U3): 今日以前の未完了Todo件数を表示する(TodayTodoWidget/Dashboardと同じ判定=dueOn:today())。
+	 * Platform.isMobileでは呼ばれない(モバイルにステータスバーが無いため)。capability.todoFeatures無効時は非表示にする。
+	 */
+	private setupStatusBar(): void {
+		this.statusBarEl = this.addStatusBarItem();
+		this.statusBarEl.addClass("pos-statusbar-item");
+		this.registerDomEvent(this.statusBarEl, "click", () => void this.openDashboard());
+		this.registerEvent(this.eventBus.onEvent("index-updated", () => this.scheduleStatusBarRefresh()));
+		this.registerEvent(this.eventBus.onEvent("capability-changed", () => this.scheduleStatusBarRefresh()));
+		this.updateStatusBar();
+	}
+
+	private scheduleStatusBarRefresh(): void {
+		if (this.statusBarDebounceTimer !== undefined) window.clearTimeout(this.statusBarDebounceTimer);
+		this.statusBarDebounceTimer = window.setTimeout(() => {
+			this.statusBarDebounceTimer = undefined;
+			this.updateStatusBar();
+		}, STATUSBAR_REFRESH_DEBOUNCE_MS);
+	}
+
+	private updateStatusBar(): void {
+		if (!this.statusBarEl) return;
+		if (!this.capability.todoFeatures) {
+			this.statusBarEl.hide();
+			return;
+		}
+		const count = this.todoService.list({ done: false, dueOn: today() }).length;
+		this.statusBarEl.show();
+		this.statusBarEl.setText(`☑ ${count}`);
+		this.statusBarEl.setAttribute("title", statusBarTodoTitle(count));
 	}
 
 	private async waitDataviewReady(): Promise<void> {

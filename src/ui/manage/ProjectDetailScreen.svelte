@@ -143,7 +143,7 @@
 {#if entity}
 	<div class="pos-preview-header">
 		<h2 class="pos-preview-title">
-			<TitleCell value={entity.title} onCommit={commitTitle} />
+			<TitleCell value={entity.title} onCommit={commitTitle} app={plugin.app} hoverSourcePath={screen.path} />
 		</h2>
 		<span class="pos-preview-type-badge">{entity.type}</span>
 	</div>

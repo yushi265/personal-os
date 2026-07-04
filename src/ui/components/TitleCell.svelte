@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { Notice } from "obsidian";
+	import { Notice, type App } from "obsidian";
 	import { t } from "../../i18n/ja";
+	import { triggerHoverPreview } from "../hoverPreview";
 
 	/**
 	 * クリック→text input(Enter確定/Esc取消/フォーカスアウト確定)のインライン編集セル(design-ui-first.md §3.1/§3.3)。
@@ -17,13 +18,23 @@
 		onCancel,
 		onNavigate,
 		editRequestToken,
+		app,
+		hoverSourcePath,
 	}: {
 		value: string;
 		onCommit: (next: string) => Promise<void>;
 		onCancel?: () => void;
 		onNavigate?: () => void;
 		editRequestToken?: number;
+		/** Ctrl/Cmd+ホバーでのネイティブページプレビュー用(Phase U3)。両方渡された場合のみ有効化する */
+		app?: App;
+		hoverSourcePath?: string;
 	} = $props();
+
+	function onTitleHover(e: MouseEvent): void {
+		if (!app || !hoverSourcePath) return;
+		triggerHoverPreview(app, e, e.currentTarget as HTMLElement, hoverSourcePath);
+	}
 
 	let editing = $state(false);
 	let optimistic = $state<{ v: string } | null>(null);
@@ -91,24 +102,28 @@
 	/>
 {:else if onNavigate}
 	<span class="pos-title-cell-nav">
+		<!-- svelte-ignore a11y_mouse_events_have_key_events -- ホバープレビュー(Phase U3)はマウス専用のプログレッシブエンハンスメント。キーボード操作はonclick/onkeydownのEnterで別途担保済み -->
 		<span
 			class="pos-cell-text pos-cell-title pos-title-link"
 			role="link"
 			tabindex="0"
 			onclick={() => onNavigate?.()}
 			onkeydown={(e) => e.key === "Enter" && onNavigate?.()}
+			onmouseover={onTitleHover}
 		>
 			{display}
 		</span>
 		<button type="button" class="pos-title-edit-btn" aria-label={t("manage.nav.editTitle")} onclick={startEdit}>✎</button>
 	</span>
 {:else}
+	<!-- svelte-ignore a11y_mouse_events_have_key_events -- ホバープレビュー(Phase U3)はマウス専用のプログレッシブエンハンスメント。キーボード操作はonclick/onkeydownのEnterで別途担保済み -->
 	<span
 		class="pos-cell-text pos-cell-title"
 		role="button"
 		tabindex="0"
 		onclick={startEdit}
 		onkeydown={(e) => e.key === "Enter" && startEdit()}
+		onmouseover={onTitleHover}
 	>
 		{display}
 	</span>

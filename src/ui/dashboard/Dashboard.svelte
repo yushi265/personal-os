@@ -53,6 +53,11 @@
 	function toggleTodo(todo: Todo): void {
 		void plugin.todoService.toggle(todo);
 	}
+
+	// オンボーディング(Phase U3): Vaultが空のときは管理Viewを開くボタンを出す
+	function openManage(): void {
+		void plugin.openManage();
+	}
 </script>
 
 <div class="pos-dashboard">
@@ -73,7 +78,21 @@
 		</div>
 	{/if}
 
-	<div class="pos-dashboard-grid">
+	{#if $data.isEmpty}
+		<div class="pos-manage-onboarding">
+			<h3 class="pos-manage-onboarding-title">{t("onboarding.welcome.title")}</h3>
+			<ol class="pos-manage-onboarding-steps">
+				<li>{t("onboarding.welcome.step1")}</li>
+				<li>{t("onboarding.welcome.step2")}</li>
+				<li>{t("onboarding.welcome.step3")}</li>
+			</ol>
+			<button type="button" class="pos-manage-onboarding-action" onclick={openManage}>
+				{t("onboarding.welcome.dashboardOpenManage")}
+			</button>
+		</div>
+	{:else}
+		<div class="pos-dashboard-grid">
+
 		{#each plugin.settings.dashboard.widgets.filter((w) => w.visible) as w (w.id)}
 			{#if w.id === "today-todo" && $data.todoFeatures}
 				<TodayTodoWidget todos={$data.todayTodos} onToggle={toggleTodo} onNavigate={handleNavigate} onOpenNote={openPath} />
@@ -115,5 +134,6 @@
 				<ParseErrorWidget errors={$data.parseErrors} onOpen={openPath} />
 			{/if}
 		{/each}
-	</div>
+		</div>
+	{/if}
 </div>

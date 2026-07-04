@@ -295,6 +295,30 @@ export function isValidInlineTitle(title: string): boolean {
 	return title.trim().length > 0;
 }
 
+/** GoalGroupの識別key(goal未設定=未分類はこの固定文字列)。ProjectListScreen.svelteのgroupKey()と揃える */
+function goalGroupKey(goal: Entity | null): string {
+	return goal?.path ?? "__unclassified__";
+}
+
+/**
+ * 「n」キーでのインライン新規作成フォーカス先(Phase U2→U3改善、design追補)。
+ * 先頭固定ではなく、展開中(折りたたまれていない)最初のGoalセクションのindexを返す。
+ * 全セクションが折りたたみ中の場合は先頭(0)にフォールバックする。
+ */
+export function firstExpandedGroupIndex(groups: GoalGroup[], collapsedGoals: Set<string>): number {
+	const idx = groups.findIndex((g) => !collapsedGoals.has(goalGroupKey(g.goal)));
+	return idx >= 0 ? idx : 0;
+}
+
+/**
+ * オンボーディング判定(design-drilldown-nav.md追補、Phase U3): Vault内にGoal/Projectが1件も無いかどうか。
+ * archivedを含む全件で判定する(フィルタ結果ではなくVaultそのものの状態を見るため)。
+ * 管理View(ProjectListScreen)・Dashboardの両方の空ウェルカム画面表示判定から共通で使う。
+ */
+export function isManageVaultEmpty(store: IndexStore): boolean {
+	return store.listByType("goal").length === 0 && store.listByType("project").length === 0;
+}
+
 /** Entityのlabelsに加え、Todoのlabelsも集計対象に含める(Todoタブのlabelsフィルタ候補のため) */
 export function collectKnownLabels(store: IndexStore): string[] {
 	const set = new Set<string>();

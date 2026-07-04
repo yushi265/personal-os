@@ -12,6 +12,7 @@ const REFRESH_DEBOUNCE_MS = 100;
 
 const EMPTY_DATA: DashboardData = {
 	todoFeatures: false,
+	isEmpty: false,
 	todayTodos: [],
 	overdueTodos: [],
 	overdueEntities: [],

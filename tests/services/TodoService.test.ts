@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { TodoService } from "../../src/services/TodoService";
 import type { Todo } from "../../src/domain/todo";
 import type { VaultRepository } from "../../src/infra/VaultRepository";
-import type { IndexStore } from "../../src/infra/IndexStore";
+import { IndexStore } from "../../src/infra/IndexStore";
 import type { Indexer } from "../../src/infra/Indexer";
 import type { POSSettings } from "../../src/settings/settings";
 
@@ -85,6 +85,51 @@ describe("TodoService.addToSection", () => {
 		await service.addToSection("PersonalOS/Tickets/ticket-a.md", { text: "牛乳を買う" });
 
 		expect(bodyTransform?.("# Ticket\n\nSome content\n")).toBe("# Ticket\n\nSome content\n\n## Todo\n- [ ] 牛乳を買う\n");
+	});
+});
+
+describe("TodoService.list", () => {
+	/**
+	 * ステータスバー(Phase U3)・TodayTodoWidget(Dashboard)がどちらも `list({ done: false, dueOn: today() })` を
+	 * 使って「今日以前の未完了Todo件数」を集計している(main.ts/dashboardData.ts参照)ため、
+	 * その集計ロジック(dueOn <= 指定日、doneフィルタ)自体をここで確認する。
+	 */
+	function makeTodo(overrides: Partial<Todo> = {}): Todo {
+		return {
+			filePath: "PersonalOS/Tickets/ticket-a.md",
+			line: 0,
+			text: "todo",
+			done: false,
+			labels: [],
+			parentType: "ticket",
+			parentPath: "PersonalOS/Tickets/ticket-a.md",
+			...overrides,
+		};
+	}
+
+	function makeServiceWithTodos(todos: Todo[]): TodoService {
+		const store = new IndexStore();
+		store.setTodos("PersonalOS/Tickets/ticket-a.md", todos);
+		return new TodoService(makeRepo(), store, makeSettings(), makeIndexer());
+	}
+
+	it("includes todos due today or earlier, excluding done and future-dated ones", () => {
+		const overdue = makeTodo({ line: 1, text: "overdue", dueDate: "2026-07-01" });
+		const dueToday = makeTodo({ line: 2, text: "today", dueDate: "2026-07-04" });
+		const dueFuture = makeTodo({ line: 3, text: "future", dueDate: "2026-07-05" });
+		const noDue = makeTodo({ line: 4, text: "no-due" });
+		const doneToday = makeTodo({ line: 5, text: "done", dueDate: "2026-07-04", done: true });
+		const service = makeServiceWithTodos([overdue, dueToday, dueFuture, noDue, doneToday]);
+
+		const result = service.list({ done: false, dueOn: "2026-07-04" });
+
+		expect(result.map((t) => t.text)).toEqual(["overdue", "today"]);
+	});
+
+	it("returns an empty list when there are no matching todos", () => {
+		const service = makeServiceWithTodos([makeTodo({ dueDate: "2026-07-10" })]);
+
+		expect(service.list({ done: false, dueOn: "2026-07-04" })).toEqual([]);
 	});
 });
 

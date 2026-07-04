@@ -1,5 +1,11 @@
 /* Personal OS plugin styles */
 
+/* ---- ステータスバー(Phase U3) ---- */
+
+.pos-statusbar-item {
+	cursor: pointer;
+}
+
 /* ---- Dashboard ---- */
 
 .pos-dashboard {
@@ -603,6 +609,28 @@
 	font-size: var(--font-ui-smaller);
 }
 
+/* ---- スティッキーヘッダー(Phase U3) ---- */
+/* --pos-manage-nav-h / --pos-manage-toolbar-h はManage.svelteがResizeObserverで計測して.pos-manageに設定する */
+
+.pos-manage-sticky-nav {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	background: var(--background-primary);
+}
+
+.pos-manage-screen-viewport {
+	position: relative;
+	/* overflow: clip(hiddenと異なりスクロールコンテナ化しない、CSS Overflow Module Lv3)。
+	   ここでhiddenを使うと配下のsticky thead/toolbar-rowが外側のview-contentではなくこの要素基準になり、
+	   スティッキーヘッダーが機能しなくなるため、スライドの横はみ出しのクリップにはclipを使う */
+	overflow: clip;
+}
+
+.pos-manage-screen {
+	position: relative;
+}
+
 .pos-manage-tabs {
 	display: flex;
 	gap: var(--size-4-1);
@@ -629,6 +657,12 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--size-4-2);
+	/* スティッキーヘッダー(Phase U3): header+breadcrumb(--pos-manage-nav-h)の直下に積む */
+	position: sticky;
+	top: var(--pos-manage-nav-h, 0px);
+	z-index: 25;
+	background: var(--background-primary);
+	padding-block: var(--size-4-1);
 }
 
 .pos-manage-filter-keyword {
@@ -752,6 +786,11 @@
 	text-transform: uppercase;
 	letter-spacing: 0.02em;
 	white-space: nowrap;
+	/* スティッキーヘッダー(Phase U3): header+breadcrumb+toolbar-rowの直下に積む(--pos-manage-nav-h + --pos-manage-toolbar-h) */
+	position: sticky;
+	top: calc(var(--pos-manage-nav-h, 0px) + var(--pos-manage-toolbar-h, 0px));
+	z-index: 20;
+	background: var(--background-primary);
 }
 
 .pos-manage-th-sortable {
@@ -823,6 +862,40 @@
 
 .pos-manage-empty-action {
 	cursor: pointer;
+}
+
+/* ---- オンボーディング(Phase U3): 管理View/Dashboard共通 ---- */
+
+.pos-manage-onboarding {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--size-4-3);
+	padding: var(--size-4-8, 48px) var(--size-4-4);
+	text-align: center;
+}
+
+.pos-manage-onboarding-title {
+	margin: 0;
+	font-size: var(--font-ui-large);
+}
+
+.pos-manage-onboarding-steps {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-1);
+	color: var(--text-muted);
+	font-size: var(--font-ui-medium);
+}
+
+.pos-manage-onboarding-action {
+	cursor: pointer;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: var(--font-medium);
 }
 
 .pos-manage-detail-section {

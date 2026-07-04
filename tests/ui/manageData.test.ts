@@ -13,9 +13,12 @@ import {
 	EMPTY_MANAGE_FILTER,
 	entityProgressFraction,
 	filterToQueryString,
+	firstExpandedGroupIndex,
 	goalGroupProgress,
 	groupProjectsByGoal,
+	isManageVaultEmpty,
 	isValidInlineTitle,
+	type GoalGroup,
 	projectTodoFraction,
 	queryStringToFilter,
 	sortEntityRows,
@@ -458,6 +461,55 @@ describe("goalGroupProgress", () => {
 	it("G-3: treats a missing progress value as 0", () => {
 		const projects = [makeEntity({ path: "a.md", type: "project" }), makeEntity({ path: "b.md", type: "project", progress: 50 })];
 		expect(goalGroupProgress(projects)).toBe(25);
+	});
+});
+
+describe("firstExpandedGroupIndex", () => {
+	function makeGroup(goalPath: string | null): GoalGroup {
+		return { goal: goalPath ? makeEntity({ path: goalPath, type: "goal", title: goalPath }) : null, projects: [] };
+	}
+
+	it("returns 0 when nothing is collapsed (先頭のGoalセクション優先、Phase U2互換)", () => {
+		const groups = [makeGroup("goal-a.md"), makeGroup("goal-b.md")];
+		expect(firstExpandedGroupIndex(groups, new Set())).toBe(0);
+	});
+
+	it("skips a collapsed leading section and returns the first expanded one (Phase U3改善)", () => {
+		const groups = [makeGroup("goal-a.md"), makeGroup("goal-b.md")];
+		expect(firstExpandedGroupIndex(groups, new Set(["goal-a.md"]))).toBe(1);
+	});
+
+	it("falls back to 0 when every section is collapsed", () => {
+		const groups = [makeGroup("goal-a.md"), makeGroup("goal-b.md")];
+		expect(firstExpandedGroupIndex(groups, new Set(["goal-a.md", "goal-b.md"]))).toBe(0);
+	});
+
+	it("treats the unclassified group (goal: null) with the __unclassified__ key", () => {
+		const groups = [makeGroup(null), makeGroup("goal-a.md")];
+		expect(firstExpandedGroupIndex(groups, new Set(["__unclassified__"]))).toBe(1);
+	});
+});
+
+describe("isManageVaultEmpty", () => {
+	it("returns true when the store has neither goals nor projects (initial-launch onboarding state, Phase U3)", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "a.md", type: "ticket", title: "orphan ticket" }));
+
+		expect(isManageVaultEmpty(store)).toBe(true);
+	});
+
+	it("returns false once a goal exists, even with no projects yet", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "goal.md", type: "goal", title: "goal", status: "active" }));
+
+		expect(isManageVaultEmpty(store)).toBe(false);
+	});
+
+	it("returns false once a project exists, even with no goals", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "project.md", type: "project", title: "project", status: "active" }));
+
+		expect(isManageVaultEmpty(store)).toBe(false);
 	});
 });
 

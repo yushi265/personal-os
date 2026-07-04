@@ -289,6 +289,15 @@ const MESSAGES = {
 	"manage.toolbar.entitySwitcher": "プロジェクト/チケットを検索",
 	"manage.kbdHint": "⌨ ↑↓ 移動 / Enter 開く / n 新規作成 / Backspace 戻る",
 
+	"onboarding.welcome.title": "Personal OSへようこそ",
+	"onboarding.welcome.step1": "① Goalを作る",
+	"onboarding.welcome.step2": "② Projectを作る",
+	"onboarding.welcome.step3": "③ Ticket/Todoで回す",
+	"onboarding.welcome.createGoal": "最初のGoalを作成",
+	"onboarding.welcome.dashboardOpenManage": "管理Viewを開く",
+
+	"statusbar.hint": "クリックでDashboardを開く",
+
 	"undo.action": "元に戻す",
 } as const;
 
@@ -381,6 +390,11 @@ export function parseErrorInvalidType(value: unknown): string {
 
 export function parseErrorInvalidStatus(status: string): string {
 	return `不正なstatus: ${status}`;
+}
+
+/** ステータスバー項目のtitle属性(今日以前の未完了Todo件数、Phase U3。値埋め込みのためt()とは別関数とする) */
+export function statusBarTodoTitle(count: number): string {
+	return `今日のTodo ${count}件`;
 }
 
 /** 解析エラーノートを開いた場合のPreview表示メッセージ(design-ui-first.md §4.7) */
