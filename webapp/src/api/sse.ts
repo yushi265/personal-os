@@ -13,6 +13,7 @@ function invalidateForPath(queryClient: QueryClient, path: string): void {
   queryClient.invalidateQueries({ queryKey: ["entity", path] }); // ["entity", path, "children"]も前方一致で含む
   queryClient.invalidateQueries({ queryKey: ["todos", path] }); // scope違いを前方一致で含む
   queryClient.invalidateQueries({ queryKey: ["memos", path] });
+  queryClient.invalidateQueries({ queryKey: ["note", path] });
 
   const cached = queryClient.getQueryData<Entity>(["entity", path]);
   queryClient.invalidateQueries({ queryKey: cached ? ["entities", cached.type] : ["entities"] });

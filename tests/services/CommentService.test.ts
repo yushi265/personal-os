@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { MemoService } from "../../src/services/MemoService";
-import type { Memo } from "../../src/domain/memo";
+import { CommentService } from "../../src/services/CommentService";
+import type { Comment } from "../../src/domain/comment";
 import type { VaultRepository } from "../../src/infra/VaultRepository";
 
 /** processBody(path, fn) を、渡された currentBody に対して fn を同期実行する vault.process 相当のモックにする */
@@ -17,22 +17,22 @@ function makeRepo(currentBody: string, overrides: Partial<Record<string, unknown
 	return { repo, getWrittenBody: () => writtenBody };
 }
 
-describe("MemoService.list", () => {
+describe("CommentService.list", () => {
 	it("reads the body via the repo and parses the '## Memo' section", async () => {
 		const { repo } = makeRepo("## Memo\n\n### 2026-07-04 10:00\nhello\n");
-		const service = new MemoService(repo);
+		const service = new CommentService(repo);
 
-		const memos = await service.list("PersonalOS/Tickets/ticket-a.md");
+		const comments = await service.list("PersonalOS/Tickets/ticket-a.md");
 
 		expect(repo.readBody).toHaveBeenCalledWith("PersonalOS/Tickets/ticket-a.md");
-		expect(memos).toEqual([{ datetime: "2026-07-04 10:00", text: "hello" }]);
+		expect(comments).toEqual([{ datetime: "2026-07-04 10:00", text: "hello" }]);
 	});
 });
 
-describe("MemoService.add", () => {
-	it("appends a trimmed memo with the current timestamp via processBody", async () => {
+describe("CommentService.add", () => {
+	it("appends a trimmed comment with the current timestamp via processBody, storing it under '## Memo'", async () => {
 		const { repo, getWrittenBody } = makeRepo("# Ticket\n");
-		const service = new MemoService(repo);
+		const service = new CommentService(repo);
 
 		await service.add("PersonalOS/Tickets/ticket-a.md", "  bank replied  ");
 
@@ -41,12 +41,12 @@ describe("MemoService.add", () => {
 	});
 });
 
-describe("MemoService.update", () => {
-	const EXPECTED: Memo = { datetime: "2026-07-04 10:00", text: "old text" };
+describe("CommentService.update", () => {
+	const EXPECTED: Comment = { datetime: "2026-07-04 10:00", text: "old text" };
 
-	it("returns 'ok' and writes the updated body when exactly one memo matches", async () => {
+	it("returns 'ok' and writes the updated body when exactly one comment matches", async () => {
 		const { repo, getWrittenBody } = makeRepo("## Memo\n\n### 2026-07-04 10:00\nold text\n");
-		const service = new MemoService(repo);
+		const service = new CommentService(repo);
 
 		const result = await service.update("a.md", EXPECTED, "  new text  ");
 
@@ -54,10 +54,10 @@ describe("MemoService.update", () => {
 		expect(getWrittenBody()).toBe("## Memo\n\n### 2026-07-04 10:00\nnew text\n");
 	});
 
-	it("returns 'conflict' and leaves the body unchanged when the expected memo is not found", async () => {
+	it("returns 'conflict' and leaves the body unchanged when the expected comment is not found", async () => {
 		const body = "## Memo\n\n### 2026-07-04 10:00\nsomething else already written\n";
 		const { repo, getWrittenBody } = makeRepo(body);
-		const service = new MemoService(repo);
+		const service = new CommentService(repo);
 
 		const result = await service.update("a.md", EXPECTED, "new text");
 
@@ -66,12 +66,12 @@ describe("MemoService.update", () => {
 	});
 });
 
-describe("MemoService.remove", () => {
-	const EXPECTED: Memo = { datetime: "2026-07-04 10:00", text: "only memo" };
+describe("CommentService.remove", () => {
+	const EXPECTED: Comment = { datetime: "2026-07-04 10:00", text: "only comment" };
 
-	it("returns 'ok' and removes the matched memo, keeping the '## Memo' heading", async () => {
-		const { repo, getWrittenBody } = makeRepo("## Memo\n\n### 2026-07-04 10:00\nonly memo\n");
-		const service = new MemoService(repo);
+	it("returns 'ok' and removes the matched comment, keeping the '## Memo' heading", async () => {
+		const { repo, getWrittenBody } = makeRepo("## Memo\n\n### 2026-07-04 10:00\nonly comment\n");
+		const service = new CommentService(repo);
 
 		const result = await service.remove("a.md", EXPECTED);
 
@@ -79,10 +79,10 @@ describe("MemoService.remove", () => {
 		expect(getWrittenBody()).toBe("## Memo\n");
 	});
 
-	it("returns 'conflict' and leaves the body unchanged when two memos match (duplicate)", async () => {
-		const body = "## Memo\n\n### 2026-07-04 10:00\nonly memo\n\n### 2026-07-04 10:00\nonly memo\n";
+	it("returns 'conflict' and leaves the body unchanged when two comments match (duplicate)", async () => {
+		const body = "## Memo\n\n### 2026-07-04 10:00\nonly comment\n\n### 2026-07-04 10:00\nonly comment\n";
 		const { repo, getWrittenBody } = makeRepo(body);
-		const service = new MemoService(repo);
+		const service = new CommentService(repo);
 
 		const result = await service.remove("a.md", EXPECTED);
 

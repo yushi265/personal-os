@@ -14,7 +14,8 @@ import { TasksAdapter } from "./infra/TasksAdapter";
 import { EntityService } from "./services/EntityService";
 import { EntityFieldService } from "./services/EntityFieldService";
 import { TodoService } from "./services/TodoService";
-import { MemoService } from "./services/MemoService";
+import { CommentService } from "./services/CommentService";
+import { NoteService } from "./services/NoteService";
 import { ProgressService } from "./services/ProgressService";
 import { ActivityLogService } from "./services/ActivityLogService";
 import { PromoteService } from "./services/PromoteService";
@@ -58,7 +59,8 @@ export default class PersonalOSPlugin extends Plugin {
 	entityService!: EntityService;
 	entityFieldService!: EntityFieldService;
 	todoService!: TodoService;
-	memoService!: MemoService;
+	commentService!: CommentService;
+	noteService!: NoteService;
 	progressService!: ProgressService;
 	activityLogService!: ActivityLogService;
 	promoteService!: PromoteService;
@@ -105,7 +107,8 @@ export default class PersonalOSPlugin extends Plugin {
 		);
 		this.entityFieldService = new EntityFieldService(this.repo, this.store, this.activityLogService);
 		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
-		this.memoService = new MemoService(this.repo);
+		this.commentService = new CommentService(this.repo);
+		this.noteService = new NoteService(this.repo);
 		this.promoteService = new PromoteService(this.repo, this.store, this.entityService, this.activityLogService);
 		this.searchService = new SearchService(this.store, this.repo);
 		this.savedViewService = new SavedViewService(this.settings, () => this.saveSettings());
@@ -167,7 +170,8 @@ export default class PersonalOSPlugin extends Plugin {
 				entityService: this.entityService,
 				entityFieldService: this.entityFieldService,
 				todoService: this.todoService,
-				memoService: this.memoService,
+				commentService: this.commentService,
+				noteService: this.noteService,
 				promoteService: this.promoteService,
 				sseHub: this.sseHub,
 				getWebappDistDir: () => this.getWebappDistDir(),

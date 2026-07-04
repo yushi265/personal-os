@@ -23,7 +23,8 @@ import { ParentSelect } from "@/components/EditableCell/ParentSelect";
 import { ProgressBar } from "@/components/ProgressBar";
 import { DueLabel } from "@/components/DueLabel";
 import { TodoListPanel } from "@/components/TodoListPanel";
-import { MemoPanel } from "@/components/MemoPanel";
+import { NotePanel } from "@/components/NotePanel";
+import { CommentPanel } from "@/components/CommentPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NotFoundScreen } from "@/components/NotFoundScreen";
 import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -193,7 +194,11 @@ export function ProjectDetail() {
       </section>
 
       <section>
-        <MemoPanel path={path} />
+        <NotePanel path={path} />
+      </section>
+
+      <section>
+        <CommentPanel path={path} />
       </section>
 
       <ConfirmDialog

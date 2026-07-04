@@ -8,7 +8,8 @@ import type { Todo } from "../../src/domain/todo";
 import type { EntityService } from "../../src/services/EntityService";
 import type { EntityFieldService } from "../../src/services/EntityFieldService";
 import type { TodoService } from "../../src/services/TodoService";
-import type { MemoService } from "../../src/services/MemoService";
+import type { CommentService } from "../../src/services/CommentService";
+import type { NoteService } from "../../src/services/NoteService";
 import { PromoteConflictError, type PromoteService } from "../../src/services/PromoteService";
 
 function makeEntity(overrides: Partial<Entity> = {}): Entity {
@@ -50,7 +51,8 @@ interface Mocks {
 		remove: ReturnType<typeof vi.fn>;
 		list: ReturnType<typeof vi.fn>;
 	};
-	memoService: { list: ReturnType<typeof vi.fn>; add: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; remove: ReturnType<typeof vi.fn> };
+	commentService: { list: ReturnType<typeof vi.fn>; add: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; remove: ReturnType<typeof vi.fn> };
+	noteService: { get: ReturnType<typeof vi.fn>; save: ReturnType<typeof vi.fn> };
 	promoteService: { promoteTodoToTicket: ReturnType<typeof vi.fn>; promoteTicketToProject: ReturnType<typeof vi.fn> };
 }
 
@@ -70,11 +72,15 @@ function makeMocks(): Mocks {
 		remove: vi.fn().mockResolvedValue("ok"),
 		list: vi.fn().mockReturnValue([]),
 	};
-	const memoService = {
+	const commentService = {
 		list: vi.fn().mockResolvedValue([]),
 		add: vi.fn().mockResolvedValue(undefined),
 		update: vi.fn().mockResolvedValue("ok"),
 		remove: vi.fn().mockResolvedValue("ok"),
+	};
+	const noteService = {
+		get: vi.fn().mockResolvedValue(""),
+		save: vi.fn().mockResolvedValue(undefined),
 	};
 	const promoteService = {
 		promoteTodoToTicket: vi.fn().mockResolvedValue(undefined),
@@ -89,13 +95,14 @@ function makeMocks(): Mocks {
 		entityService: entityService as unknown as EntityService,
 		entityFieldService: entityFieldService as unknown as EntityFieldService,
 		todoService: todoService as unknown as TodoService,
-		memoService: memoService as unknown as MemoService,
+		commentService: commentService as unknown as CommentService,
+		noteService: noteService as unknown as NoteService,
 		promoteService: promoteService as unknown as PromoteService,
 		sseHub: { subscribe: vi.fn(), closeAll: vi.fn() } as unknown as ApiDeps["sseHub"],
 		getWebappDistDir: () => "/tmp/webapp-dist",
 	};
 
-	return { deps, store, entityService, entityFieldService, todoService, memoService, promoteService };
+	return { deps, store, entityService, entityFieldService, todoService, commentService, noteService, promoteService };
 }
 
 describe("ApiRouter.handle: /api/meta", () => {
@@ -428,11 +435,11 @@ describe("ApiRouter.handle: DELETE /api/todos", () => {
 	});
 });
 
-describe("ApiRouter.handle: /api/memos", () => {
-	it("GET returns the memo list", async () => {
-		const { deps, store, memoService } = makeMocks();
+describe("ApiRouter.handle: /api/memos (comments; API path kept as-is per design-reorder-and-notes.md B-4)", () => {
+	it("GET returns the comment list", async () => {
+		const { deps, store, commentService } = makeMocks();
 		store.upsertEntity(makeEntity({ path: "a.md" }));
-		memoService.list.mockResolvedValue([{ datetime: "2026-07-04 10:00", text: "hi" }]);
+		commentService.list.mockResolvedValue([{ datetime: "2026-07-04 10:00", text: "hi" }]);
 		const res = await ApiRouter.handle("GET", "/api/memos", { path: "a.md" }, undefined, deps);
 		expect(res.status).toBe(200);
 		expect((res.body as { memos: unknown[] }).memos).toHaveLength(1);
@@ -444,18 +451,18 @@ describe("ApiRouter.handle: /api/memos", () => {
 		expect(res.status).toBe(404);
 	});
 
-	it("POST delegates to memoService.add", async () => {
-		const { deps, store, memoService } = makeMocks();
+	it("POST delegates to commentService.add", async () => {
+		const { deps, store, commentService } = makeMocks();
 		store.upsertEntity(makeEntity({ path: "a.md" }));
 		const res = await ApiRouter.handle("POST", "/api/memos", { path: "a.md" }, { text: "new memo" }, deps);
-		expect(memoService.add).toHaveBeenCalledWith("a.md", "new memo");
+		expect(commentService.add).toHaveBeenCalledWith("a.md", "new memo");
 		expect(res.status).toBe(201);
 	});
 
 	it("PATCH returns 409/E007 on conflict", async () => {
-		const { deps, store, memoService } = makeMocks();
+		const { deps, store, commentService } = makeMocks();
 		store.upsertEntity(makeEntity({ path: "a.md" }));
-		memoService.update.mockResolvedValue("conflict");
+		commentService.update.mockResolvedValue("conflict");
 		const expected = { datetime: "2026-07-04 10:00", text: "old" };
 		const res = await ApiRouter.handle("PATCH", "/api/memos", { path: "a.md" }, { expected, newText: "new" }, deps);
 		expect(res.status).toBe(409);
@@ -463,9 +470,9 @@ describe("ApiRouter.handle: /api/memos", () => {
 	});
 
 	it("DELETE returns 409/E007 on conflict", async () => {
-		const { deps, store, memoService } = makeMocks();
+		const { deps, store, commentService } = makeMocks();
 		store.upsertEntity(makeEntity({ path: "a.md" }));
-		memoService.remove.mockResolvedValue("conflict");
+		commentService.remove.mockResolvedValue("conflict");
 		const expected = { datetime: "2026-07-04 10:00", text: "old" };
 		const res = await ApiRouter.handle("DELETE", "/api/memos", { path: "a.md" }, { expected }, deps);
 		expect(res.status).toBe(409);
@@ -473,12 +480,45 @@ describe("ApiRouter.handle: /api/memos", () => {
 	});
 
 	it("DELETE returns 200 on success", async () => {
-		const { deps, store, memoService } = makeMocks();
+		const { deps, store, commentService } = makeMocks();
 		store.upsertEntity(makeEntity({ path: "a.md" }));
 		const expected = { datetime: "2026-07-04 10:00", text: "old" };
 		const res = await ApiRouter.handle("DELETE", "/api/memos", { path: "a.md" }, { expected }, deps);
-		expect(memoService.remove).toHaveBeenCalledWith("a.md", expected);
+		expect(commentService.remove).toHaveBeenCalledWith("a.md", expected);
 		expect(res.status).toBe(200);
+	});
+});
+
+describe("ApiRouter.handle: /api/note", () => {
+	it("GET delegates to noteService.get and returns the text", async () => {
+		const { deps, store, noteService } = makeMocks();
+		store.upsertEntity(makeEntity({ path: "a.md" }));
+		noteService.get.mockResolvedValue("my note");
+		const res = await ApiRouter.handle("GET", "/api/note", { path: "a.md" }, undefined, deps);
+		expect(noteService.get).toHaveBeenCalledWith("a.md");
+		expect(res.status).toBe(200);
+		expect((res.body as { text: string }).text).toBe("my note");
+	});
+
+	it("GET returns 404 when the note does not exist", async () => {
+		const { deps } = makeMocks();
+		const res = await ApiRouter.handle("GET", "/api/note", { path: "missing.md" }, undefined, deps);
+		expect(res.status).toBe(404);
+	});
+
+	it("PUT delegates to noteService.save", async () => {
+		const { deps, store, noteService } = makeMocks();
+		store.upsertEntity(makeEntity({ path: "a.md" }));
+		const res = await ApiRouter.handle("PUT", "/api/note", { path: "a.md" }, { text: "updated note" }, deps);
+		expect(noteService.save).toHaveBeenCalledWith("a.md", "updated note");
+		expect(res.status).toBe(200);
+	});
+
+	it("PUT returns 400 when body is invalid", async () => {
+		const { deps, store } = makeMocks();
+		store.upsertEntity(makeEntity({ path: "a.md" }));
+		const res = await ApiRouter.handle("PUT", "/api/note", { path: "a.md" }, {}, deps);
+		expect(res.status).toBe(400);
 	});
 });
 

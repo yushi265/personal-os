@@ -13,7 +13,8 @@ import { DateEdit } from "@/components/EditableCell/DateEdit";
 import { ParentSelect } from "@/components/EditableCell/ParentSelect";
 import { BlockerListEdit } from "@/components/BlockerListEdit";
 import { TodoListPanel } from "@/components/TodoListPanel";
-import { MemoPanel } from "@/components/MemoPanel";
+import { NotePanel } from "@/components/NotePanel";
+import { CommentPanel } from "@/components/CommentPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NotFoundScreen } from "@/components/NotFoundScreen";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,11 @@ export function TicketDetail() {
       </section>
 
       <section>
-        <MemoPanel path={path} />
+        <NotePanel path={path} />
+      </section>
+
+      <section>
+        <CommentPanel path={path} />
       </section>
 
       <ConfirmDialog

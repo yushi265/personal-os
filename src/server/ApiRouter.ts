@@ -1,6 +1,6 @@
 import { ENTITY_TYPES, type EntityType } from "../domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "../domain/todo";
-import type { Memo } from "../domain/memo";
+import type { Comment } from "../domain/comment";
 import { today } from "../domain/date";
 import { isBlocked, isOverdue, isReviewNeeded, isTodoOverdue } from "../domain/judge";
 import type { CreateEntityInput } from "../services/EntityService";
@@ -58,10 +58,12 @@ async function dispatch(method: string, pathname: string, query: Record<string, 
 	if (method === "PATCH" && pathname === "/api/todos/toggle") return handleToggleTodo(body, deps);
 	if (method === "PATCH" && pathname === "/api/todos") return handleUpdateTodoInline(body, deps);
 	if (method === "DELETE" && pathname === "/api/todos") return handleRemoveTodo(body, deps);
-	if (method === "GET" && pathname === "/api/memos") return handleListMemos(query, deps);
-	if (method === "POST" && pathname === "/api/memos") return handleAddMemo(query, body, deps);
-	if (method === "PATCH" && pathname === "/api/memos") return handleUpdateMemo(query, body, deps);
-	if (method === "DELETE" && pathname === "/api/memos") return handleRemoveMemo(query, body, deps);
+	if (method === "GET" && pathname === "/api/memos") return handleListComments(query, deps);
+	if (method === "POST" && pathname === "/api/memos") return handleAddComment(query, body, deps);
+	if (method === "PATCH" && pathname === "/api/memos") return handleUpdateComment(query, body, deps);
+	if (method === "DELETE" && pathname === "/api/memos") return handleRemoveComment(query, body, deps);
+	if (method === "GET" && pathname === "/api/note") return handleGetNote(query, deps);
+	if (method === "PUT" && pathname === "/api/note") return handleSaveNote(query, body, deps);
 	return notFound();
 }
 
@@ -256,44 +258,64 @@ async function handleRemoveTodo(body: unknown, deps: ApiDeps): Promise<ApiResult
 	return result === "conflict" ? conflict("E003") : ok();
 }
 
-// ---- memos ----
+// ---- comments (旧称: memos。design-reorder-and-notes.md B-4によりAPIパスは/api/memosのまま維持) ----
 
-async function handleListMemos(query: Record<string, string>, deps: ApiDeps): Promise<ApiResult> {
+async function handleListComments(query: Record<string, string>, deps: ApiDeps): Promise<ApiResult> {
 	const path = query.path;
 	if (!path) return badRequest("path is required");
 	if (!deps.store.get(path)) return notFound();
-	const memos = await deps.memoService.list(path);
+	const memos = await deps.commentService.list(path);
 	return ok({ memos });
 }
 
-async function handleAddMemo(query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
+async function handleAddComment(query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
 	const path = query.path;
 	if (!path) return badRequest("path is required");
 	if (!deps.store.get(path)) return notFound();
 	if (!isRecord(body) || typeof body.text !== "string") return badRequest("invalid body");
 
-	await deps.memoService.add(path, body.text);
+	await deps.commentService.add(path, body.text);
 	return created({ ok: true });
 }
 
-async function handleUpdateMemo(query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
+async function handleUpdateComment(query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
 	const path = query.path;
 	if (!path) return badRequest("path is required");
 	if (!deps.store.get(path)) return notFound();
 	if (!isRecord(body) || !isRecord(body.expected) || typeof body.newText !== "string") return badRequest("invalid body");
 
-	const result = await deps.memoService.update(path, body.expected as unknown as Memo, body.newText);
+	const result = await deps.commentService.update(path, body.expected as unknown as Comment, body.newText);
 	return result === "conflict" ? conflict("E007") : ok();
 }
 
-async function handleRemoveMemo(query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
+async function handleRemoveComment(query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
 	const path = query.path;
 	if (!path) return badRequest("path is required");
 	if (!deps.store.get(path)) return notFound();
 	if (!isRecord(body) || !isRecord(body.expected)) return badRequest("invalid body");
 
-	const result = await deps.memoService.remove(path, body.expected as unknown as Memo);
+	const result = await deps.commentService.remove(path, body.expected as unknown as Comment);
 	return result === "conflict" ? conflict("E007") : ok();
+}
+
+// ---- note ----
+
+async function handleGetNote(query: Record<string, string>, deps: ApiDeps): Promise<ApiResult> {
+	const path = query.path;
+	if (!path) return badRequest("path is required");
+	if (!deps.store.get(path)) return notFound();
+	const text = await deps.noteService.get(path);
+	return ok({ text });
+}
+
+async function handleSaveNote(query: Record<string, string>, body: unknown, deps: ApiDeps): Promise<ApiResult> {
+	const path = query.path;
+	if (!path) return badRequest("path is required");
+	if (!deps.store.get(path)) return notFound();
+	if (!isRecord(body) || typeof body.text !== "string") return badRequest("invalid body");
+
+	await deps.noteService.save(path, body.text);
+	return ok();
 }
 
 // ---- helpers ----

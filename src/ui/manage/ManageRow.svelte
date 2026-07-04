@@ -145,10 +145,10 @@
 		});
 	}
 
-	function badgeCounts(entity: Entity): { blockers: number; memos: number; todos: number } {
+	function badgeCounts(entity: Entity): { blockers: number; comments: number; todos: number } {
 		return {
 			blockers: entity.blockers.length,
-			memos: plugin.store.getMemoCount(entity.path),
+			comments: plugin.store.getCommentCount(entity.path),
 			todos: plugin.store.getTodos(entity.path).filter((todo) => !todo.done).length,
 		};
 	}
@@ -190,7 +190,7 @@
 				app={plugin.app}
 				hoverSourcePath={entity.path}
 			/>
-			<RowBadges blockerCount={badges.blockers} memoCount={badges.memos} todoCount={badges.todos} />
+			<RowBadges blockerCount={badges.blockers} commentCount={badges.comments} todoCount={badges.todos} />
 		</td>
 		<td class="pos-manage-cell-status" onclick={(e) => e.stopPropagation()}>
 			<StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} />

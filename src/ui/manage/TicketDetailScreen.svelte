@@ -10,7 +10,8 @@
 	import TitleCell from "../components/TitleCell.svelte";
 	import BlockerList from "../components/BlockerList.svelte";
 	import TodoList from "../components/TodoList.svelte";
-	import MemoSection from "../components/MemoSection.svelte";
+	import NotePanel from "../components/NotePanel.svelte";
+	import CommentSection from "../components/CommentSection.svelte";
 	import type { ManageScreen } from "./manageNav";
 	import { entityProgressFraction } from "./manageData";
 
@@ -144,7 +145,12 @@
 	{/if}
 
 	<section class="pos-manage-detail-section">
-		<h3>{t("preview.section.memo")}</h3>
-		<MemoSection {plugin} path={screen.path} />
+		<h3>{t("preview.section.note")}</h3>
+		<NotePanel {plugin} path={screen.path} />
+	</section>
+
+	<section class="pos-manage-detail-section">
+		<h3>{t("preview.section.comment")}</h3>
+		<CommentSection {plugin} path={screen.path} />
 	</section>
 {/if}

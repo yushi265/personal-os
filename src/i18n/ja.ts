@@ -10,7 +10,7 @@ const MESSAGES = {
 	E004: "元ノートが更新されたため中断しました。再度実行してください。",
 	E005: "アーカイブフォルダへの移動に失敗しました(status変更は完了)。",
 	E006: "コピーに失敗しました。",
-	E007: "メモの内容が変更されています。一覧を最新の状態に更新しました。",
+	E007: "コメントの内容が変更されています。一覧を最新の状態に更新しました。",
 	E101: "トークンが無効です。",
 	E102: "見つかりません。",
 	E104: "許可されていないOriginからのアクセスです。",
@@ -102,14 +102,18 @@ const MESSAGES = {
 	"preview.todoAdd.priority": "優先度",
 	"preview.todoAdd.submit": "追加",
 	"preview.todoAdd.textRequired": "本文を入力してください。",
-	"preview.section.memo": "メモ",
+	"preview.section.comment": "コメント",
+	"preview.section.note": "メモ",
 
-	"memo.placeholder": "メモを追加...",
-	"memo.add": "追加",
-	"memo.showMore": "もっと見る",
-	"memo.edit": "編集",
-	"memo.delete": "削除",
-	"memo.empty": "メモはありません。",
+	"comment.placeholder": "コメントを追加...",
+	"comment.add": "追加",
+	"comment.showMore": "もっと見る",
+	"comment.edit": "編集",
+	"comment.delete": "削除",
+	"comment.empty": "コメントはありません。",
+
+	"note.placeholder": "メモを書く...",
+	"note.saved": "保存しました",
 
 	"modal.createEntity.title": "新規作成",
 	"modal.createEntity.type": "種類",
@@ -442,11 +446,11 @@ export function todoDeletedUndoNotice(text: string): string {
 	return `Todo「${summary}」を削除しました`;
 }
 
-/** Undoトースト: メモ削除完了通知 */
-export function memoDeletedUndoNotice(text: string): string {
+/** Undoトースト: コメント削除完了通知 */
+export function commentDeletedUndoNotice(text: string): string {
 	const firstLine = text.split("\n")[0];
 	const summary = firstLine.length > 40 ? `${firstLine.slice(0, 40)}...` : firstLine;
-	return `メモ「${summary}」を削除しました`;
+	return `コメント「${summary}」を削除しました`;
 }
 
 /** 行バッジ(ManageRow)のホバーtitle: Blocker件数 */
@@ -454,9 +458,9 @@ export function rowBadgeBlockerTitle(count: number): string {
 	return `Blocker ${count}件`;
 }
 
-/** 行バッジ(ManageRow)のホバーtitle: メモ件数 */
-export function rowBadgeMemoTitle(count: number): string {
-	return `メモ ${count}件`;
+/** 行バッジ(ManageRow)のホバーtitle: コメント件数 */
+export function rowBadgeCommentTitle(count: number): string {
+	return `コメント ${count}件`;
 }
 
 /** 行バッジ(ManageRow)のホバーtitle: 未完了Todo件数 */

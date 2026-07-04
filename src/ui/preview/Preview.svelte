@@ -18,7 +18,8 @@
 	import TagChips from "../components/TagChips.svelte";
 	import BlockerList from "../components/BlockerList.svelte";
 	import TodoList from "../components/TodoList.svelte";
-	import MemoSection from "../components/MemoSection.svelte";
+	import NotePanel from "../components/NotePanel.svelte";
+	import CommentSection from "../components/CommentSection.svelte";
 	import ProgressIndicator from "../components/ProgressIndicator.svelte";
 	import DueLabel from "../components/DueLabel.svelte";
 
@@ -250,8 +251,13 @@
 		{/if}
 
 		<details class="pos-preview-section">
-			<summary>{t("preview.section.memo")}</summary>
-			<MemoSection {plugin} path={entity.path} />
+			<summary>{t("preview.section.note")}</summary>
+			<NotePanel {plugin} path={entity.path} />
+		</details>
+
+		<details class="pos-preview-section">
+			<summary>{t("preview.section.comment")}</summary>
+			<CommentSection {plugin} path={entity.path} />
 		</details>
 
 		<details class="pos-preview-section" open>

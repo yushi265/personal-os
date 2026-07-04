@@ -29,7 +29,7 @@
 	} = $props();
 
 	const fraction = $derived(entityProgressFraction(plugin.store, entity));
-	const memoCount = $derived(plugin.store.getMemoCount(entity.path));
+	const commentCount = $derived(plugin.store.getCommentCount(entity.path));
 
 	let dragging = $state(false);
 
@@ -77,8 +77,8 @@
 		{#if entity.blockers.length > 0}
 			<span class="pos-row-badge pos-row-badge-blocker">⛔ {entity.blockers.length}</span>
 		{/if}
-		{#if memoCount > 0}
-			<span class="pos-row-badge">💬 {memoCount}</span>
+		{#if commentCount > 0}
+			<span class="pos-row-badge">💬 {commentCount}</span>
 		{/if}
 	</div>
 	<ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} />

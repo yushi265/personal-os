@@ -1,26 +1,26 @@
 import * as React from "react";
-import type { Memo } from "@domain/memo";
-import { useMemos } from "@/hooks/useMemos";
-import { useAddMemo, useRemoveMemoMutation, useUpdateMemoMutation } from "@/hooks/useMemoMutations";
+import type { Comment } from "@domain/comment";
+import { useComments } from "@/hooks/useComments";
+import { useAddComment, useRemoveCommentMutation, useUpdateCommentMutation } from "@/hooks/useCommentMutations";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@i18n/ja";
 
-interface MemoPanelProps {
+interface CommentPanelProps {
   path: string;
 }
 
-// メモ追加(Enter送信・Shift+Enter改行・IME対応)/新しい順/編集/削除(design §9 P4行、MemoSection.svelte互換)。
+// コメント追加(Enter送信・Shift+Enter改行・IME対応)/新しい順/編集/削除(design §9 P4行、CommentSection.svelte互換)。
 // 409(E007)時は共通楽観的更新フック(useOptimisticMutation)がトースト表示+onSettled再検証を担う。
-export function MemoPanel({ path }: MemoPanelProps) {
-  const { data: memos, isLoading } = useMemos(path);
-  const add = useAddMemo(path);
-  const update = useUpdateMemoMutation(path);
-  const remove = useRemoveMemoMutation(path);
+export function CommentPanel({ path }: CommentPanelProps) {
+  const { data: comments, isLoading } = useComments(path);
+  const add = useAddComment(path);
+  const update = useUpdateCommentMutation(path);
+  const remove = useRemoveCommentMutation(path);
 
   const [draft, setDraft] = React.useState("");
-  const [editing, setEditing] = React.useState<Memo | null>(null);
+  const [editing, setEditing] = React.useState<Comment | null>(null);
   const [editDraft, setEditDraft] = React.useState("");
 
   if (isLoading) {
@@ -37,11 +37,11 @@ export function MemoPanel({ path }: MemoPanelProps) {
     add.mutate(draft, { onSuccess: () => setDraft("") });
   };
 
-  const newestFirst = [...(memos ?? [])].reverse();
+  const newestFirst = [...(comments ?? [])].reverse();
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-muted-foreground">{t("preview.section.memo")}</h3>
+      <h3 className="text-sm font-medium text-muted-foreground">{t("preview.section.comment")}</h3>
 
       <div className="space-y-1">
         <Textarea
@@ -53,24 +53,24 @@ export function MemoPanel({ path }: MemoPanelProps) {
               submitAdd();
             }
           }}
-          placeholder={t("memo.placeholder")}
+          placeholder={t("comment.placeholder")}
           rows={2}
         />
         <div className="flex justify-end">
           <Button size="sm" onClick={submitAdd} disabled={!draft.trim()}>
-            {t("memo.add")}
+            {t("comment.add")}
           </Button>
         </div>
       </div>
 
-      {newestFirst.length === 0 && <p className="text-sm text-muted-foreground">{t("memo.empty")}</p>}
+      {newestFirst.length === 0 && <p className="text-sm text-muted-foreground">{t("comment.empty")}</p>}
 
       <ul className="space-y-2">
-        {newestFirst.map((memo) => {
-          const isEditing = editing?.datetime === memo.datetime && editing.text === memo.text;
+        {newestFirst.map((comment) => {
+          const isEditing = editing?.datetime === comment.datetime && editing.text === comment.text;
           return (
-            <li key={`${memo.datetime}:${memo.text}`} className="rounded-md border p-2">
-              <div className="mb-1 text-xs text-muted-foreground">{memo.datetime}</div>
+            <li key={`${comment.datetime}:${comment.text}`} className="rounded-md border p-2">
+              <div className="mb-1 text-xs text-muted-foreground">{comment.datetime}</div>
               {isEditing ? (
                 <Textarea
                   autoFocus
@@ -79,38 +79,38 @@ export function MemoPanel({ path }: MemoPanelProps) {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                       e.preventDefault();
-                      update.mutate({ expected: memo, newText: editDraft }, { onSuccess: () => setEditing(null) });
+                      update.mutate({ expected: comment, newText: editDraft }, { onSuccess: () => setEditing(null) });
                     }
                     if (e.key === "Escape") setEditing(null);
                   }}
                   rows={2}
                 />
               ) : (
-                <p className="whitespace-pre-wrap text-sm">{memo.text}</p>
+                <p className="whitespace-pre-wrap text-sm">{comment.text}</p>
               )}
               <div className="mt-1 flex justify-end gap-2">
                 {isEditing ? (
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => update.mutate({ expected: memo, newText: editDraft }, { onSuccess: () => setEditing(null) })}
+                    onClick={() => update.mutate({ expected: comment, newText: editDraft }, { onSuccess: () => setEditing(null) })}
                   >
-                    {t("memo.edit")}
+                    {t("comment.edit")}
                   </Button>
                 ) : (
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      setEditing(memo);
-                      setEditDraft(memo.text);
+                      setEditing(comment);
+                      setEditDraft(comment.text);
                     }}
                   >
-                    {t("memo.edit")}
+                    {t("comment.edit")}
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove.mutate(memo)}>
-                  {t("memo.delete")}
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove.mutate(comment)}>
+                  {t("comment.delete")}
                 </Button>
               </div>
             </li>

@@ -2,7 +2,8 @@ import type { IndexStore } from "../infra/IndexStore";
 import type { EntityService } from "../services/EntityService";
 import type { EntityFieldService } from "../services/EntityFieldService";
 import type { TodoService } from "../services/TodoService";
-import type { MemoService } from "../services/MemoService";
+import type { CommentService } from "../services/CommentService";
+import type { NoteService } from "../services/NoteService";
 import type { PromoteService } from "../services/PromoteService";
 import type { SseHub } from "./SseHub";
 
@@ -36,7 +37,8 @@ export interface ApiDeps {
 	entityService: EntityService;
 	entityFieldService: EntityFieldService;
 	todoService: TodoService;
-	memoService: MemoService;
+	commentService: CommentService;
+	noteService: NoteService;
 	promoteService: PromoteService;
 	/** SSE購読者管理(design-browser-ui.md §4.7)。HttpServerが/api/eventsの購読受付に使う */
 	sseHub: SseHub;

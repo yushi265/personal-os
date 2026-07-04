@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { Memo } from "../../domain/memo";
+	import type { Comment } from "../../domain/comment";
 	import type PersonalOSPlugin from "../../main";
-	import { memoDeletedUndoNotice, t } from "../../i18n/ja";
+	import { commentDeletedUndoNotice, t } from "../../i18n/ja";
 	import { showUndoNotice } from "../undoNotice";
 
 	/**
-	 * タイムスタンプ付きメモの共通表示・操作部品(design-memo.md §4.1)。
+	 * タイムスタンプ付きコメントの共通表示・操作部品(design-memo.md §4.1。旧称: MemoSection)。
 	 * Preview.svelte/TicketDetailScreen.svelte/ProjectDetailScreen.svelteの3箇所から使う。
 	 * IndexStoreを経由しないため、pathを受け取り自分の力で非同期読込を完結させる(§4.2)。
 	 * capability(todoFeatures)判定は持たない。呼び出し元の{#if}にも含めない(要件§3.3)。
@@ -18,7 +18,7 @@
 		path: string;
 	} = $props();
 
-	let memos = $state<Memo[]>([]);
+	let comments = $state<Comment[]>([]);
 	let visibleCount = $state(10); // 「もっと見る」用(要件§3.1)
 	let editingIndex = $state<number | null>(null); // sorted配列内のindex
 	let editText = $state("");
@@ -28,9 +28,9 @@
 	let loadToken = 0;
 	async function reload(): Promise<void> {
 		const token = ++loadToken;
-		const next = await plugin.memoService.list(path);
+		const next = await plugin.commentService.list(path);
 		if (token !== loadToken) return; // pathが切り替わった後に古い結果が届いた場合は破棄
-		memos = next;
+		comments = next;
 	}
 
 	$effect(() => {
@@ -47,7 +47,7 @@
 		return () => plugin.eventBus.offref(ref);
 	});
 
-	const sorted = $derived([...memos].reverse()); // 新しい順(要件§1.2)
+	const sorted = $derived([...comments].reverse()); // 新しい順(要件§1.2)
 	const visible = $derived(sorted.slice(0, visibleCount));
 	const hasMore = $derived(sorted.length > visibleCount);
 
@@ -68,7 +68,7 @@
 	async function submitAdd(): Promise<void> {
 		const text = newText.trim();
 		if (!text) return;
-		await plugin.memoService.add(path, text);
+		await plugin.commentService.add(path, text);
 		newText = "";
 		await reload(); // 自分の書き込みはindex-updatedが発火しないため明示的に再読込(§4.2)
 		autosize(addTextareaEl);
@@ -81,9 +81,9 @@
 		}
 	}
 
-	function startEdit(index: number, memo: Memo): void {
+	function startEdit(index: number, comment: Comment): void {
 		editingIndex = index;
-		editText = memo.text;
+		editText = comment.text;
 	}
 
 	function cancelEdit(): void {
@@ -91,17 +91,17 @@
 		editText = "";
 	}
 
-	async function submitEdit(memo: Memo): Promise<void> {
+	async function submitEdit(comment: Comment): Promise<void> {
 		const next = editText.trim();
 		if (!next) return;
-		const result = await plugin.memoService.update(path, memo, next);
+		const result = await plugin.commentService.update(path, comment, next);
 		editingIndex = null;
 		editText = "";
 		if (result === "conflict") return; // Notice済み。以降のreloadは共通処理へ
 		await reload();
 	}
 
-	function handleEditKeydown(e: KeyboardEvent, memo: Memo): void {
+	function handleEditKeydown(e: KeyboardEvent, comment: Comment): void {
 		if (e.key === "Escape") {
 			e.preventDefault();
 			cancelEdit();
@@ -109,15 +109,15 @@
 		}
 		if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
 			e.preventDefault();
-			void submitEdit(memo);
+			void submitEdit(comment);
 		}
 	}
 
-	async function requestRemove(memo: Memo): Promise<void> {
-		await plugin.memoService.remove(path, memo);
+	async function requestRemove(comment: Comment): Promise<void> {
+		await plugin.commentService.remove(path, comment);
 		await reload(); // ok/conflictいずれの場合も最新化
-		showUndoNotice(memoDeletedUndoNotice(memo.text), async () => {
-			await plugin.memoService.restore(path, memo);
+		showUndoNotice(commentDeletedUndoNotice(comment.text), async () => {
+			await plugin.commentService.restore(path, comment);
 			await reload();
 		});
 	}
@@ -127,55 +127,55 @@
 	}
 </script>
 
-<div class="pos-memo-section">
+<div class="pos-comment-section">
 	<form
-		class="pos-memo-add"
+		class="pos-comment-add"
 		onsubmit={(e) => {
 			e.preventDefault();
 			void submitAdd();
 		}}
 	>
 		<textarea
-			class="pos-memo-add-text"
+			class="pos-comment-add-text"
 			rows="1"
-			placeholder={t("memo.placeholder")}
+			placeholder={t("comment.placeholder")}
 			bind:value={newText}
 			bind:this={addTextareaEl}
 			oninput={() => autosize(addTextareaEl)}
 			onkeydown={handleAddKeydown}
 		></textarea>
-		<button type="submit" class="pos-manage-new-btn">{t("memo.add")}</button>
+		<button type="submit" class="pos-manage-new-btn">{t("comment.add")}</button>
 	</form>
 
 	{#if visible.length === 0}
-		<p class="pos-widget-empty">{t("memo.empty")}</p>
+		<p class="pos-widget-empty">{t("comment.empty")}</p>
 	{:else}
-		<ul class="pos-memo-list">
-			{#each visible as memo, i (i)}
-				<li class="pos-memo-item">
+		<ul class="pos-comment-list">
+			{#each visible as comment, i (i)}
+				<li class="pos-comment-item">
 					{#if editingIndex === i}
 						<textarea
-							class="pos-memo-edit-text"
+							class="pos-comment-edit-text"
 							rows="1"
 							bind:value={editText}
 							use:autosizeAction
-							onkeydown={(e) => handleEditKeydown(e, memo)}
+							onkeydown={(e) => handleEditKeydown(e, comment)}
 						></textarea>
 					{:else}
-						<div class="pos-memo-item-header">
-							<span class="pos-memo-datetime">{memo.datetime}</span>
-							<span class="pos-memo-item-actions">
-								<button class="pos-memo-action" onclick={() => startEdit(i, memo)}>{t("memo.edit")}</button>
-								<button class="pos-memo-action pos-btn-danger-ghost" onclick={() => requestRemove(memo)}>{t("memo.delete")}</button>
+						<div class="pos-comment-item-header">
+							<span class="pos-comment-datetime">{comment.datetime}</span>
+							<span class="pos-comment-item-actions">
+								<button class="pos-comment-action" onclick={() => startEdit(i, comment)}>{t("comment.edit")}</button>
+								<button class="pos-comment-action pos-btn-danger-ghost" onclick={() => requestRemove(comment)}>{t("comment.delete")}</button>
 							</span>
 						</div>
-						<p class="pos-memo-text">{memo.text}</p>
+						<p class="pos-comment-text">{comment.text}</p>
 					{/if}
 				</li>
 			{/each}
 		</ul>
 		{#if hasMore}
-			<button class="pos-manage-new-btn" onclick={showMore}>{t("memo.showMore")}</button>
+			<button class="pos-manage-new-btn" onclick={showMore}>{t("comment.showMore")}</button>
 		{/if}
 	{/if}
 </div>

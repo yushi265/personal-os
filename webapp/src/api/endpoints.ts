@@ -1,6 +1,6 @@
 import type { Entity, EntityType } from "@domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "@domain/todo";
-import type { Memo } from "@domain/memo";
+import type { Comment } from "@domain/comment";
 import { apiClient } from "./client";
 import type { CreateEntityInput, EntityFieldKey, EntityFieldValue, GoalGroup, HomeSummaryResponse, MetaResponse, PromoteOptions } from "./types";
 
@@ -80,20 +80,30 @@ export function removeTodo(todo: Todo): Promise<void> {
   return apiClient.delete<void>("/api/todos", todo);
 }
 
-// ---- memos ----
+// ---- comments (旧称: memos。design-reorder-and-notes.md B-4によりAPIパスは/api/memosのまま維持) ----
 
-export function getMemos(path: string): Promise<Memo[]> {
-  return apiClient.get<{ memos: Memo[] }>(`/api/memos?path=${encodeURIComponent(path)}`).then((r) => r.memos);
+export function getComments(path: string): Promise<Comment[]> {
+  return apiClient.get<{ memos: Comment[] }>(`/api/memos?path=${encodeURIComponent(path)}`).then((r) => r.memos);
 }
 
-export function addMemo(path: string, text: string): Promise<void> {
+export function addComment(path: string, text: string): Promise<void> {
   return apiClient.post<void>(`/api/memos?path=${encodeURIComponent(path)}`, { text });
 }
 
-export function updateMemo(path: string, expected: Memo, newText: string): Promise<void> {
+export function updateComment(path: string, expected: Comment, newText: string): Promise<void> {
   return apiClient.patch<void>(`/api/memos?path=${encodeURIComponent(path)}`, { expected, newText });
 }
 
-export function removeMemo(path: string, expected: Memo): Promise<void> {
+export function removeComment(path: string, expected: Comment): Promise<void> {
   return apiClient.delete<void>(`/api/memos?path=${encodeURIComponent(path)}`, { expected });
+}
+
+// ---- note ----
+
+export function getNote(path: string): Promise<string> {
+  return apiClient.get<{ text: string }>(`/api/note?path=${encodeURIComponent(path)}`).then((r) => r.text);
+}
+
+export function saveNote(path: string, text: string): Promise<void> {
+  return apiClient.put<void>(`/api/note?path=${encodeURIComponent(path)}`, { text });
 }
