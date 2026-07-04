@@ -1,0 +1,10 @@
+{
+  "id": "personal-os",
+  "name": "Personal OS",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "A life/work/learning management system built entirely on Markdown notes.",
+  "author": "yushi265",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
