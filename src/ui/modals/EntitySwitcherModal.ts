@@ -11,9 +11,9 @@ export interface EntitySwitcherModalOptions {
 }
 
 /**
- * project/ticket(+goal)向けのクイックスイッチャー(Phase U2)。
+ * goal/project/ticket向けのクイックスイッチャー(Phase U2)。
  * Obsidianネイティブのクイックスイッチャーと同じ見た目・あいまい検索をFuzzySuggestModal継承で得る。
- * archived除外。goalも候補に含めるが選択時は詳細画面ではなくノートを開く(design方針: goalに専用詳細画面はまだない)。
+ * archived除外。いずれのtypeも選択時は対応する詳細画面へ遷移する(呼び出し元がonChooseGoal/onChooseProject/onChooseTicketを実装する)。
  */
 export class EntitySwitcherModal extends FuzzySuggestModal<Entity> {
 	constructor(

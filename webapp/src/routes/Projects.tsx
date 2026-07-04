@@ -128,13 +128,28 @@ export function Projects() {
 
         return (
           <Collapsible key={key} open={isOpen} onOpenChange={() => toggleCollapsed(key)}>
-            <CollapsibleTrigger asChild>
-              <button className="flex w-full items-center gap-2 rounded-md py-2 text-left font-medium hover:bg-accent">
-                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
-                {group.goal?.title ?? t("webapp.projects.unclassified")}
-                <span className="text-sm font-normal text-muted-foreground">({visibleProjects.length})</span>
-              </button>
-            </CollapsibleTrigger>
+            <div className="flex w-full items-center gap-2 rounded-md py-2 font-medium">
+              {/* 折りたたみ専用の独立したクリック領域(design: タイトル遷移とのクリック競合回避) */}
+              <CollapsibleTrigger asChild>
+                <button
+                  className="rounded-md p-1 hover:bg-accent"
+                  aria-label={isOpen ? t("webapp.projects.collapseGoal") : t("webapp.projects.expandGoal")}
+                >
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
+                </button>
+              </CollapsibleTrigger>
+              {group.goal ? (
+                <button
+                  className="rounded-md text-left hover:underline"
+                  onClick={() => navigate(`/goals/${encodeURIComponent(group.goal!.path)}`)}
+                >
+                  {group.goal.title}
+                </button>
+              ) : (
+                <span>{t("webapp.projects.unclassified")}</span>
+              )}
+              <span className="text-sm font-normal text-muted-foreground">({visibleProjects.length})</span>
+            </div>
             <CollapsibleContent>
               <Table>
                 <TableHeader>

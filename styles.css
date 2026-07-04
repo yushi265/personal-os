@@ -1368,18 +1368,26 @@
 	align-items: center;
 	gap: var(--size-4-2);
 	width: 100%;
-	cursor: pointer;
 	background: var(--background-secondary);
-	border: none;
-	box-shadow: none;
 	padding: var(--size-4-2) var(--size-4-3);
 	border-radius: var(--radius-s);
-	text-align: left;
 	transition: background-color 0.1s ease;
 }
 
 .pos-manage-goal-header:hover {
 	background: var(--background-modifier-hover);
+}
+
+/* 折りたたみ専用の独立したクリック領域(design: タイトル遷移とのクリック競合回避、lessons.md N1参照) */
+.pos-manage-goal-toggle-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	padding: var(--size-2-1);
+	cursor: pointer;
 }
 
 .pos-manage-goal-toggle {
@@ -1396,6 +1404,7 @@
 	font-weight: var(--font-semibold, 600);
 	font-size: var(--font-ui-medium);
 	flex: 1;
+	min-width: 0;
 }
 
 .pos-manage-goal-status {

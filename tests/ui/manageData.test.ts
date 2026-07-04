@@ -4,6 +4,7 @@ import type { Entity } from "../../src/domain/entity";
 import type { Todo } from "../../src/domain/todo";
 import type PersonalOSPlugin from "../../src/main";
 import {
+	buildGoalProjectRows,
 	buildManageRows,
 	buildProjectTicketRows,
 	collectKnownLabels,
@@ -419,6 +420,45 @@ describe("buildProjectTicketRows (design-drilldown-nav.md §3.2)", () => {
 		);
 
 		expect(rows.map((r) => r.entity?.title)).toEqual(["t1"]);
+	});
+});
+
+describe("buildGoalProjectRows (Goal詳細画面の配下プロジェクト一覧、buildProjectTicketRowsのgoal版)", () => {
+	it("returns only projects that are direct children of the goal", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "g1.md", type: "goal", title: "g1" }));
+		store.upsertEntity(makeEntity({ path: "g2.md", type: "goal", title: "g2" }));
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", goal: "g1.md" }));
+		store.upsertEntity(makeEntity({ path: "p2.md", type: "project", title: "p2", goal: "g2.md" }));
+		const plugin = makePlugin(store);
+
+		const rows = buildGoalProjectRows(plugin, "g1.md", { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
+
+		expect(rows.map((r) => r.entity?.title)).toEqual(["p1"]);
+	});
+
+	it("excludes archived projects by default", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "g1.md", type: "goal", title: "g1" }));
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", goal: "g1.md", status: "active" }));
+		store.upsertEntity(makeEntity({ path: "p2.md", type: "project", title: "p2", goal: "g1.md", status: "archived" }));
+		const plugin = makePlugin(store);
+
+		const rows = buildGoalProjectRows(plugin, "g1.md", { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
+
+		expect(rows.map((r) => r.entity?.title)).toEqual(["p1"]);
+	});
+
+	it("applies the given filter (e.g. priority) to the child projects", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "g1.md", type: "goal", title: "g1" }));
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", goal: "g1.md", priority: "high" }));
+		store.upsertEntity(makeEntity({ path: "p2.md", type: "project", title: "p2", goal: "g1.md", priority: "low" }));
+		const plugin = makePlugin(store);
+
+		const rows = buildGoalProjectRows(plugin, "g1.md", { ...EMPTY_MANAGE_FILTER, priorities: ["high"] }, DEFAULT_ENTITY_SORT);
+
+		expect(rows.map((r) => r.entity?.title)).toEqual(["p1"]);
 	});
 });
 

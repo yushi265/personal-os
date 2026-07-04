@@ -21,6 +21,7 @@
 	} from "./manageData";
 	import {
 		isManageSavedViewVisible,
+		makeGoalDetailScreen,
 		makeProjectDetailScreen,
 		makeTicketDetailScreen,
 		popOne,
@@ -34,6 +35,7 @@
 	import ProjectListScreen from "./ProjectListScreen.svelte";
 	import ProjectDetailScreen from "./ProjectDetailScreen.svelte";
 	import TicketDetailScreen from "./TicketDetailScreen.svelte";
+	import GoalDetailScreen from "./GoalDetailScreen.svelte";
 
 	let {
 		plugin,
@@ -144,6 +146,11 @@
 		stack = pushScreen(stack, makeTicketDetailScreen(path));
 	}
 
+	function goToGoalDetail(path: string): void {
+		slideDirection = "push";
+		stack = pushScreen(stack, makeGoalDetailScreen(path));
+	}
+
 	// project-detail/ticket-detailのフレーム固有state(§2.3)は、スタック末尾を丸ごと差し替える形で更新する
 	function updateCurrentScreen(next: ManageScreen): void {
 		stack = [...stack.slice(0, -1), next];
@@ -193,7 +200,7 @@
 			store: plugin.store,
 			onChooseProject: goToProjectDetail,
 			onChooseTicket: goToTicketDetail,
-			onChooseGoal: openPath,
+			onChooseGoal: goToGoalDetail,
 		}).open();
 	}
 
@@ -310,6 +317,7 @@
 			onSortChange={changeListSort}
 			onToggleGoal={toggleGoal}
 			onNavigate={goToProjectDetail}
+			onNavigateGoal={goToGoalDetail}
 			{focusNewRowToken}
 		>
 			{#snippet toolbarExtra()}
@@ -330,6 +338,16 @@
 		/>
 	{:else if current.kind === "ticket-detail"}
 		<TicketDetailScreen {plugin} {refreshTick} screen={current} onScreenChange={updateCurrentScreen} />
+	{:else if current.kind === "goal-detail"}
+		<GoalDetailScreen
+			{plugin}
+			{refreshTick}
+			screen={current}
+			onScreenChange={updateCurrentScreen}
+			onNavigateProject={goToProjectDetail}
+			onOpenNote={openPath}
+			{focusNewRowToken}
+		/>
 	{/if}
 	</div>
 	{/key}

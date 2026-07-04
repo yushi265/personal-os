@@ -286,6 +286,23 @@ export function buildProjectTicketRows(
 }
 
 /**
+ * Goal詳細画面の配下プロジェクト一覧(buildProjectTicketRowsのgoal版)。
+ * 全プロジェクトを走査してから絞るのではなく、getChildren(goalPath)を起点にそのgoalの子のみを対象にする。
+ */
+export function buildGoalProjectRows(
+	plugin: ManageDataPlugin,
+	goalPath: string,
+	filter: ManageFilter,
+	sort: ManageSort
+): ManageRowData[] {
+	let projects = plugin.store.getChildren(goalPath).filter((e) => e.type === "project");
+	if (!filter.showArchived) projects = projects.filter((e) => e.status !== "archived");
+	const q = filterToQuery(filter, "project");
+	projects = projects.filter((e) => evaluate(q, e, (p) => plugin.store.get(p)?.title));
+	return sortEntityRows(projects, sort).map((entity) => ({ kind: "entity", entity }));
+}
+
+/**
  * プロジェクト詳細画面のTodo一覧(design-drilldown-nav.md §3.2)。
  * direct: プロジェクト直下のTodoのみ。all: 直下+配下の非archivedチケット全ての未完了Todoを集約する。
  */

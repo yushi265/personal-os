@@ -3,8 +3,12 @@
 	import type { Snippet } from "svelte";
 	import type { Entity } from "../../domain/entity";
 	import type PersonalOSPlugin from "../../main";
-	import { entityCreatedNotice, t } from "../../i18n/ja";
+	import { archivedUndoNotice, deletedUndoNotice, entityCreatedNotice, t } from "../../i18n/ja";
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
+	import { showUndoNotice } from "../undoNotice";
+	import { VIEW_TYPE_PREVIEW } from "../preview/PreviewView";
+	import TitleCell from "../components/TitleCell.svelte";
+	import RowMenu from "../components/RowMenu.svelte";
 	import ManageFilterBar from "./ManageFilterBar.svelte";
 	import ManageTable from "./ManageTable.svelte";
 	import InlineCreateRow from "./InlineCreateRow.svelte";
@@ -33,6 +37,7 @@
 		onSortChange,
 		onToggleGoal,
 		onNavigate,
+		onNavigateGoal,
 		toolbarExtra,
 		focusNewRowToken,
 	}: {
@@ -47,6 +52,8 @@
 		onSortChange: (key: ManageSortKey) => void;
 		onToggleGoal: (key: string) => void;
 		onNavigate: (path: string) => void;
+		/** Goalセクション見出しのタイトルクリック→Goal詳細画面へ遷移(design: Goal編集導線の追加) */
+		onNavigateGoal: (path: string) => void;
 		toolbarExtra?: Snippet;
 		/** Manage.svelteの「n」キー操作から先頭のGoalセクションのインライン新規作成行へフォーカスを要求する(Phase U2) */
 		focusNewRowToken?: number;
@@ -124,6 +131,34 @@
 		new Notice(entityCreatedNotice(title));
 	}
 
+	// Goalセクション見出し⋮メニュー(design: Goal編集導線の追加): 名前を変更(TitleCellの鉛筆アイコン起動)/Archive/削除/ノートを開く
+	function commitGoalTitle(goal: Entity, next: string): Promise<void> {
+		return plugin.entityFieldService.updateField(goal.path, "title", next);
+	}
+
+	function showGoalPreview(path: string): void {
+		const leaves = plugin.app.workspace.getLeavesOfType(VIEW_TYPE_PREVIEW);
+		if (leaves.length > 0) plugin.app.workspace.revealLeaf(leaves[0]);
+		openNote(path);
+	}
+
+	async function archiveGoal(goal: Entity): Promise<void> {
+		const originalPath = goal.path;
+		const originalStatus = goal.status;
+		const newPath = await plugin.entityService.archive(originalPath);
+		showUndoNotice(archivedUndoNotice(goal.title), () =>
+			plugin.entityService.restoreFromArchive(newPath, originalPath, originalStatus)
+		);
+	}
+
+	async function deleteGoal(goal: Entity): Promise<void> {
+		const savedContent = await plugin.repo.readBody(goal.path);
+		await plugin.entityService.delete(goal.path);
+		showUndoNotice(deletedUndoNotice(goal.title), async () => {
+			await plugin.repo.restoreFile(goal.path, savedContent);
+		});
+	}
+
 	/**
 	 * Goal跨ぎドロップ(design-reorder-and-notes.md A-4, T-6): ドロップ先セクションのgoalが元と異なる場合、
 	 * goal付け替え+ドロップ位置に応じたorder設定を1回のfrontmatter書き込みにまとめる。
@@ -172,10 +207,30 @@
 		{@const collapsed = collapsedGoals.has(key)}
 		{@const groupProgress = goalGroupProgress(group.projects)}
 		<section class="pos-manage-goal-section">
-			<button class="pos-manage-goal-header" onclick={() => onToggleGoal(key)}>
-				<span class="pos-manage-goal-toggle" class:pos-manage-goal-toggle-open={!collapsed}>▶</span>
-				<span class="pos-manage-goal-title">{group.goal?.title ?? t("manage.nav.unclassified")}</span>
-				{#if group.goal}<span class="pos-manage-goal-status">{group.goal.status}</span>{/if}
+			<div class="pos-manage-goal-header">
+				<button
+					type="button"
+					class="pos-manage-goal-toggle-btn"
+					onclick={() => onToggleGoal(key)}
+					aria-label={collapsed ? t("manage.nav.expandGoal") : t("manage.nav.collapseGoal")}
+				>
+					<span class="pos-manage-goal-toggle" class:pos-manage-goal-toggle-open={!collapsed}>▶</span>
+				</button>
+				{#if group.goal}
+					{@const goal = group.goal}
+					<span class="pos-manage-goal-title">
+						<TitleCell
+							value={goal.title}
+							onCommit={(next) => commitGoalTitle(goal, next)}
+							onNavigate={() => onNavigateGoal(goal.path)}
+							app={plugin.app}
+							hoverSourcePath={goal.path}
+						/>
+					</span>
+					<span class="pos-manage-goal-status">{goal.status}</span>
+				{:else}
+					<span class="pos-manage-goal-title">{t("manage.nav.unclassified")}</span>
+				{/if}
 				<span class="pos-manage-goal-count">{group.projects.length}{t("manage.nav.itemsSuffix")}</span>
 				{#if groupProgress !== null}
 					<span class="pos-progress-cell pos-manage-goal-progress">
@@ -185,7 +240,16 @@
 						<span class="pos-progress-label">{groupProgress}%</span>
 					</span>
 				{/if}
-			</button>
+				{#if group.goal}
+					{@const goal = group.goal}
+					<RowMenu
+						onOpenNote={() => openNote(goal.path)}
+						onShowPreview={() => showGoalPreview(goal.path)}
+						onArchive={() => archiveGoal(goal)}
+						onDelete={() => deleteGoal(goal)}
+					/>
+				{/if}
+			</div>
 			{#if !collapsed}
 				<ManageTable
 					tab="project"

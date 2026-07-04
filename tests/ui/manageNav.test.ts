@@ -4,6 +4,7 @@ import type { Entity } from "../../src/domain/entity";
 import type { SavedView } from "../../src/settings/settings";
 import {
 	isManageSavedViewVisible,
+	makeGoalDetailScreen,
 	makeProjectDetailScreen,
 	makeTicketDetailScreen,
 	popOne,
@@ -92,6 +93,21 @@ describe("manageNav stack operations (design-drilldown-nav.md §8.1)", () => {
 		a.ticketFilter.keyword = "changed";
 		expect(b.ticketFilter.keyword).toBe("");
 	});
+
+	it("N-7: pushScreen appends a new goal-detail frame", () => {
+		const stack: ManageScreen[] = [{ kind: "project-list" }];
+		const next = pushScreen(stack, makeGoalDetailScreen("g1"));
+		expect(next).toHaveLength(2);
+		expect(next[1]).toMatchObject({ kind: "goal-detail", path: "g1" });
+	});
+
+	it("N-8: makeGoalDetailScreen produces independent page-local state per call", () => {
+		const a = makeGoalDetailScreen("g1");
+		const b = makeGoalDetailScreen("g1");
+		if (a.kind !== "goal-detail" || b.kind !== "goal-detail") throw new Error("unreachable");
+		a.projectFilter.keyword = "changed";
+		expect(b.projectFilter.keyword).toBe("");
+	});
 });
 
 describe("reconcileStack (design-drilldown-nav.md §8.2)", () => {
@@ -160,6 +176,23 @@ describe("reconcileStack (design-drilldown-nav.md §8.2)", () => {
 		expect(result.truncated).toBe(false);
 		expect(result.stack).toEqual([{ kind: "project-list" }]);
 	});
+
+	it("R-8: deleted/archived goal-detail entity truncates to project-list, truncated: true", () => {
+		const store = new IndexStore();
+		const stack: ManageScreen[] = [{ kind: "project-list" }, makeGoalDetailScreen("G")];
+		const result = reconcileStack(stack, store, []);
+		expect(result.truncated).toBe(true);
+		expect(result.stack).toEqual([{ kind: "project-list" }]);
+	});
+
+	it("R-9: rename of a goal-detail frame follows the path in place, no truncation", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "G-new", type: "goal", title: "G" }));
+		const stack: ManageScreen[] = [{ kind: "project-list" }, makeGoalDetailScreen("G-old")];
+		const result = reconcileStack(stack, store, [["G-old", "G-new"]]);
+		expect(result.truncated).toBe(false);
+		expect(result.stack[1]).toMatchObject({ kind: "goal-detail", path: "G-new" });
+	});
 });
 
 describe("resolveNavigateAction (design-drilldown-nav.md §4.1 navigateOrOpen routing)", () => {
@@ -176,8 +209,15 @@ describe("resolveNavigateAction (design-drilldown-nav.md §4.1 navigateOrOpen ro
 		expect(resolveNavigateAction("ticket", true)).toBe("open-note");
 	});
 
-	it("D-4: goal/review/resource/inbox entities always open the note (Goal detail is out of scope)", () => {
-		expect(resolveNavigateAction("goal", false)).toBe("open-note");
+	it("D-4: goal entity without modifier click routes to goal-detail", () => {
+		expect(resolveNavigateAction("goal", false)).toBe("goal-detail");
+	});
+
+	it("D-4b: modifier click on a goal opens the note", () => {
+		expect(resolveNavigateAction("goal", true)).toBe("open-note");
+	});
+
+	it("D-4c: review/resource/inbox entities always open the note (no detail screen for these types)", () => {
 		expect(resolveNavigateAction("review", false)).toBe("open-note");
 		expect(resolveNavigateAction("resource", false)).toBe("open-note");
 		expect(resolveNavigateAction("inbox", false)).toBe("open-note");
