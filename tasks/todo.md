@@ -2,9 +2,9 @@
 
 計画: ~/.claude/plans/greedy-tumbling-planet.md(詳細設計書 v1.0 準拠)
 
-- [ ] Phase 0: スキャフォールド(package.json / tsconfig / esbuild / vitest / manifest)→ ビルド通過 → commit
-- [ ] Phase 1: 基盤(entity/date/settings/EventBus/SelfWriteGuard/VaultRepository/IndexStore/Indexer/EntityService/CreateEntityModal/main.ts/i18n)+ テスト → commit
-- [ ] Phase 2: Todo(todo.ts/DataviewAdapter/TasksAdapter/TodoService/QuickAddModal)+ テスト → commit
+- [x] Phase 0: スキャフォールド(package.json / tsconfig / esbuild / vitest / manifest)→ ビルド通過 → commit `1ecc56d`
+- [x] Phase 1: 基盤(entity/date/settings/EventBus/SelfWriteGuard/VaultRepository/IndexStore/Indexer/EntityService/CreateEntityModal/main.ts/i18n)+ テスト26件 → commit `6b31b59`
+- [x] Phase 2: Todo(todo.ts/DataviewAdapter/TasksAdapter/TodoService/QuickAddModal)+ テスト22件(累計48件)→ commit `8ce6074`
 - [ ] Phase 3: 表示(judge/progress/ProgressService/Dashboard+Widgets/Preview)+ テスト → commit
 - [ ] Phase 4: 操作(Kanban/ActivityLog/PromoteService/PromoteModal/コマンド)+ テスト → commit
 - [ ] Phase 5: 補助(query/SearchService/SavedViewService/ReviewService/ReviewModal/Timeline/検索UI)+ テスト → commit
