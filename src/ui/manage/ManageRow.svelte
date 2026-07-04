@@ -67,6 +67,12 @@
 		return plugin.entityFieldService.updateField(entity.path, "title", next);
 	}
 
+	// タイトルの編集開始をRowMenu「名前を変更」からも起動できるようにする外部トリガー(TitleCell参照)
+	let editTitleToken = $state(0);
+	function requestRenameTitle(): void {
+		editTitleToken++;
+	}
+
 	// ---- RowMenu操作 ----
 	function showPreview(path: string): void {
 		const leaves = plugin.app.workspace.getLeavesOfType(VIEW_TYPE_PREVIEW);
@@ -97,7 +103,14 @@
 {#if row.entity}
 	{@const entity = row.entity}
 	<tr class="pos-manage-row" class:pos-manage-row-navigable={!!onNavigate} onclick={() => onNavigate?.(entity.path)}>
-		<td onclick={(e) => e.stopPropagation()}><TitleCell value={entity.title} onCommit={(next) => commitTitle(entity, next)} /></td>
+		<td onclick={(e) => e.stopPropagation()}>
+			<TitleCell
+				value={entity.title}
+				onCommit={(next) => commitTitle(entity, next)}
+				onNavigate={onNavigate ? () => onNavigate?.(entity.path) : undefined}
+				editRequestToken={editTitleToken}
+			/>
+		</td>
 		<td onclick={(e) => e.stopPropagation()}>
 			<StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} />
 		</td>
@@ -113,10 +126,12 @@
 		</td>
 		<td onclick={(e) => e.stopPropagation()}>
 			{#if entity.type !== "goal"}
-				<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
-					<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
+				<div class="pos-progress-cell">
+					<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
+						<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
+					</div>
+					<span class="pos-progress-label">{entity.progress ?? 0}%</span>
 				</div>
-				<span class="pos-progress-label">{entity.progress ?? 0}%</span>
 			{/if}
 		</td>
 		<td onclick={(e) => e.stopPropagation()}><DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} /></td>
@@ -129,10 +144,25 @@
 			<RowMenu
 				onOpenNote={() => onOpen(entity.path)}
 				onShowPreview={() => showPreview(entity.path)}
+				onRename={onNavigate ? requestRenameTitle : undefined}
 				onPromote={tab === "ticket" ? () => promoteEntity(entity) : undefined}
 				onArchive={() => archiveEntity(entity)}
 				onDelete={() => deleteEntity(entity)}
 			/>
 		</td>
+		{#if onNavigate}
+			<td class="pos-manage-nav-cell" onclick={(e) => e.stopPropagation()}>
+				<button
+					type="button"
+					class="pos-manage-nav-chevron"
+					aria-label={t("manage.nav.openDetail")}
+					onclick={() => onNavigate?.(entity.path)}
+				>
+					›
+				</button>
+			</td>
+		{:else}
+			<td></td>
+		{/if}
 	</tr>
 {/if}

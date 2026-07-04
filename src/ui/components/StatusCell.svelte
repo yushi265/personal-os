@@ -30,6 +30,18 @@
 		return options.find((o) => o.value === display)?.label ?? display;
 	}
 
+	// statusの意味カテゴリでバッジ色を分ける(design-ui-first.md追補: UI磨き込み Phase N5)。
+	// 未知のstatus値は"default"にフォールバックする。
+	const STATUS_COLOR_CLASS: Record<string, string> = {
+		doing: "pos-status-accent",
+		active: "pos-status-accent",
+		waiting: "pos-status-warning",
+		review: "pos-status-review",
+		done: "pos-status-done",
+		archived: "pos-status-done",
+	};
+	const colorClass = $derived(STATUS_COLOR_CLASS[display] ?? "pos-status-default");
+
 	async function commit(next: string): Promise<void> {
 		optimistic = { v: next };
 		editing = false;
@@ -55,7 +67,7 @@
 	</select>
 {:else}
 	<span
-		class="pos-cell-badge"
+		class="pos-cell-badge pos-status-badge {colorClass}"
 		role="button"
 		tabindex="0"
 		onclick={() => (editing = true)}

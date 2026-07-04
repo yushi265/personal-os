@@ -5,24 +5,49 @@
 	/**
 	 * クリック→text input(Enter確定/Esc取消/フォーカスアウト確定)のインライン編集セル(design-ui-first.md §3.1/§3.3)。
 	 * Entityのtitle(rename)とTodoのtext編集の両方から{value, onCommit}のみで再利用する。
+	 *
+	 * onNavigateを渡すと一覧行での用途になり、テキストはクリックで遷移するリンク表示になる
+	 * (design-drilldown-nav.md 追補: 遷移導線の明確化)。編集開始はホバーで現れる鉛筆アイコンから行う。
+	 * editRequestTokenは呼び出し側(RowMenuの「名前を変更」)から編集開始を指示するための外部トリガー。
+	 * 値が変化するたびに編集モードへ入る。
 	 */
 	let {
 		value,
 		onCommit,
 		onCancel,
+		onNavigate,
+		editRequestToken,
 	}: {
 		value: string;
 		onCommit: (next: string) => Promise<void>;
 		onCancel?: () => void;
+		onNavigate?: () => void;
+		editRequestToken?: number;
 	} = $props();
 
 	let editing = $state(false);
 	let optimistic = $state<{ v: string } | null>(null);
 	let draft = $state("");
 	const display = $derived(optimistic ? optimistic.v : value);
+	let lastEditRequestToken: number | undefined;
+	let sawFirstEditRequestToken = false;
 
 	$effect(() => {
 		if (optimistic && value === optimistic.v) optimistic = null;
+	});
+
+	$effect(() => {
+		const token = editRequestToken;
+		if (token === undefined) return;
+		if (!sawFirstEditRequestToken) {
+			sawFirstEditRequestToken = true;
+			lastEditRequestToken = token;
+			return;
+		}
+		if (token !== lastEditRequestToken) {
+			lastEditRequestToken = token;
+			startEdit();
+		}
 	});
 
 	function startEdit(): void {
@@ -64,6 +89,19 @@
 			if (e.key === "Escape") cancel();
 		}}
 	/>
+{:else if onNavigate}
+	<span class="pos-title-cell-nav">
+		<span
+			class="pos-cell-text pos-cell-title pos-title-link"
+			role="link"
+			tabindex="0"
+			onclick={() => onNavigate?.()}
+			onkeydown={(e) => e.key === "Enter" && onNavigate?.()}
+		>
+			{display}
+		</span>
+		<button type="button" class="pos-title-edit-btn" aria-label={t("manage.nav.editTitle")} onclick={startEdit}>✎</button>
+	</span>
 {:else}
 	<span
 		class="pos-cell-text pos-cell-title"

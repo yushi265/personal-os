@@ -29,6 +29,11 @@
 		return options.find((o) => o.value === display)?.label ?? display;
 	}
 
+	// priority値ごとに矢印アイコン+色を出す(design-ui-first.md追補: UI磨き込み Phase N5)
+	const PRIORITY_ICON: Record<string, string> = { high: "↑", low: "↓" };
+	const icon = $derived(display ? (PRIORITY_ICON[display] ?? "") : "");
+	const colorClass = $derived(`pos-priority-${display || "unset"}`);
+
 	async function commit(next: string): Promise<void> {
 		optimistic = { v: next };
 		editing = false;
@@ -54,12 +59,13 @@
 	</select>
 {:else}
 	<span
-		class="pos-cell-badge"
+		class="pos-cell-badge pos-priority-badge {colorClass}"
 		role="button"
 		tabindex="0"
 		onclick={() => (editing = true)}
 		onkeydown={(e) => e.key === "Enter" && (editing = true)}
 	>
+		{#if icon}<span class="pos-priority-icon" aria-hidden="true">{icon}</span>{/if}
 		{currentLabel()}
 	</span>
 {/if}

@@ -55,14 +55,18 @@
 <ManageFilterBar {plugin} tab="project" {filter} onChange={onFilterChange} showParentFilter={false} />
 
 {#if groups.length === 0}
-	<p class="pos-manage-empty">{t("manage.emptyState")}</p>
+	<div class="pos-manage-empty-state">
+		<span class="pos-manage-empty-icon" aria-hidden="true">🗂️</span>
+		<p class="pos-manage-empty">{t("manage.emptyState")}</p>
+		<button class="pos-manage-empty-action" onclick={() => createProject(undefined)}>{t("manage.nav.newProject")}</button>
+	</div>
 {:else}
 	{#each groups as group (groupKey(group.goal))}
 		{@const key = groupKey(group.goal)}
 		{@const collapsed = collapsedGoals.has(key)}
 		<section class="pos-manage-goal-section">
 			<button class="pos-manage-goal-header" onclick={() => onToggleGoal(key)}>
-				<span class="pos-manage-goal-toggle">{collapsed ? "▶" : "▼"}</span>
+				<span class="pos-manage-goal-toggle" class:pos-manage-goal-toggle-open={!collapsed}>▶</span>
 				<span class="pos-manage-goal-title">{group.goal?.title ?? t("manage.nav.unclassified")}</span>
 				{#if group.goal}<span class="pos-manage-goal-status">{group.goal.status}</span>{/if}
 				<span class="pos-manage-goal-count">{group.projects.length}{t("manage.nav.itemsSuffix")}</span>

@@ -37,6 +37,7 @@
 		{ key: "due", labelKey: "manage.column.due" },
 		{ key: null, labelKey: "manage.column.labels" },
 		{ key: null, labelKey: "manage.column.actions" },
+		{ key: null, labelKey: "manage.column.nav" },
 	];
 	const ticketColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
@@ -47,6 +48,7 @@
 		{ key: "due", labelKey: "manage.column.due" },
 		{ key: null, labelKey: "manage.column.labels" },
 		{ key: null, labelKey: "manage.column.actions" },
+		{ key: null, labelKey: "manage.column.nav" },
 	];
 	const columns = $derived(tab === "project" ? projectColumns : ticketColumns);
 

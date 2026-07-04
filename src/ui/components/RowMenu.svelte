@@ -9,12 +9,14 @@
 	let {
 		onOpenNote,
 		onShowPreview,
+		onRename,
 		onPromote,
 		onArchive,
 		onDelete,
 	}: {
 		onOpenNote: () => void;
 		onShowPreview: () => void;
+		onRename?: () => void;
 		onPromote?: () => void;
 		onArchive?: () => void;
 		onDelete: () => void;
@@ -25,6 +27,9 @@
 		const menu = new Menu();
 		menu.addItem((item) => item.setTitle(t("manage.rowMenu.openNote")).onClick(onOpenNote));
 		menu.addItem((item) => item.setTitle(t("manage.rowMenu.showPreview")).onClick(onShowPreview));
+		if (onRename) {
+			menu.addItem((item) => item.setTitle(t("manage.rowMenu.rename")).onClick(onRename));
+		}
 		if (onPromote) {
 			menu.addItem((item) => item.setTitle(t("manage.rowMenu.promote")).onClick(onPromote));
 		}

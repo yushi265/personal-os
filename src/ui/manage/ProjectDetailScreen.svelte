@@ -123,10 +123,12 @@
 
 		<dt>{t("preview.field.progress")}</dt>
 		<dd>
-			<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
-				<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
+			<div class="pos-progress-cell">
+				<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
+					<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
+				</div>
+				<span class="pos-progress-label">{entity.progress ?? 0}%</span>
 			</div>
-			{entity.progress ?? 0}%
 		</dd>
 	</dl>
 
