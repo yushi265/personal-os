@@ -15,6 +15,8 @@ export type ManageScreen =
 			// ページ内設定(§2.3): このフレーム固有、他のproject-detailフレームとは共有しない
 			ticketFilter: ManageFilter;
 			ticketSort: ManageSort;
+			// フィルタ詳細パネルの開閉。フレーム固有(§2.3)で、project-listのlistFilterExpandedと同じ扱い
+			ticketFilterExpanded: boolean;
 			todoScope: "direct" | "all";
 			showDoneTodos: boolean;
 	  }
@@ -26,6 +28,7 @@ export function makeProjectDetailScreen(path: string): ManageScreen {
 		path,
 		ticketFilter: { ...EMPTY_MANAGE_FILTER },
 		ticketSort: { ...DEFAULT_ENTITY_SORT },
+		ticketFilterExpanded: false,
 		todoScope: "direct",
 		showDoneTodos: false,
 	};

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from "svelte";
 	import type { Entity } from "../../domain/entity";
 	import type PersonalOSPlugin from "../../main";
 	import { t } from "../../i18n/ja";
@@ -13,20 +14,26 @@
 		filter,
 		sort,
 		collapsedGoals,
+		filterExpanded,
 		onFilterChange,
+		onFilterExpandedChange,
 		onSortChange,
 		onToggleGoal,
 		onNavigate,
+		toolbarExtra,
 	}: {
 		plugin: PersonalOSPlugin;
 		refreshTick: number;
 		filter: ManageFilter;
 		sort: ManageSort;
 		collapsedGoals: Set<string>;
+		filterExpanded: boolean;
 		onFilterChange: (next: ManageFilter) => void;
+		onFilterExpandedChange: (next: boolean) => void;
 		onSortChange: (key: ManageSortKey) => void;
 		onToggleGoal: (key: string) => void;
 		onNavigate: (path: string) => void;
+		toolbarExtra?: Snippet;
 	} = $props();
 
 	// IndexStoreは素のMapでリアクティブでないため、refreshTickを明示的に参照して再計算のトリガとする(Manage.svelte参照)
@@ -59,7 +66,16 @@
 	}
 </script>
 
-<ManageFilterBar {plugin} tab="project" {filter} onChange={onFilterChange} showParentFilter={false} />
+<ManageFilterBar
+	{plugin}
+	tab="project"
+	{filter}
+	onChange={onFilterChange}
+	expanded={filterExpanded}
+	onExpandedChange={onFilterExpandedChange}
+	showParentFilter={false}
+	{toolbarExtra}
+/>
 
 {#if groups.length === 0}
 	<div class="pos-manage-empty-state">

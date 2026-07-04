@@ -86,6 +86,10 @@
 		onScreenChange({ ...screen, ticketFilter: next });
 	}
 
+	function changeTicketFilterExpanded(next: boolean): void {
+		onScreenChange({ ...screen, ticketFilterExpanded: next });
+	}
+
 	function changeTicketSort(key: ManageSortKey): void {
 		const next: ManageSort =
 			screen.ticketSort.key === key
@@ -152,7 +156,15 @@
 
 	<section class="pos-manage-detail-section">
 		<h3>{t("manage.tab.tickets")}</h3>
-		<ManageFilterBar {plugin} tab="ticket" filter={screen.ticketFilter} onChange={changeTicketFilter} showParentFilter={false} />
+		<ManageFilterBar
+			{plugin}
+			tab="ticket"
+			filter={screen.ticketFilter}
+			onChange={changeTicketFilter}
+			expanded={screen.ticketFilterExpanded}
+			onExpandedChange={changeTicketFilterExpanded}
+			showParentFilter={false}
+		/>
 		<ManageTable
 			tab="ticket"
 			rows={ticketRows}

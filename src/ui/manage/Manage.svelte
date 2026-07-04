@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { Notice } from "obsidian";
+	import { Menu, Notice } from "obsidian";
 	import { untrack } from "svelte";
 	import type { Writable } from "svelte/store";
 	import type PersonalOSPlugin from "../../main";
 	import { t } from "../../i18n/ja";
+	import { SaveViewModal } from "../modals/SaveViewModal";
 	import type { SavedView } from "../../settings/settings";
 	import {
 		DEFAULT_ENTITY_SORT,
@@ -46,10 +47,8 @@
 	// プロジェクト一覧のフィルタ・ソート・折りたたみ状態はスタック外の永続state(§2.3)
 	let listFilter = $state<ManageFilter>({ ...EMPTY_MANAGE_FILTER });
 	let listSort = $state<ManageSort>({ ...DEFAULT_ENTITY_SORT });
+	let listFilterExpanded = $state(false);
 	let collapsedGoals = $state<Set<string>>(new Set());
-
-	let savedViewName = $state("");
-	let selectedSavedViewId = $state("");
 
 	const manageSavedViews = $derived.by((): SavedView[] => {
 		void $refreshToken;
@@ -109,22 +108,37 @@
 	}
 
 	function applySavedView(id: string): void {
-		selectedSavedViewId = id;
 		const view = manageSavedViews.find((v) => v.id === id);
 		if (!view) return;
 		listFilter = queryStringToFilter(view.query);
 		listSort = view.sort;
 	}
 
-	async function saveCurrentView(): Promise<void> {
-		const name = savedViewName.trim() || t("manage.savedView.unnamed");
+	async function saveCurrentView(name: string): Promise<void> {
 		await plugin.savedViewService.save({
-			name,
+			name: name || t("manage.savedView.unnamed"),
 			query: filterToQueryString(listFilter, "project"),
 			sort: listSort,
 			viewMode: "manage",
 		});
-		savedViewName = "";
+	}
+
+	function openSaveViewModal(): void {
+		new SaveViewModal(plugin.app, { onSubmit: saveCurrentView }).open();
+	}
+
+	function openSavedViewMenu(e: MouseEvent): void {
+		const menu = new Menu();
+		if (manageSavedViews.length === 0) {
+			menu.addItem((item) => item.setTitle(t("manage.savedView.empty")).setDisabled(true));
+		} else {
+			for (const view of manageSavedViews) {
+				menu.addItem((item) => item.setTitle(view.name).onClick(() => applySavedView(view.id)));
+			}
+		}
+		menu.addSeparator();
+		menu.addItem((item) => item.setTitle(t("manage.savedView.saveNew")).onClick(openSaveViewModal));
+		menu.showAtMouseEvent(e);
 	}
 
 	// index-updated由来の再描画契機ごとにrename追従+消滅検証を行う(§2.4)。
@@ -171,37 +185,25 @@
 	</nav>
 
 	{#if current.kind === "project-list"}
-		<div class="pos-manage-savedview">
-			<select
-				class="pos-manage-savedview-select"
-				value={selectedSavedViewId}
-				onchange={(e) => applySavedView((e.target as HTMLSelectElement).value)}
-			>
-				<option value="">{t("manage.savedView.placeholder")}</option>
-				{#each manageSavedViews as view (view.id)}
-					<option value={view.id}>{view.name}</option>
-				{/each}
-			</select>
-			<input
-				class="pos-manage-savedview-name"
-				type="text"
-				placeholder={t("manage.savedView.namePlaceholder")}
-				bind:value={savedViewName}
-			/>
-			<button onclick={saveCurrentView}>{t("manage.savedView.save")}</button>
-		</div>
-
 		<ProjectListScreen
 			{plugin}
 			{refreshTick}
 			filter={listFilter}
 			sort={listSort}
 			{collapsedGoals}
+			filterExpanded={listFilterExpanded}
 			onFilterChange={changeListFilter}
+			onFilterExpandedChange={(next) => (listFilterExpanded = next)}
 			onSortChange={changeListSort}
 			onToggleGoal={toggleGoal}
 			onNavigate={goToProjectDetail}
-		/>
+		>
+			{#snippet toolbarExtra()}
+				<button type="button" class="pos-manage-savedview-btn" onclick={openSavedViewMenu}>
+					{t("manage.savedView.menuButton")}
+				</button>
+			{/snippet}
+		</ProjectListScreen>
 	{:else if current.kind === "project-detail"}
 		<ProjectDetailScreen
 			{plugin}
