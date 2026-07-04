@@ -4,6 +4,7 @@
  */
 import type { EntityType } from "../../domain/entity";
 import type { IndexStore } from "../../infra/IndexStore";
+import type { SavedView } from "../../settings/settings";
 import { DEFAULT_ENTITY_SORT, EMPTY_MANAGE_FILTER, type ManageFilter, type ManageSort } from "./manageData";
 
 export type ManageScreen =
@@ -61,6 +62,16 @@ export function resolveNavigateAction(entityType: EntityType | undefined, modifi
 	if (!modifierClick && entityType === "project") return "project-detail";
 	if (!modifierClick && entityType === "ticket") return "ticket-detail";
 	return "open-note";
+}
+
+/**
+ * SavedViewのpicker絞り込み(design-drilldown-nav.md §5.2)。
+ * ドリルダウン化で保存対象がプロジェクト一覧画面のフィルタ+ソートのみになったため、旧タブ式で
+ * `tab: "ticket"`/`tab: "todo"`として保存されたSavedViewはpickerから除外する(データは破棄しない、
+ * 誤った絞り込み結果を返すよりサイレントに隠す方が安全という判断)。`tab`未設定(旧旧形式)は表示対象。
+ */
+export function isManageSavedViewVisible(view: SavedView): boolean {
+	return view.viewMode === "manage" && (view.tab === "project" || view.tab === undefined);
 }
 
 export function screenPath(screen: ManageScreen): string | undefined {

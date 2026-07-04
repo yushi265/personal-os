@@ -15,7 +15,6 @@ import {
 	groupProjectsByGoal,
 	queryStringToFilter,
 	sortEntityRows,
-	sortTodoRows,
 	type ManageFilter,
 } from "../../src/ui/manage/manageData";
 
@@ -122,29 +121,6 @@ describe("buildManageRows", () => {
 		expect(rows.map((r) => r.entity?.title)).toEqual(["銀行手続き"]);
 	});
 
-	it("returns undone todos by default and includes done todos when showDone is true", () => {
-		const store = new IndexStore();
-		store.setTodos("t.md", [makeTodo({ filePath: "t.md", parentPath: "t.md", text: "open" }), makeTodo({ filePath: "t.md", parentPath: "t.md", text: "closed", done: true })]);
-		const plugin = makePlugin(store);
-
-		const undoneOnly = buildManageRows(plugin, "todo", { ...EMPTY_MANAGE_FILTER }, { key: "text", order: "asc" });
-		expect(undoneOnly.map((r) => r.todo?.text)).toEqual(["open"]);
-
-		const withDone = buildManageRows(plugin, "todo", { ...EMPTY_MANAGE_FILTER, showDone: true }, { key: "text", order: "asc" });
-		expect(withDone.map((r) => r.todo?.text).sort()).toEqual(["closed", "open"]);
-	});
-
-	it("resolves parentTitle for todo rows via IndexStore", () => {
-		const store = new IndexStore();
-		store.upsertEntity(makeEntity({ path: "t.md", type: "ticket", title: "my-ticket" }));
-		store.setTodos("t.md", [makeTodo({ filePath: "t.md", parentPath: "t.md", text: "do it" })]);
-		const plugin = makePlugin(store);
-
-		const rows = buildManageRows(plugin, "todo", { ...EMPTY_MANAGE_FILTER }, { key: "text", order: "asc" });
-
-		expect(rows[0].parentTitle).toBe("my-ticket");
-	});
-
 	it("applies period:overdue filter consistently for entities and todos", () => {
 		const store = new IndexStore();
 		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "overdue-proj", status: "active", due: "2020-01-01" }));
@@ -157,7 +133,7 @@ describe("buildManageRows", () => {
 	});
 });
 
-describe("sortEntityRows / sortTodoRows", () => {
+describe("sortEntityRows", () => {
 	it("sorts entities by due ascending, falling back to priority/title tie-break", () => {
 		const a = makeEntity({ path: "a.md", title: "a", due: "2026-07-10" });
 		const b = makeEntity({ path: "b.md", title: "b", due: "2026-07-01" });
@@ -175,18 +151,6 @@ describe("sortEntityRows / sortTodoRows", () => {
 		const sorted = sortEntityRows([a, b], { key: "title", order: "desc" });
 
 		expect(sorted.map((e) => e.title)).toEqual(["b", "a"]);
-	});
-
-	it("sorts todos by 所属(parent title) using IndexStore lookup", () => {
-		const store = new IndexStore();
-		store.upsertEntity(makeEntity({ path: "z.md", type: "ticket", title: "z-ticket" }));
-		store.upsertEntity(makeEntity({ path: "a.md", type: "ticket", title: "a-ticket" }));
-		const t1 = makeTodo({ filePath: "z.md", parentPath: "z.md", text: "one" });
-		const t2 = makeTodo({ filePath: "a.md", parentPath: "a.md", text: "two" });
-
-		const sorted = sortTodoRows([t1, t2], { key: "parent", order: "asc" }, store);
-
-		expect(sorted.map((t) => t.text)).toEqual(["two", "one"]);
 	});
 });
 
@@ -225,15 +189,6 @@ describe("filterToQueryString / queryStringToFilter round trip", () => {
 		const s = filterToQueryString(filter, "ticket");
 
 		expect(s).toContain("project:PersonalOS/Projects/proj-a.md");
-	});
-
-	it("does not emit goal:/project: tokens for the todo tab", () => {
-		const filter: ManageFilter = { ...EMPTY_MANAGE_FILTER, parentPath: "irrelevant-for-todo" };
-
-		const s = filterToQueryString(filter, "todo");
-
-		expect(s).not.toContain("goal:");
-		expect(s).not.toContain("project:");
 	});
 
 	it("round-trips an empty filter to an empty query string", () => {

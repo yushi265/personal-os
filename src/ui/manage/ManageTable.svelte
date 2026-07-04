@@ -48,16 +48,7 @@
 		{ key: null, labelKey: "manage.column.labels" },
 		{ key: null, labelKey: "manage.column.actions" },
 	];
-	const todoColumns: ColumnDef[] = [
-		{ key: null, labelKey: "manage.column.done" },
-		{ key: "text", labelKey: "manage.column.text" },
-		{ key: "parent", labelKey: "manage.column.parent" },
-		{ key: "priority", labelKey: "manage.column.priority" },
-		{ key: "due", labelKey: "manage.column.due" },
-		{ key: null, labelKey: "manage.column.actions" },
-	];
-
-	const columns = $derived(tab === "project" ? projectColumns : tab === "ticket" ? ticketColumns : todoColumns);
+	const columns = $derived(tab === "project" ? projectColumns : ticketColumns);
 
 	function sortIndicator(key: ManageSortKey | null): string {
 		if (!key || sort.key !== key) return "";
@@ -65,7 +56,7 @@
 	}
 
 	function rowKey(row: ManageRowData): string {
-		return row.kind === "entity" ? row.entity!.path : `${row.todo!.filePath}:${row.todo!.line}`;
+		return row.entity.path;
 	}
 </script>
 

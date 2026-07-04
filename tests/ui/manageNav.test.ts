@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { IndexStore } from "../../src/infra/IndexStore";
 import type { Entity } from "../../src/domain/entity";
+import type { SavedView } from "../../src/settings/settings";
 import {
+	isManageSavedViewVisible,
 	makeProjectDetailScreen,
 	makeTicketDetailScreen,
 	popOne,
@@ -11,6 +13,17 @@ import {
 	resolveNavigateAction,
 	type ManageScreen,
 } from "../../src/ui/manage/manageNav";
+
+function makeSavedView(overrides: Partial<SavedView> = {}): SavedView {
+	return {
+		id: "v1",
+		name: "view",
+		query: "",
+		sort: { key: "priority", order: "asc" },
+		viewMode: "manage",
+		...overrides,
+	};
+}
 
 function makeEntity(overrides: Partial<Entity> = {}): Entity {
 	return {
@@ -172,5 +185,28 @@ describe("resolveNavigateAction (design-drilldown-nav.md §4.1 navigateOrOpen ro
 
 	it("D-5: undefined entity type (e.g. parse-error path not in store) opens the note", () => {
 		expect(resolveNavigateAction(undefined, false)).toBe("open-note");
+	});
+});
+
+describe("isManageSavedViewVisible (design-drilldown-nav.md §5.2 / §8.5)", () => {
+	it("S-1: viewMode:manage, tab:project is shown in the picker", () => {
+		expect(isManageSavedViewVisible(makeSavedView({ tab: "project" }))).toBe(true);
+	});
+
+	it("S-2: viewMode:manage with no tab field (pre-tab legacy data) is shown in the picker", () => {
+		expect(isManageSavedViewVisible(makeSavedView({ tab: undefined }))).toBe(true);
+	});
+
+	it("S-3: viewMode:manage, tab:ticket is excluded from the picker (no error)", () => {
+		expect(isManageSavedViewVisible(makeSavedView({ tab: "ticket" }))).toBe(false);
+	});
+
+	it("S-4: viewMode:manage, tab:todo is excluded from the picker (no error)", () => {
+		expect(isManageSavedViewVisible(makeSavedView({ tab: "todo" }))).toBe(false);
+	});
+
+	it("S-5: viewMode:list / viewMode:kanban are excluded (Search/Kanban own their picker logic)", () => {
+		expect(isManageSavedViewVisible(makeSavedView({ viewMode: "list" }))).toBe(false);
+		expect(isManageSavedViewVisible(makeSavedView({ viewMode: "kanban" }))).toBe(false);
 	});
 });

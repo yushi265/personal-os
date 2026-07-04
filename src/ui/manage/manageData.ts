@@ -5,10 +5,10 @@
 import { ENTITY_TYPES, type Entity, type EntityType, type Priority } from "../../domain/entity";
 import type { Todo } from "../../domain/todo";
 import type { IndexStore } from "../../infra/IndexStore";
-import { evaluate, evaluateTodo, parseQuery, type ParsedQuery, type Period } from "../../domain/query";
+import { evaluate, parseQuery, type ParsedQuery, type Period } from "../../domain/query";
 import type PersonalOSPlugin from "../../main";
 
-export type ManageTab = "project" | "ticket" | "todo";
+export type ManageTab = "project" | "ticket";
 
 export interface ManageFilter {
 	keyword: string;
@@ -18,8 +18,9 @@ export interface ManageFilter {
 	period?: Period;
 	tags: string[];
 	labels: string[];
-	showDone: boolean; // Todoタブのみ有効
-	showArchived: boolean; // Projects/Ticketsタブのみ有効
+	/** ドリルダウン化(design-drilldown-nav.md §1.2)でTodoタブ自体が廃止されたため現状未使用。SavedView.query往復の型対称性のため残置 */
+	showDone: boolean;
+	showArchived: boolean;
 }
 
 export const EMPTY_MANAGE_FILTER: ManageFilter = {
@@ -36,7 +37,9 @@ export const EMPTY_MANAGE_FILTER: ManageFilter = {
 
 /**
  * §3.2の型ではキーを "due" | "priority" | "title" | "progress" としているが、
- * Todoタブは text(タイトル相当)/所属という別軸を持つため "text" / "parent" を追加している(設計からの逸脱、報告参照)。
+ * 旧Todoタブ(design-drilldown-nav.md §1.2で廃止済み)は text(タイトル相当)/所属という別軸を持っていたため
+ * "text" / "parent" が追加されている。UI上ではもう使われないが、SavedView.sort(settings.ts)の型が
+ * このunionをそのまま参照しており、旧data.json由来の値を読んでも型エラーにならないよう残置する。
  */
 export type ManageSortKey = "due" | "priority" | "title" | "progress" | "text" | "parent";
 
@@ -46,13 +49,11 @@ export interface ManageSort {
 }
 
 export const DEFAULT_ENTITY_SORT: ManageSort = { key: "priority", order: "asc" };
-export const DEFAULT_TODO_SORT: ManageSort = { key: "priority", order: "asc" };
 
 export interface ManageRowData {
-	kind: "entity" | "todo";
-	entity?: Entity;
-	todo?: Todo;
-	/** 表示用に解決済みの親title。todoは所属先(ticket/project/inbox)のtitle、entityはgoal/project(tab依存)のtitle */
+	kind: "entity";
+	entity: Entity;
+	/** 表示用に解決済みの親(goal/project、tab依存)title */
 	parentTitle?: string;
 }
 
@@ -78,7 +79,7 @@ export function filterToQuery(f: ManageFilter, tab: ManageTab): ParsedQuery {
 	if (f.tags.length > 0) filters.tags = f.tags.join(",");
 	if (f.labels.length > 0) filters.labels = f.labels.join(",");
 	if (f.period) filters.period = f.period;
-	if (f.parentPath && tab !== "todo") {
+	if (f.parentPath) {
 		const key = tab === "project" ? "goal" : "project";
 		filters[key] = f.parentPath;
 	}
@@ -146,46 +147,6 @@ export function sortEntityRows(entities: Entity[], sort: ManageSort): Entity[] {
 	});
 }
 
-/** Todo一覧のソート。「所属」は親EntityのtitleをIndexStoreから解決する */
-export function sortTodoRows(todos: Todo[], sort: ManageSort, store: IndexStore): Todo[] {
-	const parentTitle = (todo: Todo): string => store.get(todo.parentPath)?.title ?? todo.parentPath;
-
-	const tieBreak = (a: Todo, b: Todo): number => {
-		const pr = priorityRank(a.priority) - priorityRank(b.priority);
-		if (pr !== 0) return pr;
-		const ad = a.dueDate ?? "9999-99-99";
-		const bd = b.dueDate ?? "9999-99-99";
-		if (ad !== bd) return ad < bd ? -1 : 1;
-		return a.text.localeCompare(b.text);
-	};
-
-	return [...todos].sort((a, b) => {
-		let cmp = 0;
-		switch (sort.key) {
-			case "due":
-				cmp = (a.dueDate ?? "9999-99-99").localeCompare(b.dueDate ?? "9999-99-99");
-				break;
-			case "priority":
-				cmp = priorityRank(a.priority) - priorityRank(b.priority);
-				break;
-			case "parent":
-				cmp = parentTitle(a).localeCompare(parentTitle(b));
-				break;
-			case "text":
-			case "title":
-			default:
-				cmp = a.text.localeCompare(b.text);
-				break;
-		}
-		return compareWithTieBreak(cmp, sort.order, () => tieBreak(a, b));
-	});
-}
-
-/** todoの所属先(ticket/project/inbox)のtitleを解決する(所属列表示用) */
-function resolveTodoParentTitle(plugin: PersonalOSPlugin, todo: Todo): string {
-	return plugin.store.get(todo.parentPath)?.title ?? todo.parentPath;
-}
-
 /** entityのgoal/project(tabに応じてどちらか一方)のtitleを解決する */
 function resolveEntityParentTitle(plugin: PersonalOSPlugin, tab: ManageTab, entity: Entity): string | undefined {
 	const parentPath = tab === "project" ? entity.goal : entity.project;
@@ -195,18 +156,6 @@ function resolveEntityParentTitle(plugin: PersonalOSPlugin, tab: ManageTab, enti
 
 /** タブ・フィルタ・ソートに応じた表示行を構築する(index-updated契機の再描画から呼ばれる想定) */
 export function buildManageRows(plugin: PersonalOSPlugin, tab: ManageTab, filter: ManageFilter, sort: ManageSort): ManageRowData[] {
-	if (tab === "todo") {
-		let todos = plugin.store.getAllTodos();
-		if (!filter.showDone) todos = todos.filter((t) => !t.done);
-		const q = filterToQuery(filter, tab);
-		todos = todos.filter((t) => evaluateTodo(q, t));
-		return sortTodoRows(todos, sort, plugin.store).map((todo) => ({
-			kind: "todo",
-			todo,
-			parentTitle: resolveTodoParentTitle(plugin, todo),
-		}));
-	}
-
 	const type: EntityType = tab;
 	let entities = plugin.store.listByType(type);
 	if (!filter.showArchived) entities = entities.filter((e) => e.status !== "archived");

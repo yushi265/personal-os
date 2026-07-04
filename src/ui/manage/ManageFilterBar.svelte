@@ -19,12 +19,10 @@
 		showParentFilter?: boolean;
 	} = $props();
 
-	const statusOptions = $derived(tab === "project" ? PROJECT_STATUSES : tab === "ticket" ? TICKET_STATUSES : ([] as readonly string[]));
-	const parentOptions = $derived(
-		tab === "project" ? plugin.store.listByType("goal") : tab === "ticket" ? plugin.store.listByType("project") : []
-	);
+	const statusOptions = $derived(tab === "project" ? PROJECT_STATUSES : TICKET_STATUSES);
+	const parentOptions = $derived(tab === "project" ? plugin.store.listByType("goal") : plugin.store.listByType("project"));
 	const parentLabel = $derived(tab === "project" ? t("manage.filter.parentGoal") : t("manage.filter.parentProject"));
-	const tagOptions = $derived(tab === "todo" ? [] : collectKnownTags(plugin.store));
+	const tagOptions = $derived(collectKnownTags(plugin.store));
 	const labelOptions = $derived(collectKnownLabels(plugin.store));
 
 	function toggle(list: string[], value: string): string[] {
@@ -158,27 +156,14 @@
 		</div>
 	{/if}
 
-	{#if tab === "todo"}
-		<label class="pos-manage-filter-toggle">
-			<input
-				type="checkbox"
-				checked={filter.showDone}
-				onchange={(e) => update({ showDone: (e.target as HTMLInputElement).checked })}
-			/>
-			{t("manage.filter.showDone")}
-		</label>
-	{/if}
-
-	{#if tab !== "todo"}
-		<label class="pos-manage-filter-toggle">
-			<input
-				type="checkbox"
-				checked={filter.showArchived}
-				onchange={(e) => update({ showArchived: (e.target as HTMLInputElement).checked })}
-			/>
-			{t("manage.filter.showArchived")}
-		</label>
-	{/if}
+	<label class="pos-manage-filter-toggle">
+		<input
+			type="checkbox"
+			checked={filter.showArchived}
+			onchange={(e) => update({ showArchived: (e.target as HTMLInputElement).checked })}
+		/>
+		{t("manage.filter.showArchived")}
+	</label>
 
 	<button type="button" class="pos-manage-filter-clear" onclick={clear}>{t("manage.filter.clear")}</button>
 </div>

@@ -15,6 +15,7 @@
 		type ManageSortKey,
 	} from "./manageData";
 	import {
+		isManageSavedViewVisible,
 		makeProjectDetailScreen,
 		makeTicketDetailScreen,
 		popOne,
@@ -52,7 +53,7 @@
 
 	const manageSavedViews = $derived.by((): SavedView[] => {
 		void $refreshToken;
-		return plugin.savedViewService.list().filter((v) => v.viewMode === "manage");
+		return plugin.savedViewService.list().filter(isManageSavedViewVisible);
 	});
 
 	const breadcrumbs = $derived(
