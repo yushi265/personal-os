@@ -195,6 +195,7 @@
 			onSortChange={changeTicketSort}
 			onOpen={onOpenNote}
 			onNavigate={onNavigateTicket}
+			showParentColumn={false}
 		/>
 		<div class="pos-manage-create-row">
 			<InlineCreateRow
@@ -210,32 +211,34 @@
 	{#if plugin.capability.todoFeatures}
 		<section class="pos-manage-detail-section">
 			<h3>{t("preview.section.todos")}</h3>
-			<div class="pos-manage-chip-group" role="group" aria-label={t("manage.projectDetail.todoScope")}>
-				<button
-					type="button"
-					class="pos-manage-chip"
-					class:pos-manage-chip-active={screen.todoScope === "direct"}
-					onclick={() => setTodoScope("direct")}
-				>
-					{t("manage.projectDetail.scopeDirect")}
-				</button>
-				<button
-					type="button"
-					class="pos-manage-chip"
-					class:pos-manage-chip-active={screen.todoScope === "all"}
-					onclick={() => setTodoScope("all")}
-				>
-					{t("manage.projectDetail.scopeAll")}
-				</button>
+			<div class="pos-manage-todo-controls">
+				<div class="pos-manage-chip-group" role="group" aria-label={t("manage.projectDetail.todoScope")}>
+					<button
+						type="button"
+						class="pos-manage-chip"
+						class:pos-manage-chip-active={screen.todoScope === "direct"}
+						onclick={() => setTodoScope("direct")}
+					>
+						{t("manage.projectDetail.scopeDirect")}
+					</button>
+					<button
+						type="button"
+						class="pos-manage-chip"
+						class:pos-manage-chip-active={screen.todoScope === "all"}
+						onclick={() => setTodoScope("all")}
+					>
+						{t("manage.projectDetail.scopeAll")}
+					</button>
+				</div>
+				<label class="pos-manage-filter-toggle">
+					<input
+						type="checkbox"
+						checked={screen.showDoneTodos}
+						onchange={(e) => toggleShowDoneTodos((e.target as HTMLInputElement).checked)}
+					/>
+					{t("manage.filter.showDone")}
+				</label>
 			</div>
-			<label class="pos-manage-filter-toggle">
-				<input
-					type="checkbox"
-					checked={screen.showDoneTodos}
-					onchange={(e) => toggleShowDoneTodos((e.target as HTMLInputElement).checked)}
-				/>
-				{t("manage.filter.showDone")}
-			</label>
 			<TodoList
 				{plugin}
 				{todos}

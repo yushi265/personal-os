@@ -22,6 +22,7 @@
 		plugin,
 		onOpen,
 		onNavigate,
+		showParentColumn = true,
 		focused = false,
 	}: {
 		row: ManageRowData;
@@ -30,6 +31,8 @@
 		onOpen: (path: string) => void;
 		/** 指定時、行の空白部分クリックでentity詳細へ遷移する(design-drilldown-nav.md §3.1.1) */
 		onNavigate?: (path: string) => void;
+		/** ManageTableのGoal/Project列(ParentCell)を表示するかどうか(呼び出し元で既にグルーピング済みの場合はfalse) */
+		showParentColumn?: boolean;
 		/** ManageTableのキーボード操作(↑/↓)によるフォーカス中の行かどうか(Phase U2) */
 		focused?: boolean;
 	} = $props();
@@ -143,13 +146,15 @@
 		<td class="pos-manage-cell-status" onclick={(e) => e.stopPropagation()}>
 			<StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} />
 		</td>
-		<td class="pos-manage-cell-parent" onclick={(e) => e.stopPropagation()}>
-			<ParentCell
-				value={tab === "project" ? entity.goal : entity.project}
-				options={parentOptions()}
-				onCommit={(next) => commitParent(entity, next)}
-			/>
-		</td>
+		{#if showParentColumn}
+			<td class="pos-manage-cell-parent" onclick={(e) => e.stopPropagation()}>
+				<ParentCell
+					value={tab === "project" ? entity.goal : entity.project}
+					options={parentOptions()}
+					onCommit={(next) => commitParent(entity, next)}
+				/>
+			</td>
+		{/if}
 		<td class="pos-manage-cell-priority" onclick={(e) => e.stopPropagation()}>
 			<PriorityCell value={entity.priority ?? ""} options={priorityOptions()} onCommit={(next) => commitPriority(entity, next)} />
 		</td>

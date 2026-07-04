@@ -164,6 +164,7 @@
 					{onSortChange}
 					onOpen={openNote}
 					{onNavigate}
+					showParentColumn={false}
 				/>
 				<div class="pos-manage-create-row">
 					<InlineCreateRow

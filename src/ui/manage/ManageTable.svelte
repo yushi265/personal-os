@@ -13,6 +13,7 @@
 		onSortChange,
 		onOpen,
 		onNavigate,
+		showParentColumn = true,
 	}: {
 		tab: ManageTab;
 		rows: ManageRowData[];
@@ -21,6 +22,8 @@
 		onSortChange: (key: ManageSortKey) => void;
 		onOpen: (path: string) => void;
 		onNavigate?: (path: string) => void;
+		/** 呼び出し元が既にGoal/Projectでグルーピング済みの場合、冗長な親列を非表示にする(design参照) */
+		showParentColumn?: boolean;
 	} = $props();
 
 	// キーボード操作(Phase U2): ↑/↓で行フォーカス移動、Enterで詳細/ノートを開く(design §「キーボード操作」)。
@@ -52,13 +55,15 @@
 	interface ColumnDef {
 		key: ManageSortKey | null;
 		labelKey: MessageKey;
+		/** Goal/Projectでのグルーピング表示に伴い、showParentColumn=falseの場合は列ごと除外する */
+		isParent?: boolean;
 	}
 
 	// A3: 各セルはui/components/の共通セルコンポーネントへ置換(ManageRow.svelte参照)。末尾にRowMenu用の列を追加する
 	const projectColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
 		{ key: null, labelKey: "manage.column.status" },
-		{ key: null, labelKey: "manage.column.goal" },
+		{ key: null, labelKey: "manage.column.goal", isParent: true },
 		{ key: "priority", labelKey: "manage.column.priority" },
 		{ key: "progress", labelKey: "manage.column.progress" },
 		{ key: "due", labelKey: "manage.column.due" },
@@ -69,7 +74,7 @@
 	const ticketColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
 		{ key: null, labelKey: "manage.column.status" },
-		{ key: null, labelKey: "manage.column.project" },
+		{ key: null, labelKey: "manage.column.project", isParent: true },
 		{ key: "priority", labelKey: "manage.column.priority" },
 		{ key: "progress", labelKey: "manage.column.progress" },
 		{ key: "due", labelKey: "manage.column.due" },
@@ -77,7 +82,10 @@
 		{ key: null, labelKey: "manage.column.actions" },
 		{ key: null, labelKey: "manage.column.nav" },
 	];
-	const columns = $derived(tab === "project" ? projectColumns : ticketColumns);
+	const columns = $derived.by(() => {
+		const base = tab === "project" ? projectColumns : ticketColumns;
+		return showParentColumn ? base : base.filter((col) => !col.isParent);
+	});
 
 	function sortIndicator(key: ManageSortKey | null): string {
 		if (!key || sort.key !== key) return "";
@@ -92,7 +100,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -- 行フォーカス移動(↑/↓/Enter)のための複合ウィジェットコンテナ(design: キーボード操作) -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="pos-manage-table-wrapper" role="grid" tabindex="0" onkeydown={handleKeydown}>
-	<table class="pos-manage-table">
+	<table class="pos-manage-table" class:pos-manage-table-no-parent={!showParentColumn}>
 		<thead>
 			<tr>
 				{#each columns as col (col.labelKey)}
@@ -109,7 +117,7 @@
 				</tr>
 			{:else}
 				{#each rows as row, i (rowKey(row))}
-					<ManageRow {row} {tab} {plugin} {onOpen} {onNavigate} focused={i === focusedIndex} />
+					<ManageRow {row} {tab} {plugin} {onOpen} {onNavigate} {showParentColumn} focused={i === focusedIndex} />
 				{/each}
 			{/if}
 		</tbody>

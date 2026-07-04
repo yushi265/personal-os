@@ -953,6 +953,19 @@
 	gap: var(--size-2-2);
 }
 
+/* Todoセクションのスコープ切替(チップ)/完了表示チェックボックスの並びに呼吸できる余白を持たせる */
+.pos-manage-todo-controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--size-4-3);
+	margin: var(--size-4-2) 0 var(--size-4-4);
+}
+
+.pos-manage-todo-controls + .pos-widget-empty {
+	padding: var(--size-4-3) 0;
+}
+
 .pos-manage-chip {
 	cursor: pointer;
 	font-size: var(--font-ui-smaller);
@@ -1789,6 +1802,17 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 		gap: var(--size-2-2) var(--size-4-3);
 		padding: var(--size-4-3) var(--size-4-2);
 		border-bottom: 1px solid var(--background-modifier-border);
+	}
+
+	/* Goal/Project列(ParentCell)を省略した表(ManageTable showParentColumn=false)では、statusが単独で1行を占める */
+	.pos-manage-table-no-parent tr {
+		grid-template-areas:
+			"title title"
+			"status status"
+			"priority due"
+			"progress progress"
+			"labels labels"
+			"actions nav";
 	}
 
 	.pos-manage-table td {

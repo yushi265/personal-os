@@ -131,14 +131,16 @@
 	{#if plugin.capability.todoFeatures}
 		<section class="pos-manage-detail-section">
 			<h3>{t("preview.section.todos")}</h3>
-			<label class="pos-manage-filter-toggle">
-				<input
-					type="checkbox"
-					checked={screen.showDoneTodos}
-					onchange={(e) => toggleShowDoneTodos((e.target as HTMLInputElement).checked)}
-				/>
-				{t("manage.filter.showDone")}
-			</label>
+			<div class="pos-manage-todo-controls">
+				<label class="pos-manage-filter-toggle">
+					<input
+						type="checkbox"
+						checked={screen.showDoneTodos}
+						onchange={(e) => toggleShowDoneTodos((e.target as HTMLInputElement).checked)}
+					/>
+					{t("manage.filter.showDone")}
+				</label>
+			</div>
 			<TodoList {plugin} {todos} showDone={screen.showDoneTodos} showParentBadge={false} addTarget={screen.path} />
 		</section>
 	{:else}
