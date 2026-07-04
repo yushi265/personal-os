@@ -82,6 +82,50 @@ describe("evaluate", () => {
 	});
 });
 
+describe("evaluate - period filter", () => {
+	const TODAY = "2026-07-04";
+
+	it("PQ-1: period:today matches only entities due today", () => {
+		const q = parseQuery("period:today");
+		expect(evaluate(q, makeEntity({ due: "2026-07-04" }), undefined, TODAY)).toBe(true);
+		expect(evaluate(q, makeEntity({ due: "2026-07-05" }), undefined, TODAY)).toBe(false);
+	});
+
+	it("PQ-2: period:week matches due dates from today through 7 days later (inclusive)", () => {
+		const q = parseQuery("period:week");
+		expect(evaluate(q, makeEntity({ due: "2026-07-04" }), undefined, TODAY)).toBe(true);
+		expect(evaluate(q, makeEntity({ due: "2026-07-11" }), undefined, TODAY)).toBe(true);
+		expect(evaluate(q, makeEntity({ due: "2026-07-12" }), undefined, TODAY)).toBe(false);
+	});
+
+	it("PQ-3: period:overdue matches the same as judge.isOverdue (open status required)", () => {
+		const q = parseQuery("period:overdue");
+		expect(evaluate(q, makeEntity({ due: "2026-07-01", status: "doing" }), undefined, TODAY)).toBe(true);
+		expect(evaluate(q, makeEntity({ due: "2026-07-01", status: "done" }), undefined, TODAY)).toBe(false);
+	});
+
+	it("PQ-4: period:none matches only entities without a due date", () => {
+		const q = parseQuery("period:none");
+		expect(evaluate(q, makeEntity({ due: undefined }), undefined, TODAY)).toBe(true);
+		expect(evaluate(q, makeEntity({ due: "2026-07-04" }), undefined, TODAY)).toBe(false);
+	});
+});
+
+describe("evaluate - comma-separated OR filters", () => {
+	it("PQ-5: status:doing,waiting matches either value", () => {
+		const q = parseQuery("status:doing,waiting");
+		expect(evaluate(q, makeEntity({ status: "doing" }))).toBe(true);
+		expect(evaluate(q, makeEntity({ status: "waiting" }))).toBe(true);
+		expect(evaluate(q, makeEntity({ status: "backlog" }))).toBe(false);
+	});
+
+	it("PQ-6: a single-value status query keeps its exact-match behavior (regression)", () => {
+		const q = parseQuery("status:doing");
+		expect(evaluate(q, makeEntity({ status: "doing" }))).toBe(true);
+		expect(evaluate(q, makeEntity({ status: "waiting" }))).toBe(false);
+	});
+});
+
 describe("evaluateTodo", () => {
 	it("matches on priority/labels/due/text", () => {
 		const q = parseQuery("priority:high labels:urgent 電話");

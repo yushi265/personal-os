@@ -158,6 +158,26 @@ export class VaultRepository {
 		await this.app.fileManager.renameFile(file, target);
 	}
 
+	/** 同一フォルダ内でのファイル名変更(rename)。フォルダ跨ぎのmoveToFolder/moveToArchiveとは別メソッドとする */
+	async renameNote(path: string, newTitle: string): Promise<string> {
+		const file = this.getFile(path);
+		if (!file) throw new Error(`File not found: ${path}`);
+
+		const folder = file.parent?.path ?? "";
+		let target = folder ? `${folder}/${newTitle}.${file.extension}` : `${newTitle}.${file.extension}`;
+		let suffix = 1;
+		while (this.app.vault.getAbstractFileByPath(target) && target !== path) {
+			target = folder ? `${folder}/${newTitle} ${suffix}.${file.extension}` : `${newTitle} ${suffix}.${file.extension}`;
+			suffix++;
+		}
+		if (target === path) return path; // 変更なし
+
+		this.selfWriteGuard.markWrite(path);
+		this.selfWriteGuard.markWrite(target);
+		await this.app.fileManager.renameFile(file, target);
+		return target;
+	}
+
 	/** fileManager.renameFile で任意フォルダへ移動する(Promote等)。同名衝突時はサフィックス。移動後のpathを返す */
 	async moveToFolder(path: string, folder: string): Promise<string> {
 		const file = this.getFile(path);

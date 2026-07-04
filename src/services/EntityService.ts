@@ -1,5 +1,5 @@
 import { Notice, type TFile } from "obsidian";
-import { defaultStatusOf, validStatusesOf, type EntityType, type Priority } from "../domain/entity";
+import { FORBIDDEN_TITLE_CHARS, defaultStatusOf, validStatusesOf, type EntityType, type Priority } from "../domain/entity";
 import { today } from "../domain/date";
 import type { ActivityLogger, ProgressRecalculator } from "../infra/types";
 import type { IndexStore } from "../infra/IndexStore";
@@ -16,8 +16,6 @@ export interface CreateEntityInput {
 	due?: string;
 	templateName?: string; // Templates/内のファイル名
 }
-
-const FORBIDDEN_TITLE_CHARS = /[\\/:*?"<>|#^[\]]/g;
 
 function buildFrontmatterBlock(fm: Record<string, unknown>): string {
 	const lines = Object.entries(fm)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addCycle, today } from "../../src/domain/date";
+import { addCycle, addDays, today } from "../../src/domain/date";
 
 describe("today", () => {
 	it("returns a YYYY-MM-DD formatted string", () => {
@@ -48,5 +48,23 @@ describe("addCycle", () => {
 		const m = String(expected.getMonth() + 1).padStart(2, "0");
 		const d = String(expected.getDate()).padStart(2, "0");
 		expect(result).toBe(`${y}-${m}-${d}`);
+	});
+});
+
+describe("addDays", () => {
+	it("adds days within the same month", () => {
+		expect(addDays("2026-07-04", 3)).toBe("2026-07-07");
+	});
+
+	it("rolls over into the next month", () => {
+		expect(addDays("2026-07-28", 5)).toBe("2026-08-02");
+	});
+
+	it("rolls over into the next year", () => {
+		expect(addDays("2026-12-30", 5)).toBe("2027-01-04");
+	});
+
+	it("supports negative n (subtracting days)", () => {
+		expect(addDays("2026-07-04", -5)).toBe("2026-06-29");
 	});
 });

@@ -18,6 +18,9 @@ export type Priority = (typeof PRIORITIES)[number];
 export const REVIEW_CYCLES = ["daily", "weekly", "monthly", "quarterly", "yearly"] as const;
 export type ReviewCycle = (typeof REVIEW_CYCLES)[number];
 
+/** タイトルに使用できない文字。ノート作成・rename双方で共用する */
+export const FORBIDDEN_TITLE_CHARS = /[\\/:*?"<>|#^[\]]/g;
+
 /** 未完了statusの定義(judge.tsで使用) */
 export const OPEN_STATUSES: Record<"project" | "ticket" | "goal", ReadonlySet<string>> = {
 	goal: new Set(["active", "paused"]),

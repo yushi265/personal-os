@@ -170,6 +170,14 @@ const MESSAGES = {
 
 	"timeline.title": "Timeline",
 	"timeline.empty": "start/dueを持つProject・Ticketはありません。",
+
+	"manage.field.titleRequired": "タイトルを入力してください。",
+	"manage.field.invalidStatus": "不正なstatusです。",
+	"manage.field.invalidPriority": "不正なpriorityです。",
+	"manage.field.invalidDate": "日付はYYYY-MM-DD形式で入力してください。",
+	"manage.field.invalidReviewCycle": "不正なreview_cycleです。",
+	"manage.field.invalidParent": "選択した親が存在しないか、種類が一致しません。",
+	"manage.field.invalidArray": "不正な値です。",
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;

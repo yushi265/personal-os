@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	appendTodoToSection,
 	buildTodoLine,
 	extractEmojiDate,
 	extractInline,
@@ -8,6 +9,7 @@ import {
 	rebuildTodoLine,
 	stripMetadata,
 	toggleTodoLine,
+	updateTodoLine,
 	type Todo,
 } from "../../src/domain/todo";
 
@@ -151,5 +153,100 @@ describe("rebuildTodoLine", () => {
 	it("strips the indent when stripIndent is requested (e.g. moving into a new note)", () => {
 		const todo = makeTodo({ indent: "  ", rawText: "sub task" });
 		expect(rebuildTodoLine(todo, { stripIndent: true })).toBe("- [ ] sub task");
+	});
+});
+
+describe("updateTodoLine", () => {
+	function makeTodo(overrides: Partial<Todo> = {}): Todo {
+		return {
+			filePath: "a.md",
+			line: 0,
+			text: "buy milk",
+			done: false,
+			labels: [],
+			parentType: "inbox",
+			parentPath: "a.md",
+			...overrides,
+		};
+	}
+
+	it("U-1: changes only text, preserving the existing due date and priority", () => {
+		const todo = makeTodo({ dueDate: "2026-07-10", priority: "high" });
+		expect(updateTodoLine(todo, { text: "buy bread" })).toBe("- [ ] buy bread 📅 2026-07-10 [priority:: high]");
+	});
+
+	it("U-2: assigns a new due date when the original todo had none", () => {
+		const todo = makeTodo();
+		expect(updateTodoLine(todo, { dueDate: "2026-07-10" })).toBe("- [ ] buy milk 📅 2026-07-10");
+	});
+
+	it("U-3: removes the due date when dueDate is null", () => {
+		const todo = makeTodo({ dueDate: "2026-07-10" });
+		expect(updateTodoLine(todo, { dueDate: null })).toBe("- [ ] buy milk");
+	});
+
+	it("U-4: removes the priority when priority is null", () => {
+		const todo = makeTodo({ priority: "high" });
+		expect(updateTodoLine(todo, { priority: null })).toBe("- [ ] buy milk");
+	});
+
+	it("U-5: preserves labels when only text changes", () => {
+		const todo = makeTodo({ labels: ["home", "urgent"] });
+		expect(updateTodoLine(todo, { text: "buy bread" })).toBe("- [ ] buy bread [labels:: home, urgent]");
+	});
+
+	it("U-6: preserves indentation for a nested todo", () => {
+		const todo = makeTodo({ indent: "  ", text: "sub task" });
+		expect(updateTodoLine(todo, { text: "sub task updated" })).toBe("  - [ ] sub task updated");
+	});
+
+	it("U-7: preserves both startDate and doneDate while changing only the due date", () => {
+		const todo = makeTodo({
+			done: true,
+			startDate: "2026-07-01",
+			doneDate: "2026-07-03",
+			dueDate: "2026-07-05",
+		});
+		expect(updateTodoLine(todo, { dueDate: "2026-07-10" })).toBe(
+			"- [x] buy milk 🛫 2026-07-01 📅 2026-07-10 ✅ 2026-07-03"
+		);
+	});
+});
+
+describe("appendTodoToSection", () => {
+	const NEW_LINE = "- [ ] new item";
+
+	it("A-1: appends a new '## Todo' section at the end when none exists", () => {
+		const body = "# Note\n\nSome content\n";
+		expect(appendTodoToSection(body, NEW_LINE)).toBe("# Note\n\nSome content\n\n## Todo\n- [ ] new item\n");
+	});
+
+	it("A-2: inserts after the last non-empty line of an existing section with multiple todos", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2";
+		expect(appendTodoToSection(body, NEW_LINE)).toBe("## Todo\n- [ ] item1\n- [ ] item2\n- [ ] new item");
+	});
+
+	it("A-3: inserts before a following heading, leaving content after it untouched", () => {
+		const body = "## Todo\n- [ ] item1\n## Note\nother content";
+		expect(appendTodoToSection(body, NEW_LINE)).toBe(
+			"## Todo\n- [ ] item1\n- [ ] new item\n## Note\nother content"
+		);
+	});
+
+	it("A-4: normalizes to a single blank line before a new section when the body has no trailing newline", () => {
+		const body = "# Note";
+		expect(appendTodoToSection(body, NEW_LINE)).toBe("# Note\n\n## Todo\n- [ ] new item\n");
+	});
+
+	it("A-5: inserts directly after the heading when the section is empty (EOF or next heading immediately follows)", () => {
+		expect(appendTodoToSection("## Todo", NEW_LINE)).toBe("## Todo\n- [ ] new item");
+		expect(appendTodoToSection("## Todo\n## Note\ncontent", NEW_LINE)).toBe(
+			"## Todo\n- [ ] new item\n## Note\ncontent"
+		);
+	});
+
+	it("§7.6: does not recognize heading variants like '## TODO', so a duplicate '## Todo' section is added", () => {
+		const body = "## TODO\n- [ ] existing";
+		expect(appendTodoToSection(body, NEW_LINE)).toBe("## TODO\n- [ ] existing\n\n## Todo\n- [ ] new item\n");
 	});
 });

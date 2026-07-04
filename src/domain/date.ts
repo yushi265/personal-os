@@ -29,3 +29,11 @@ export function addCycle(date: string, cycle: ReviewCycle): string {
 	}
 	return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
 }
+
+/** 日数(負数可)を加算した日付を返す。addCycleはReviewCycle単位専用のため、日数加算にはこちらを使う */
+export function addDays(date: string, n: number): string {
+	const [y, m, d] = date.split("-").map(Number);
+	const base = new Date(y, m - 1, d);
+	base.setDate(base.getDate() + n);
+	return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
+}

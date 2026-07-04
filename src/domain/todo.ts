@@ -108,3 +108,57 @@ export function rebuildTodoLine(todo: Todo, opts?: { stripIndent?: boolean }): s
 	const indent = opts?.stripIndent ? "" : (todo.indent ?? "");
 	return `${indent}${checkbox} ${body}`.trimEnd();
 }
+
+export interface TodoPatch {
+	text?: string;
+	dueDate?: string | null; // null = 削除
+	priority?: Priority | null; // null = 削除
+}
+
+/**
+ * インライン編集用の次行生成。text/dueDate/priorityのみ差し替え、
+ * startDate/doneDate/labels/indent/checkbox状態は保持する。
+ * 出力順序は text→🛫→📅→✅→[priority::]→[labels::](buildTodoLineの絵文字順序と揃える)。
+ */
+export function updateTodoLine(todo: Todo, patch: TodoPatch): string {
+	const checkbox = todo.done ? "- [x]" : "- [ ]";
+	const indent = todo.indent ?? "";
+	const text = (patch.text ?? todo.text).trim();
+
+	let line = `${indent}${checkbox} ${text}`;
+	if (todo.startDate) line += ` 🛫 ${todo.startDate}`;
+	const due = patch.dueDate === null ? undefined : (patch.dueDate ?? todo.dueDate);
+	if (due) line += ` 📅 ${due}`;
+	if (todo.doneDate) line += ` ✅ ${todo.doneDate}`;
+	const priority = patch.priority === null ? undefined : (patch.priority ?? todo.priority);
+	if (priority) line += ` [priority:: ${priority}]`;
+	if (todo.labels.length > 0) line += ` [labels:: ${todo.labels.join(", ")}]`;
+	return line;
+}
+
+const TODO_SECTION_HEADING = "## Todo";
+
+/**
+ * body内の "## Todo" セクション末尾へ line を追記する。
+ * - セクションが存在すれば、次の見出し行(先頭が "#")の直前 or 本文末尾までの中で
+ *   最後の非空行の直後に挿入する。
+ * - セクションが存在しなければ、本文末尾に "\n\n## Todo\n{line}\n" を追加する(PromoteServiceと同じ形式)。
+ * - 見出し表記は "## Todo" への完全一致(大文字小文字区別あり)のみを対象とする(表記ゆれは非対応)。
+ */
+export function appendTodoToSection(body: string, line: string): string {
+	const lines = body.split("\n");
+	const headingIdx = lines.findIndex((l) => l.trim() === TODO_SECTION_HEADING);
+
+	if (headingIdx === -1) {
+		const trimmed = body.replace(/\n+$/, "");
+		return `${trimmed}\n\n${TODO_SECTION_HEADING}\n${line}\n`;
+	}
+
+	let insertAt = headingIdx + 1;
+	for (let i = headingIdx + 1; i < lines.length; i++) {
+		if (/^#{1,6}\s/.test(lines[i])) break; // 次の見出しで打ち切り
+		if (lines[i].trim() !== "") insertAt = i + 1; // 非空行の直後を候補に更新
+	}
+	lines.splice(insertAt, 0, line);
+	return lines.join("\n");
+}

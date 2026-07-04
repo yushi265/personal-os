@@ -11,6 +11,7 @@ import { Indexer } from "./infra/Indexer";
 import { DataviewAdapter } from "./infra/DataviewAdapter";
 import { TasksAdapter } from "./infra/TasksAdapter";
 import { EntityService } from "./services/EntityService";
+import { EntityFieldService } from "./services/EntityFieldService";
 import { TodoService } from "./services/TodoService";
 import { ProgressService } from "./services/ProgressService";
 import { ActivityLogService } from "./services/ActivityLogService";
@@ -44,6 +45,7 @@ export default class PersonalOSPlugin extends Plugin {
 	dataviewAdapter!: DataviewAdapter;
 	tasksAdapter!: TasksAdapter;
 	entityService!: EntityService;
+	entityFieldService!: EntityFieldService;
 	todoService!: TodoService;
 	progressService!: ProgressService;
 	activityLogService!: ActivityLogService;
@@ -82,6 +84,7 @@ export default class PersonalOSPlugin extends Plugin {
 			this.activityLogService,
 			this.progressService
 		);
+		this.entityFieldService = new EntityFieldService(this.repo, this.store, this.activityLogService);
 		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
 		this.promoteService = new PromoteService(this.repo, this.store, this.entityService, this.activityLogService);
 		this.searchService = new SearchService(this.store, this.repo);
