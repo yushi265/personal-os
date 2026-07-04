@@ -2,7 +2,15 @@
  * Presentation層(ManageView専用データ整形): 統合管理Viewの一覧+フィルタ+ソート(design-ui-first.md §3.2)。
  * ManageView.ts / Manage.svelte から呼ばれる純粋関数群。Obsidian APIには依存しない。
  */
-import { ENTITY_TYPES, validStatusesOf, type Entity, type EntityType, type Priority } from "../../domain/entity";
+import {
+	computeOrderForInsert,
+	ENTITY_TYPES,
+	validStatusesOf,
+	type Entity,
+	type EntityType,
+	type OrderableRow,
+	type Priority,
+} from "../../domain/entity";
 import type { Todo } from "../../domain/todo";
 import type { IndexStore } from "../../infra/IndexStore";
 import { evaluate, parseQuery, type ParsedQuery, type Period } from "../../domain/query";
@@ -50,14 +58,14 @@ export const EMPTY_MANAGE_FILTER: ManageFilter = {
  * "text" / "parent" が追加されている。UI上ではもう使われないが、SavedView.sort(settings.ts)の型が
  * このunionをそのまま参照しており、旧data.json由来の値を読んでも型エラーにならないよう残置する。
  */
-export type ManageSortKey = "due" | "priority" | "title" | "progress" | "status" | "text" | "parent";
+export type ManageSortKey = "due" | "priority" | "title" | "progress" | "status" | "text" | "parent" | "manual";
 
 export interface ManageSort {
 	key: ManageSortKey;
 	order: "asc" | "desc";
 }
 
-export const DEFAULT_ENTITY_SORT: ManageSort = { key: "priority", order: "asc" };
+export const DEFAULT_ENTITY_SORT: ManageSort = { key: "manual", order: "asc" };
 
 export interface ManageRowData {
 	kind: "entity";
@@ -158,13 +166,40 @@ export function sortEntityRows(entities: Entity[], sort: ManageSort): Entity[] {
 			case "status":
 				cmp = statusRank(a) - statusRank(b);
 				break;
+			case "manual": {
+				if (a.order !== undefined && b.order !== undefined) cmp = a.order - b.order;
+				else if (a.order !== undefined) cmp = -1;
+				else if (b.order !== undefined) cmp = 1;
+				else cmp = 0; // 両者ともorder未設定ならtieBreak(priority→due→title)へ委ねる
+				break;
+			}
 			case "title":
 			default:
 				cmp = a.title.localeCompare(b.title);
 				break;
 		}
+		if (sort.key === "manual") {
+			// manualは方向概念を持たない(常に昇順)。両者orderありでcmp!==0ならそのまま、無ければtieBreak
+			return cmp !== 0 ? cmp : tieBreak(a, b);
+		}
 		return compareWithTieBreak(cmp, sort.order, () => tieBreak(a, b));
 	});
+}
+
+/**
+ * Goal跨ぎドロップ(design-reorder-and-notes.md A-4)用: ドロップ先のGoalセクションにまだ属していない
+ * エンティティが targetIndex/position の位置に入るとしたら、どのorder値を採るべきかを計算する。
+ * targetRowsは現在のプロパティ(entity.order)を含むドロップ先セクションの表示行。
+ */
+export function computeCrossGroupOrder(targetRows: OrderableRow[], targetIndex: number, position: "before" | "after"): number {
+	const idx = position === "after" ? targetIndex + 1 : targetIndex;
+	const rows2 = targetRows.slice();
+	const insertAt = Math.max(0, Math.min(idx, rows2.length));
+	const placeholder: OrderableRow = { path: "__incoming__" };
+	rows2.splice(insertAt, 0, placeholder);
+	const changes = computeOrderForInsert(rows2, insertAt, insertAt);
+	const match = changes.find((c) => c.path === "__incoming__");
+	return match ? match.order : 100;
 }
 
 /** entityのgoal/project(tabに応じてどちらか一方)のtitleを解決する */

@@ -15,20 +15,31 @@
 	import RowMenu from "../components/RowMenu.svelte";
 	import RowBadges from "../components/RowBadges.svelte";
 	import ProgressIndicator from "../components/ProgressIndicator.svelte";
-	import { entityProgressFraction, type ManageRowData, type ManageTab } from "./manageData";
+	import { entityProgressFraction, type ManageRowData, type ManageSort, type ManageTab } from "./manageData";
 
 	let {
 		row,
 		tab,
 		plugin,
+		sort,
 		onOpen,
 		onNavigate,
 		showParentColumn = true,
 		focused = false,
+		dragInsertBefore = false,
+		dragInsertAfter = false,
+		onDragStartRow,
+		onDragOverRow,
+		onDragLeaveRow,
+		onDropRow,
+		onMoveUp,
+		onMoveDown,
 	}: {
 		row: ManageRowData;
 		tab: ManageTab;
 		plugin: PersonalOSPlugin;
+		/** manualソート時のみドラッグハンドルを有効化するための現在のソート状態(design-reorder-and-notes.md A-4) */
+		sort: ManageSort;
 		onOpen: (path: string) => void;
 		/** 指定時、行の空白部分クリックでentity詳細へ遷移する(design-drilldown-nav.md §3.1.1) */
 		onNavigate?: (path: string) => void;
@@ -36,6 +47,16 @@
 		showParentColumn?: boolean;
 		/** ManageTableのキーボード操作(↑/↓)によるフォーカス中の行かどうか(Phase U2) */
 		focused?: boolean;
+		/** ドラッグオーバー中、この行の上端/下端どちらに挿入されるかの表示(design-reorder-and-notes.md A-4) */
+		dragInsertBefore?: boolean;
+		dragInsertAfter?: boolean;
+		onDragStartRow?: (event: DragEvent) => void;
+		onDragOverRow?: (event: DragEvent) => void;
+		onDragLeaveRow?: (event: DragEvent) => void;
+		onDropRow?: (event: DragEvent) => void;
+		/** モバイル代替(design-reorder-and-notes.md A-5): RowMenuの「上へ移動」「下へ移動」 */
+		onMoveUp?: () => void;
+		onMoveDown?: () => void;
 	} = $props();
 
 	function statusOptions(entity: Entity): { value: string; label: string }[] {
@@ -141,8 +162,25 @@
 		class="pos-manage-row"
 		class:pos-manage-row-navigable={!!onNavigate}
 		class:pos-manage-row-focused={focused}
+		class:pos-manage-row-drag-insert-before={dragInsertBefore}
+		class:pos-manage-row-drag-insert-after={dragInsertAfter}
 		onclick={() => onNavigate?.(entity.path)}
+		ondragover={onDragOverRow}
+		ondragleave={onDragLeaveRow}
+		ondrop={onDropRow}
 	>
+		<td
+			class="pos-manage-cell-drag"
+			class:pos-manage-cell-drag-active={sort.key === "manual"}
+			class:pos-manage-cell-drag-disabled={sort.key !== "manual"}
+			draggable={sort.key === "manual"}
+			ondragstart={sort.key === "manual" ? onDragStartRow : undefined}
+			onclick={(e) => e.stopPropagation()}
+			title={sort.key === "manual" ? t("manage.reorder.dragHandle") : t("manage.reorder.dragHandleDisabled")}
+			aria-label={sort.key === "manual" ? t("manage.reorder.dragHandle") : t("manage.reorder.dragHandleDisabled")}
+		>
+			⠿
+		</td>
 		<td class="pos-manage-cell-title" onclick={(e) => e.stopPropagation()}>
 			<TitleCell
 				value={entity.title}
@@ -190,6 +228,8 @@
 				onPromote={tab === "ticket" ? () => promoteEntity(entity) : undefined}
 				onChangeParent={() => changeParent(entity)}
 				changeParentLabel={tab === "project" ? t("manage.rowMenu.changeGoal") : t("manage.rowMenu.changeProject")}
+				onMoveUp={onMoveUp}
+				onMoveDown={onMoveDown}
 				onArchive={() => archiveEntity(entity)}
 				onDelete={() => deleteEntity(entity)}
 			/>

@@ -4,6 +4,7 @@
 	import { PRIORITIES } from "../../domain/entity";
 	import type { Todo } from "../../domain/todo";
 	import { rebuildTodoLine } from "../../domain/todo";
+	import type { MoveTodoTarget } from "../../domain/todo";
 	import type PersonalOSPlugin from "../../main";
 	import { t, todoDeletedUndoNotice } from "../../i18n/ja";
 	import { showUndoNotice } from "../undoNotice";
@@ -59,6 +60,30 @@
 		void plugin.todoService.toggle(todo);
 	}
 
+	// D&Dによる手動並び替え(design-reorder-and-notes.md A-1/A-4): Todoは行の物理順序そのものが並び順のため、
+	// 専用プロパティ不要。TodoService.reorder経由でprocessBodyによる行の削除+再挿入を行う。
+	function todoKey(todo: Todo): string {
+		return `${todo.filePath}#${todo.line}`;
+	}
+
+	function handleDragStart(event: DragEvent, todo: Todo): void {
+		event.dataTransfer?.setData("text/plain", todoKey(todo));
+	}
+
+	function handleDrop(event: DragEvent, target: Todo): void {
+		event.preventDefault();
+		const draggedKey = event.dataTransfer?.getData("text/plain");
+		if (!draggedKey || draggedKey === todoKey(target)) return;
+		const dragged = visibleTodos.find((t) => todoKey(t) === draggedKey);
+		if (!dragged || dragged.filePath !== target.filePath) return; // 別ノートのTodoへの移動はサポートしない
+		void moveTodo(dragged, { kind: "beforeLine", lineContent: rebuildTodoLine(target) });
+	}
+
+	async function moveTodo(todo: Todo, target: MoveTodoTarget): Promise<void> {
+		await plugin.todoService.reorder(todo, target);
+	}
+
+
 	async function deleteTodo(todo: Todo): Promise<void> {
 		const savedLine = rebuildTodoLine(todo, { stripIndent: true });
 		await plugin.todoService.remove(todo);
@@ -105,8 +130,22 @@
 	<p class="pos-widget-empty">{t("preview.empty.todos")}</p>
 {:else}
 	<ul class="pos-widget-list">
-		{#each visibleTodos as todo (todo.filePath + "#" + todo.line)}
-			<li class="pos-widget-item pos-preview-todo-row">
+		{#each visibleTodos as todo, i (todo.filePath + "#" + todo.line)}
+			<li
+				class="pos-widget-item pos-preview-todo-row"
+				ondragover={(e) => e.preventDefault()}
+				ondrop={(e) => handleDrop(e, todo)}
+			>
+				<!-- svelte-ignore a11y_no_static_element_interactions -- ドラッグハンドル(design-reorder-and-notes.md A-4)。上下移動ボタンを別途用意しているため代替操作は確保済み -->
+				<span
+					class="pos-preview-todo-drag"
+					draggable="true"
+					ondragstart={(e) => handleDragStart(e, todo)}
+					title={t("preview.todo.dragHandle")}
+					aria-label={t("preview.todo.dragHandle")}
+				>
+					⠿
+				</span>
 				<input type="checkbox" checked={todo.done} onchange={() => toggleTodo(todo)} />
 				<span class="pos-preview-todo-text">
 					<TitleCell value={todo.text} onCommit={(next) => commitTodoText(todo, next)} />
@@ -132,6 +171,22 @@
 					onCommit={(next) => commitTodoPriority(todo, next)}
 				/>
 				<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} relative />
+				<button
+					class="pos-preview-todo-action"
+					disabled={i === 0}
+					onclick={() => moveTodo(todo, { kind: "up" })}
+					aria-label={t("preview.todo.moveUp")}
+				>
+					▲
+				</button>
+				<button
+					class="pos-preview-todo-action"
+					disabled={i === visibleTodos.length - 1}
+					onclick={() => moveTodo(todo, { kind: "down" })}
+					aria-label={t("preview.todo.moveDown")}
+				>
+					▼
+				</button>
 				<button class="pos-preview-todo-action" onclick={() => promoteTodo(todo)}>{t("preview.todo.promote")}</button>
 				<button class="pos-preview-todo-action pos-btn-danger-ghost" onclick={() => deleteTodo(todo)}>
 					{t("preview.todo.delete")}

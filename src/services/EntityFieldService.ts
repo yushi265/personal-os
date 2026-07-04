@@ -23,9 +23,10 @@ export type EntityFieldKey =
 	| "title"
 	| "tags"
 	| "labels"
-	| "blockers";
+	| "blockers"
+	| "order";
 
-export type EntityFieldValue = string | string[] | undefined;
+export type EntityFieldValue = string | string[] | number | undefined;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -57,6 +58,38 @@ export class EntityFieldService {
 		const old = this.currentValueOf(entity, key);
 		await this.repo.updateFrontmatter(path, (fm) => this.applyToFrontmatter(fm, key, value));
 		await this.activityLog.log("update", `${entity.title}: ${key} ${this.display(old)} → ${this.display(value)}`);
+	}
+
+	/**
+	 * D&D並び替え専用の軽量パス(design-reorder-and-notes.md A-2)。
+	 * 高頻度に発火するため、updateFieldの汎用validate/ActivityLog記録は通さずrepoへ直接書き込む。
+	 */
+	async reorder(path: string, newOrder: number): Promise<void> {
+		await this.repo.updateFrontmatter(path, (fm) => {
+			fm.order = newOrder;
+		});
+	}
+
+	/**
+	 * Goal跨ぎドロップ(design-reorder-and-notes.md A-4): goal付け替えとorder更新を1回のfrontmatter書き込みにまとめる。
+	 */
+	async reorderAndReassignGoal(path: string, newOrder: number, newGoal: string | undefined): Promise<void> {
+		const entity = this.store.get(path);
+		if (!entity) throw new Error(`Entity not found: ${path}`);
+		await this.applyMultiple(path, (fm) => {
+			fm.order = newOrder;
+			if (newGoal === undefined) delete fm.goal;
+			else {
+				const target = this.store.get(newGoal);
+				fm.goal = `[[${target?.title ?? newGoal}]]`;
+			}
+		});
+		await this.activityLog.log("update", `${entity.title}: goal → ${newGoal ? (this.store.get(newGoal)?.title ?? newGoal) : t("manage.field.unset")}`);
+	}
+
+	/** 複数frontmatterフィールドを1回のvault書き込みでまとめて更新する内部ヘルパー */
+	private async applyMultiple(path: string, fn: (fm: Record<string, unknown>) => void): Promise<void> {
+		await this.repo.updateFrontmatter(path, fn);
 	}
 
 	private async renameTitle(entity: Entity, newTitle: string): Promise<void> {
@@ -119,6 +152,12 @@ export class EntityFieldService {
 				}
 				break;
 			}
+			case "order": {
+				if (value !== undefined && value !== "" && typeof value !== "number") {
+					throw new Error(t("manage.field.invalidOrder"));
+				}
+				break;
+			}
 		}
 	}
 
@@ -159,6 +198,10 @@ export class EntityFieldService {
 			case "blockers":
 				fm[key] = value as string[];
 				break;
+			case "order":
+				if (value === undefined || value === "") delete fm.order;
+				else fm.order = value as number;
+				break;
 			case "title":
 				break; // renameTitle側で処理済み(ここには到達しない)
 		}
@@ -186,6 +229,8 @@ export class EntityFieldService {
 				return entity.labels;
 			case "blockers":
 				return entity.blockers;
+			case "order":
+				return entity.order;
 			default:
 				return undefined;
 		}
@@ -194,6 +239,6 @@ export class EntityFieldService {
 	private display(value: EntityFieldValue): string {
 		if (value === undefined || value === "") return t("manage.field.unset");
 		if (Array.isArray(value)) return value.join(", ");
-		return value;
+		return String(value);
 	}
 }

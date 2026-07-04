@@ -9,6 +9,7 @@ import {
 	collectKnownLabels,
 	collectKnownTags,
 	collectProjectTodos,
+	computeCrossGroupOrder,
 	DEFAULT_ENTITY_SORT,
 	EMPTY_MANAGE_FILTER,
 	entityProgressFraction,
@@ -188,6 +189,56 @@ describe("sortEntityRows", () => {
 		const sorted = sortEntityRows([backlog, done], { key: "status", order: "desc" });
 
 		expect(sorted.map((e) => e.title)).toEqual(["done", "backlog"]);
+	});
+
+	it("manual: sorts by order ascending", () => {
+		const a = makeEntity({ path: "a.md", title: "a", order: 300 });
+		const b = makeEntity({ path: "b.md", title: "b", order: 100 });
+		const c = makeEntity({ path: "c.md", title: "c", order: 200 });
+
+		const sorted = sortEntityRows([a, b, c], { key: "manual", order: "asc" });
+
+		expect(sorted.map((e) => e.title)).toEqual(["b", "c", "a"]);
+	});
+
+	it("manual: entities with order sort before those without", () => {
+		const withOrder = makeEntity({ path: "a.md", title: "zebra", order: 100 });
+		const withoutOrder = makeEntity({ path: "b.md", title: "apple" });
+
+		const sorted = sortEntityRows([withoutOrder, withOrder], { key: "manual", order: "asc" });
+
+		expect(sorted.map((e) => e.title)).toEqual(["zebra", "apple"]);
+	});
+
+	it("manual: falls back to priority/due/title tie-break when both sides lack order", () => {
+		const high = makeEntity({ path: "a.md", title: "a", priority: "high" });
+		const low = makeEntity({ path: "b.md", title: "b", priority: "low" });
+
+		const sorted = sortEntityRows([low, high], { key: "manual", order: "asc" });
+
+		expect(sorted.map((e) => e.title)).toEqual(["a", "b"]);
+	});
+});
+
+describe("computeCrossGroupOrder", () => {
+	it("computes a midpoint order when inserting between two rows with orders", () => {
+		const targetRows = [
+			{ path: "p1", order: 100 },
+			{ path: "p2", order: 200 },
+		];
+		expect(computeCrossGroupOrder(targetRows, 1, "before")).toBe(150);
+	});
+
+	it("appends after the last order when inserting at the tail", () => {
+		const targetRows = [
+			{ path: "p1", order: 100 },
+			{ path: "p2", order: 200 },
+		];
+		expect(computeCrossGroupOrder(targetRows, 1, "after")).toBe(300);
+	});
+
+	it("returns 100 for the first item in an empty target group", () => {
+		expect(computeCrossGroupOrder([], 0, "before")).toBe(100);
 	});
 });
 

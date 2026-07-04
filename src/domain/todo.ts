@@ -162,3 +162,48 @@ export function appendTodoToSection(body: string, line: string): string {
 	lines.splice(insertAt, 0, line);
 	return lines.join("\n");
 }
+
+export type MoveTodoTarget =
+	| { kind: "beforeLine"; lineContent: string }
+	| { kind: "afterLine"; lineContent: string }
+	| { kind: "up" }
+	| { kind: "down" };
+
+/**
+ * Todo行の物理的な並び替え(design-reorder-and-notes.md A-1: Todoの並び順=本文中の行の物理順序そのもの)。
+ * rebuildTodoLine(todo)の完全一致で対象行を検索し、見つからなければnullを返す(呼び出し側でconflict扱いにする)。
+ * target: beforeLine/afterLine は他Todoの行内容(完全一致)を基準にした挿入。up/downは現在位置からの1行移動。
+ */
+export function moveTodoLine(body: string, todo: Todo, target: MoveTodoTarget): string | null {
+	const expected = rebuildTodoLine(todo);
+	const lines = body.split("\n");
+	const fromIdx = lines.indexOf(expected);
+	if (fromIdx === -1) return null;
+
+	const removed = lines.splice(fromIdx, 1)[0];
+
+	let insertAt: number;
+	switch (target.kind) {
+		case "up":
+			insertAt = Math.max(0, fromIdx - 1);
+			break;
+		case "down":
+			insertAt = Math.min(lines.length, fromIdx + 1);
+			break;
+		case "beforeLine": {
+			const idx = lines.indexOf(target.lineContent);
+			if (idx === -1) return null;
+			insertAt = idx;
+			break;
+		}
+		case "afterLine": {
+			const idx = lines.indexOf(target.lineContent);
+			if (idx === -1) return null;
+			insertAt = idx + 1;
+			break;
+		}
+	}
+
+	lines.splice(insertAt, 0, removed);
+	return lines.join("\n");
+}

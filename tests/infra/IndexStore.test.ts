@@ -108,6 +108,31 @@ describe("IndexStore", () => {
 		expect(store.listByType("ticket").map((e) => e.title)).toEqual(["apple", "banana", "cherry"]);
 	});
 
+	it("listByType sorts by order ascending when both sides have order", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "a.md", title: "banana", order: 300 }));
+		store.upsertEntity(makeEntity({ path: "b.md", title: "apple", order: 100 }));
+		store.upsertEntity(makeEntity({ path: "c.md", title: "cherry", order: 200 }));
+
+		expect(store.listByType("ticket").map((e) => e.title)).toEqual(["apple", "cherry", "banana"]);
+	});
+
+	it("listByType sorts entities with order before entities without order", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "a.md", title: "zebra", order: 100 }));
+		store.upsertEntity(makeEntity({ path: "b.md", title: "apple" }));
+
+		expect(store.listByType("ticket").map((e) => e.title)).toEqual(["zebra", "apple"]);
+	});
+
+	it("listByType falls back to title compare when both sides lack order", () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "a.md", title: "banana" }));
+		store.upsertEntity(makeEntity({ path: "b.md", title: "apple" }));
+
+		expect(store.listByType("ticket").map((e) => e.title)).toEqual(["apple", "banana"]);
+	});
+
 	it("tracks parse errors and clears them once an entity parses successfully", () => {
 		const store = new IndexStore();
 		store.addParseError("bad.md", "不正なtype");

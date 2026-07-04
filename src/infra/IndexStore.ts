@@ -1,6 +1,14 @@
 import type { Entity, EntityType } from "../domain/entity";
 import type { Todo } from "../domain/todo";
 
+/** order昇順優先、両者ともorder未設定ならtitle localeCompareにフォールバック(design-reorder-and-notes.md A-3) */
+function compareByOrderThenTitle(a: Entity, b: Entity): number {
+	if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
+	if (a.order !== undefined) return -1;
+	if (b.order !== undefined) return 1;
+	return a.title.localeCompare(b.title);
+}
+
 /**
  * インメモリインデックス。Obsidianに依存しないため単体テスト可能。
  * key: path
@@ -77,7 +85,7 @@ export class IndexStore {
 		return Array.from(paths)
 			.map((p) => this.entities.get(p)!)
 			.filter((e): e is Entity => !!e)
-			.sort((a, b) => a.title.localeCompare(b.title));
+			.sort(compareByOrderThenTitle);
 	}
 
 	getChildren(parentPath: string): Entity[] {

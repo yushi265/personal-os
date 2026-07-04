@@ -5,6 +5,7 @@ import {
 	extractEmojiDate,
 	extractInline,
 	extractInlineList,
+	moveTodoLine,
 	normalizePriority,
 	rebuildTodoLine,
 	stripMetadata,
@@ -248,5 +249,58 @@ describe("appendTodoToSection", () => {
 	it("§7.6: does not recognize heading variants like '## TODO', so a duplicate '## Todo' section is added", () => {
 		const body = "## TODO\n- [ ] existing";
 		expect(appendTodoToSection(body, NEW_LINE)).toBe("## TODO\n- [ ] existing\n\n## Todo\n- [ ] new item\n");
+	});
+});
+
+describe("moveTodoLine", () => {
+	const todoB: Todo = {
+		filePath: "PersonalOS/Tickets/ticket-a.md",
+		line: 1,
+		text: "item2",
+		done: false,
+		labels: [],
+		parentType: "ticket",
+		parentPath: "PersonalOS/Tickets/ticket-a.md",
+	};
+
+	it("moves the line up by one position", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2\n- [ ] item3";
+		expect(moveTodoLine(body, todoB, { kind: "up" })).toBe("## Todo\n- [ ] item2\n- [ ] item1\n- [ ] item3");
+	});
+
+	it("moves the line down by one position", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2\n- [ ] item3";
+		expect(moveTodoLine(body, todoB, { kind: "down" })).toBe("## Todo\n- [ ] item1\n- [ ] item3\n- [ ] item2");
+	});
+
+	it("moves the line before another line's exact content", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2\n- [ ] item3";
+		expect(moveTodoLine(body, todoB, { kind: "beforeLine", lineContent: "## Todo" })).toBe(
+			"- [ ] item2\n## Todo\n- [ ] item1\n- [ ] item3"
+		);
+	});
+
+	it("moves the line after another line's exact content", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2\n- [ ] item3";
+		expect(moveTodoLine(body, todoB, { kind: "afterLine", lineContent: "- [ ] item3" })).toBe(
+			"## Todo\n- [ ] item1\n- [ ] item3\n- [ ] item2"
+		);
+	});
+
+	it("leaves other lines unchanged when moving", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2\n- [ ] item3";
+		const result = moveTodoLine(body, todoB, { kind: "down" });
+		expect(result).toContain("- [ ] item1");
+		expect(result).toContain("- [ ] item3");
+	});
+
+	it("returns null when the expected line content does not match (concurrent edit)", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2-modified\n- [ ] item3";
+		expect(moveTodoLine(body, todoB, { kind: "up" })).toBeNull();
+	});
+
+	it("returns null when the beforeLine/afterLine target content is not found", () => {
+		const body = "## Todo\n- [ ] item1\n- [ ] item2\n- [ ] item3";
+		expect(moveTodoLine(body, todoB, { kind: "beforeLine", lineContent: "- [ ] nonexistent" })).toBeNull();
 	});
 });

@@ -22,9 +22,16 @@ function priorityRank(e: Entity): number {
 	return e.priority ? (PRIORITY_RANK[e.priority] ?? 3) : 3;
 }
 
-/** 列内ソート: priority(high→low)→due昇順→title(detail-design.md §5.3) */
+/**
+ * 列内ソート: order昇順を優先(design-reorder-and-notes.md A-3)。
+ * 両者ともorder未設定の場合のみpriority(high→low)→due昇順→titleへフォールバックする。
+ */
 export function sortEntities(entities: Entity[]): Entity[] {
 	return [...entities].sort((a, b) => {
+		if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
+		if (a.order !== undefined) return -1;
+		if (b.order !== undefined) return 1;
+
 		const p = priorityRank(a) - priorityRank(b);
 		if (p !== 0) return p;
 		const ad = a.due ?? "9999-99-99";

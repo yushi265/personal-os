@@ -1,8 +1,8 @@
 import { Notice } from "obsidian";
 import type { Priority } from "../domain/entity";
 import { today } from "../domain/date";
-import { appendTodoToSection, buildTodoLine, rebuildTodoLine, toggleTodoLine, updateTodoLine } from "../domain/todo";
-import type { BuildTodoLineInput, Todo, TodoPatch } from "../domain/todo";
+import { appendTodoToSection, buildTodoLine, moveTodoLine, rebuildTodoLine, toggleTodoLine, updateTodoLine } from "../domain/todo";
+import type { BuildTodoLineInput, MoveTodoTarget, Todo, TodoPatch } from "../domain/todo";
 import type { EditLineResult } from "../infra/VaultRepository";
 import type { VaultRepository } from "../infra/VaultRepository";
 import type { IndexStore } from "../infra/IndexStore";
@@ -82,6 +82,27 @@ export class TodoService {
 		const next = updateTodoLine(todo, patch);
 		const result = await this.repo.editLine(todo.filePath, todo.line, expected, next);
 		return this.handleMismatch(result, todo.filePath);
+	}
+
+	/**
+	 * Todo行の並び替え(design-reorder-and-notes.md A-4)。editLineでは行の移動を表現できないため
+	 * processBody(全文再構成)を使う。対象行が見つからない(照合失敗)場合はhandleMismatchと同じconflict処理を行う。
+	 */
+	async reorder(todo: Todo, target: MoveTodoTarget): Promise<TodoWriteResult> {
+		let mismatch = false;
+		await this.repo.processBody(todo.filePath, (body) => {
+			const next = moveTodoLine(body, todo, target);
+			if (next === null) {
+				mismatch = true;
+				return body;
+			}
+			return next;
+		});
+		if (!mismatch) return "ok";
+		new Notice(t("E003"));
+		const file = this.repo.getFile(todo.filePath);
+		if (file) await this.indexer.reindexFile(file);
+		return "conflict";
 	}
 
 	/** フィルタ済み一覧(Dashboard/Todo管理画面用) */

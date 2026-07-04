@@ -37,6 +37,7 @@ export interface Entity {
 	project?: string;
 	priority?: Priority;
 	progress?: number;
+	order?: number;
 	start?: string;
 	due?: string;
 	reviewCycle?: ReviewCycle;
@@ -57,6 +58,7 @@ const KNOWN_FRONTMATTER_KEYS = new Set([
 	"project",
 	"priority",
 	"progress",
+	"order",
 	"start",
 	"due",
 	"last_reviewed",
@@ -162,6 +164,13 @@ export function parseEntity(
 		}
 	}
 
+	let order: number | undefined;
+	if (fm.order !== undefined && fm.order !== null) {
+		const n = Number(fm.order);
+		if (!Number.isNaN(n)) order = n;
+		// 不正なorder(数値化不可)はwarning無しでundefined扱い(design-reorder-and-notes.md A-2)
+	}
+
 	const parseDateField = (raw: unknown, label: string): string | undefined => {
 		if (raw === undefined || raw === null) return undefined;
 		if (isValidDate(raw)) return raw;
@@ -204,6 +213,7 @@ export function parseEntity(
 		project,
 		priority,
 		progress,
+		order,
 		start,
 		due,
 		reviewCycle,
@@ -216,4 +226,63 @@ export function parseEntity(
 	};
 
 	return { ok: true, entity, warnings };
+}
+
+export interface OrderableRow {
+	path: string;
+	order?: number;
+}
+
+/**
+ * D&D並び替え後のorder値算出(design-reorder-and-notes.md A-1)。疎な連番(100刻み)方式。
+ * fromIndex/toIndexはArray.spliceのremove-then-insert方式(移動元を除去した後の配列に対する挿入位置)。
+ * order未設定の行は「末尾」として扱う(隣接値としては「orderの概念が無い」＝境界なしとして扱う)。
+ * 戻り値は実際にorder値が変化する行のみ(無関係な行のorderには一切触れない)。
+ */
+export function computeOrderForInsert(rows: OrderableRow[], fromIndex: number, toIndex: number): { path: string; order: number }[] {
+	const arr = rows.slice();
+	const [moved] = arr.splice(fromIndex, 1);
+	if (!moved) return [];
+	const insertAt = Math.max(0, Math.min(toIndex, arr.length));
+	arr.splice(insertAt, 0, moved);
+
+	const changes = new Map<string, number>();
+	const setIfChanged = (row: OrderableRow, value: number): void => {
+		if (row.order !== value) changes.set(row.path, value);
+	};
+
+	const prev = insertAt > 0 ? arr[insertAt - 1] : undefined;
+	const next = insertAt < arr.length - 1 ? arr[insertAt + 1] : undefined;
+	const prevOrder = prev?.order;
+	const nextOrder = next?.order;
+
+	if (nextOrder === undefined) {
+		// 末尾追加相当(次のneighborが無い、または次がorder未設定=末尾扱い)
+		setIfChanged(moved, prevOrder !== undefined ? prevOrder + 100 : 100);
+	} else if (prevOrder === undefined) {
+		// 先頭挿入相当: 仮想的にprevOrder=0として扱う
+		const gap = nextOrder - 0;
+		if (gap >= 2) setIfChanged(moved, Math.floor(nextOrder / 2));
+		else renumberFrom(arr, insertAt, 0, changes);
+	} else {
+		const gap = nextOrder - prevOrder;
+		if (gap >= 2) setIfChanged(moved, Math.floor((prevOrder + nextOrder) / 2));
+		else renumberFrom(arr, insertAt, prevOrder, changes);
+	}
+
+	return Array.from(changes.entries()).map(([path, order]) => ({ path, order }));
+}
+
+/** gapが枯渇した場合のローカルrenumber。moved行から後方へ、衝突が解消するまでのみ100刻みで採番し直す */
+function renumberFrom(arr: OrderableRow[], startIdx: number, baseOrder: number, changes: Map<string, number>): void {
+	let current = baseOrder;
+	for (let i = startIdx; i < arr.length; i++) {
+		const row = arr[i];
+		current += 100;
+		if (i > startIdx) {
+			const existing = row.order;
+			if (existing !== undefined && existing > current) break; // これ以降は衝突が解消済み
+		}
+		if (row.order !== current) changes.set(row.path, current);
+	}
 }

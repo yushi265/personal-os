@@ -14,6 +14,8 @@
 		onArchive,
 		onChangeParent,
 		changeParentLabel,
+		onMoveUp,
+		onMoveDown,
 		onDelete,
 	}: {
 		onOpenNote: () => void;
@@ -24,6 +26,12 @@
 		/** Goal/Project再割り当て(一覧行からの導線、ParentCellが無い画面向け)。changeParentLabelとセットで指定する */
 		onChangeParent?: () => void;
 		changeParentLabel?: string;
+		/**
+		 * モバイル代替(design-reorder-and-notes.md A-5): D&D不可環境向けに「⋮」メニューへ常時表示する
+		 * (Platform.isMobileでのゲーティングはしない方針で承認済み)。
+		 */
+		onMoveUp?: () => void;
+		onMoveDown?: () => void;
 		onDelete: () => void;
 	} = $props();
 
@@ -40,6 +48,12 @@
 		}
 		if (onChangeParent && changeParentLabel) {
 			menu.addItem((item) => item.setTitle(changeParentLabel).onClick(onChangeParent));
+		}
+		if (onMoveUp) {
+			menu.addItem((item) => item.setTitle(t("manage.rowMenu.moveUp")).onClick(onMoveUp));
+		}
+		if (onMoveDown) {
+			menu.addItem((item) => item.setTitle(t("manage.rowMenu.moveDown")).onClick(onMoveDown));
 		}
 		if (onArchive) {
 			menu.addItem((item) => item.setTitle(t("manage.rowMenu.archive")).onClick(onArchive));

@@ -9,10 +9,12 @@
 	import ManageTable from "./ManageTable.svelte";
 	import InlineCreateRow from "./InlineCreateRow.svelte";
 	import {
+		computeCrossGroupOrder,
 		firstExpandedGroupIndex,
 		goalGroupProgress,
 		groupProjectsByGoal,
 		isManageVaultEmpty,
+		type GoalGroup,
 		type ManageFilter,
 		type ManageRowData,
 		type ManageSort,
@@ -104,6 +106,18 @@
 		await plugin.entityService.create({ type: "project", title, goal: goalPath });
 		new Notice(entityCreatedNotice(title));
 	}
+
+	/**
+	 * Goal跨ぎドロップ(design-reorder-and-notes.md A-4, T-6): ドロップ先セクションのgoalが元と異なる場合、
+	 * goal付け替え+ドロップ位置に応じたorder設定を1回のfrontmatter書き込みにまとめる。
+	 */
+	function handleCrossGroupDrop(group: GoalGroup, path: string, targetIndex: number, position: "before" | "after"): void {
+		const targetRows = group.projects.map((p) => ({ path: p.path, order: p.order }));
+		const newOrder = computeCrossGroupOrder(targetRows, targetIndex, position);
+		void plugin.entityFieldService
+			.reorderAndReassignGoal(path, newOrder, group.goal?.path)
+			.catch(() => new Notice(t("manage.updateFailed")));
+	}
 </script>
 
 <ManageFilterBar
@@ -165,6 +179,7 @@
 					onOpen={openNote}
 					{onNavigate}
 					showParentColumn={false}
+					onCrossDrop={(path, targetIndex, position) => handleCrossGroupDrop(group, path, targetIndex, position)}
 				/>
 				<div class="pos-manage-create-row">
 					<InlineCreateRow

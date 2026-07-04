@@ -119,4 +119,96 @@ describe("EntityFieldService.updateField", () => {
 		expect(fm.priority).toBe("high");
 		expect(fm.customField).toBe("kept");
 	});
+
+	it("E-9: allows updating order via the generic switch", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity());
+		const repo = makeRepo();
+		const service = new EntityFieldService(repo, store, makeActivityLog());
+
+		await service.updateField("PersonalOS/Tickets/ticket-a.md", "order", 150);
+
+		const fn = (repo.updateFrontmatter as ReturnType<typeof vi.fn>).mock.calls[0][1] as (
+			fm: Record<string, unknown>
+		) => void;
+		const fm: Record<string, unknown> = {};
+		fn(fm);
+		expect(fm.order).toBe(150);
+	});
+
+	it("E-10: rejects a non-numeric order value", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity());
+		const service = new EntityFieldService(makeRepo(), store, makeActivityLog());
+
+		await expect(service.updateField("PersonalOS/Tickets/ticket-a.md", "order", "not-a-number")).rejects.toThrow();
+	});
+});
+
+describe("EntityFieldService.reorder", () => {
+	it("R-1: writes the order field directly, bypassing validate/ActivityLog", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity());
+		const repo = makeRepo();
+		const activityLog = makeActivityLog();
+		const service = new EntityFieldService(repo, store, activityLog);
+
+		await service.reorder("PersonalOS/Tickets/ticket-a.md", 250);
+
+		expect(repo.updateFrontmatter).toHaveBeenCalledWith("PersonalOS/Tickets/ticket-a.md", expect.any(Function));
+		const fn = (repo.updateFrontmatter as ReturnType<typeof vi.fn>).mock.calls[0][1] as (
+			fm: Record<string, unknown>
+		) => void;
+		const fm: Record<string, unknown> = {};
+		fn(fm);
+		expect(fm.order).toBe(250);
+		expect(activityLog.log).not.toHaveBeenCalled();
+	});
+});
+
+describe("EntityFieldService.reorderAndReassignGoal", () => {
+	it("G-1: writes goal and order in a single frontmatter update call", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ type: "project", path: "PersonalOS/Projects/p1.md", title: "p1" }));
+		store.upsertEntity({
+			path: "PersonalOS/Goals/g1.md",
+			type: "goal",
+			title: "g1",
+			status: "active",
+			tags: [],
+			labels: [],
+			blockers: [],
+			extra: {},
+		});
+		const repo = makeRepo();
+		const service = new EntityFieldService(repo, store, makeActivityLog());
+
+		await service.reorderAndReassignGoal("PersonalOS/Projects/p1.md", 150, "PersonalOS/Goals/g1.md");
+
+		expect(repo.updateFrontmatter).toHaveBeenCalledTimes(1);
+		const fn = (repo.updateFrontmatter as ReturnType<typeof vi.fn>).mock.calls[0][1] as (
+			fm: Record<string, unknown>
+		) => void;
+		const fm: Record<string, unknown> = {};
+		fn(fm);
+		expect(fm.order).toBe(150);
+		expect(fm.goal).toBe("[[g1]]");
+	});
+
+	it("G-2: clears goal when newGoal is undefined", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ type: "project", path: "PersonalOS/Projects/p1.md", title: "p1" }));
+		const repo = makeRepo();
+		const service = new EntityFieldService(repo, store, makeActivityLog());
+
+		await service.reorderAndReassignGoal("PersonalOS/Projects/p1.md", 100, undefined);
+
+		const fn = (repo.updateFrontmatter as ReturnType<typeof vi.fn>).mock.calls[0][1] as (
+			fm: Record<string, unknown>
+		) => void;
+		const fm: Record<string, unknown> = { goal: "[[old]]" };
+		fn(fm);
+		expect(fm.order).toBe(100);
+		expect(fm.goal).toBeUndefined();
+	});
 });

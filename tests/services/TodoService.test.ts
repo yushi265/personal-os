@@ -88,6 +88,44 @@ describe("TodoService.addToSection", () => {
 	});
 });
 
+describe("TodoService.reorder", () => {
+	it("moves the line via processBody and returns ok", async () => {
+		let bodyTransform: ((body: string) => string) | undefined;
+		const repo = makeRepo({
+			processBody: vi.fn().mockImplementation((_path: string, fn: (body: string) => string) => {
+				bodyTransform = fn;
+				return Promise.resolve();
+			}),
+		});
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), makeIndexer());
+
+		const result = await service.reorder(TODO, { kind: "down" });
+
+		expect(repo.processBody).toHaveBeenCalledWith(TODO.filePath, expect.any(Function));
+		expect(result).toBe("ok");
+		expect(
+			bodyTransform?.(`## Todo\n${EXPECTED_LINE}\n- [ ] next item`)
+		).toBe(`## Todo\n- [ ] next item\n${EXPECTED_LINE}`);
+	});
+
+	it("shows a conflict Notice and reindexes when the expected line is not found", async () => {
+		const repo = makeRepo({
+			processBody: vi.fn().mockImplementation((_path: string, fn: (body: string) => string) => {
+				fn("## Todo\n- [ ] something else entirely");
+				return Promise.resolve();
+			}),
+			getFile: vi.fn().mockReturnValue({ path: TODO.filePath }),
+		});
+		const indexer = makeIndexer();
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), indexer);
+
+		const result = await service.reorder(TODO, { kind: "up" });
+
+		expect(result).toBe("conflict");
+		expect(indexer.reindexFile).toHaveBeenCalled();
+	});
+});
+
 describe("TodoService.list", () => {
 	/**
 	 * ステータスバー(Phase U3)・TodayTodoWidget(Dashboard)がどちらも `list({ done: false, dueOn: today() })` を
