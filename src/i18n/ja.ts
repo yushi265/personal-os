@@ -61,8 +61,27 @@ const MESSAGES = {
 	"preview.field.due": "期限",
 	"preview.field.goal": "Goal",
 	"preview.field.project": "Project",
+	"preview.field.start": "開始日",
+	"preview.field.reviewCycle": "レビュー周期",
+	"preview.field.lastReviewed": "最終レビュー",
 	"preview.empty.children": "配下のEntityはありません。",
 	"preview.empty.todos": "Todoはありません。",
+	"preview.empty.body": "(本文なし)",
+	"preview.section.tags": "Tags",
+	"preview.section.labels": "Labels",
+	"preview.section.review": "Review",
+	"preview.section.unknown": "未知プロパティ",
+	"preview.section.body": "本文",
+	"preview.action.archive": "Archive",
+	"preview.action.promote": "昇格",
+	"preview.action.delete": "削除",
+	"preview.action.review": "レビュー実施",
+	"preview.body.openNote": "ノートで開く",
+	"preview.tagChips.placeholder": "追加してEnter...",
+	"preview.tagChips.remove": "削除",
+	"preview.blockerList.placeholder": "Blockerを追加...",
+	"preview.blockerList.add": "追加",
+	"preview.blockerList.remove": "削除",
 
 	"modal.createEntity.title": "新規作成",
 	"modal.createEntity.type": "種類",
@@ -267,4 +286,9 @@ export function parseErrorInvalidStatus(status: string): string {
 /** ManageView RowMenuの削除確認メッセージ(タイトル埋め込みのためt()とは別関数とする) */
 export function manageDeleteConfirmMessage(title: string): string {
 	return `「${title}」を削除しますか?この操作は取り消せません。`;
+}
+
+/** 解析エラーノートを開いた場合のPreview表示メッセージ(design-ui-first.md §4.7) */
+export function previewParseErrorMessage(reason: string): string {
+	return `このノートは解析できません: ${reason}`;
 }

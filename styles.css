@@ -310,6 +310,101 @@
 	font-size: var(--font-ui-small);
 }
 
+.pos-preview-header {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-3);
+}
+
+.pos-preview-title {
+	margin: 0;
+	font-size: var(--font-ui-large);
+}
+
+.pos-preview-type-badge {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	padding: 0 var(--size-4-2);
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-border);
+}
+
+.pos-preview-child-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--size-4-2);
+}
+
+.pos-preview-actions {
+	display: flex;
+	gap: var(--size-4-2);
+	margin-bottom: var(--size-4-3);
+}
+
+.pos-preview-body {
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-size: var(--font-ui-small);
+	background: var(--background-secondary);
+	padding: var(--size-4-2);
+	border-radius: var(--radius-s);
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+/* ---- TagChips / BlockerList (ui/components/, shared Preview widgets) ---- */
+
+.pos-tagchips {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.pos-tagchips-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-2-1);
+}
+
+.pos-tagchips-remove {
+	cursor: pointer;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	color: var(--text-muted);
+	padding: 0;
+	line-height: 1;
+}
+
+.pos-tagchips-remove:hover {
+	color: var(--text-error);
+}
+
+.pos-tagchips-input {
+	flex: 1;
+	min-width: 120px;
+}
+
+.pos-blockerlist-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--size-4-2);
+}
+
+.pos-blockerlist-add {
+	display: flex;
+	gap: var(--size-4-2);
+	margin-top: var(--size-4-2);
+}
+
+.pos-blockerlist-add-btn {
+	cursor: pointer;
+}
+
 /* ---- Search ---- */
 
 .pos-search {
