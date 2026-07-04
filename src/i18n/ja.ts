@@ -16,10 +16,12 @@ const MESSAGES = {
 	"command.createGoal": "Create Goal",
 	"command.createProject": "Create Project",
 	"command.createTicket": "Create Ticket",
+	"command.createTodo": "Create Todo",
 	"command.openDashboard": "Open Dashboard",
 	"command.refreshIndex": "Refresh Index",
 
 	"notice.dashboardPlaceholder": "Dashboard(未実装: Phase 3で追加予定)",
+	"notice.todoAdded": "追加しました",
 
 	"modal.createEntity.title": "新規作成",
 	"modal.createEntity.type": "種類",
@@ -31,6 +33,16 @@ const MESSAGES = {
 	"modal.createEntity.template": "テンプレート",
 	"modal.createEntity.submit": "作成",
 	"modal.createEntity.titleRequired": "タイトルを入力してください。",
+
+	"modal.quickAdd.title": "Todoを追加",
+	"modal.quickAdd.text": "本文",
+	"modal.quickAdd.textPlaceholder": "やることを入力",
+	"modal.quickAdd.textRequired": "本文を入力してください。",
+	"modal.quickAdd.target": "保存先",
+	"modal.quickAdd.targetInbox": "Inbox",
+	"modal.quickAdd.due": "期限",
+	"modal.quickAdd.priority": "優先度",
+	"modal.quickAdd.submit": "追加",
 
 	"settings.section.folders": "フォルダ",
 	"settings.rootDirectory": "Root Directory",

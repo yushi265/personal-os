@@ -7,8 +7,12 @@ import { SelfWriteGuard } from "./infra/SelfWriteGuard";
 import { VaultRepository } from "./infra/VaultRepository";
 import { IndexStore } from "./infra/IndexStore";
 import { Indexer } from "./infra/Indexer";
+import { DataviewAdapter } from "./infra/DataviewAdapter";
+import { TasksAdapter } from "./infra/TasksAdapter";
 import { EntityService } from "./services/EntityService";
+import { TodoService } from "./services/TodoService";
 import { CreateEntityModal } from "./ui/modals/CreateEntityModal";
+import { QuickAddModal } from "./ui/modals/QuickAddModal";
 import { t } from "./i18n/ja";
 
 interface Capability {
@@ -22,7 +26,10 @@ export default class PersonalOSPlugin extends Plugin {
 	store!: IndexStore;
 	selfWriteGuard!: SelfWriteGuard;
 	indexer!: Indexer;
+	dataviewAdapter!: DataviewAdapter;
+	tasksAdapter!: TasksAdapter;
 	entityService!: EntityService;
+	todoService!: TodoService;
 	capability: Capability = { todoFeatures: false };
 
 	async onload() {
@@ -32,10 +39,19 @@ export default class PersonalOSPlugin extends Plugin {
 		this.selfWriteGuard = new SelfWriteGuard();
 		this.repo = new VaultRepository(this.app, this.settings, this.selfWriteGuard);
 		this.store = new IndexStore();
-		// Adapter(Dataview/Tasks)はPhase 2で追加し、Indexerへ注入する。
-		this.indexer = new Indexer(this.app, this.repo, this.store, this.eventBus, this.selfWriteGuard);
+		this.dataviewAdapter = new DataviewAdapter(this.app, this.store);
+		this.tasksAdapter = new TasksAdapter(this.app);
+		this.indexer = new Indexer(
+			this.app,
+			this.repo,
+			this.store,
+			this.eventBus,
+			this.selfWriteGuard,
+			this.dataviewAdapter
+		);
 		// ActivityLogService/ProgressServiceはPhase 3/4で追加し、EntityServiceへ注入する。
 		this.entityService = new EntityService(this.repo, this.store, this.settings);
+		this.todoService = new TodoService(this.repo, this.store, this.settings, this.indexer);
 
 		this.registerViews();
 		this.registerCommands();
@@ -83,6 +99,15 @@ export default class PersonalOSPlugin extends Plugin {
 			callback: () => this.openCreateModal("ticket"),
 		});
 		this.addCommand({
+			id: "create-todo",
+			name: t("command.createTodo"),
+			checkCallback: (checking) => {
+				if (!this.capability.todoFeatures) return false;
+				if (!checking) this.openQuickAddModal();
+				return true;
+			},
+		});
+		this.addCommand({
 			id: "open-dashboard",
 			name: t("command.openDashboard"),
 			callback: () => this.openDashboard(),
@@ -107,11 +132,16 @@ export default class PersonalOSPlugin extends Plugin {
 		new Notice(t("notice.dashboardPlaceholder"));
 	}
 
+	private openQuickAddModal(): void {
+		new QuickAddModal(this.app, {
+			todoService: this.todoService,
+			store: this.store,
+			settings: this.settings,
+		}).open();
+	}
+
 	private detectCapability(): void {
-		const plugins = (this.app as unknown as { plugins: { plugins: Record<string, unknown> } }).plugins.plugins;
-		const dataview = !!plugins["dataview"];
-		const tasks = !!plugins["obsidian-tasks-plugin"];
-		this.capability = { todoFeatures: dataview && tasks };
+		this.capability = { todoFeatures: this.dataviewAdapter.available && this.tasksAdapter.available };
 		this.eventBus.emitEvent("capability-changed", this.capability);
 		if (!this.capability.todoFeatures) {
 			new Notice(t("E001"));
