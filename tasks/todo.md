@@ -1,5 +1,16 @@
 # Personal OS 実装 TODO
 
+## 第3次機能追加: タイムスタンプ付きメモ(requirements-memo.md v1.0 準拠)
+
+- [x] 設計書(design-memo.md)→ ユーザーレビューOK → commit `3cbd81e`
+- [x] Phase M1: domain(メモパース/シリアライズ)+ MemoService + テスト24件(累計223件)→ commit `ed6ba67`
+- [x] Phase M2: UI(MemoSection共通部品、Ticket/Project詳細+Preview組込)→ commit `edd6f94` + テストVault反映済み(累計223件)
+
+### メモ機能 完了レビュー(2026-07-04)
+
+- M1+M2完了。テスト223件全パス、0エラー0警告。M1で設計書のセクション離脱判定バグをエージェントが発見し修正(パターン2種使い分け)
+- 実機確認の観点: 3画面(Ticket詳細/Project詳細/Preview)でのメモ追加・編集・削除 / IME変換確定Enterで誤送信しないか / 手書きメモとの共存 / ノート側の `## Memo` セクションのGit差分
+
 ## 第2次機能追加: ドリルダウンナビゲーション(design-drilldown-nav.md v1.0 準拠)
 
 - [x] Phase N1: ナビ基盤(manageNav.ts)+プロジェクト一覧(Goalグルーピング)+ テスト18件(累計186件)→ commit `f2a1a37`
