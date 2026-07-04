@@ -10,11 +10,13 @@
 		tab,
 		filter,
 		onChange,
+		showParentFilter = true,
 	}: {
 		plugin: PersonalOSPlugin;
 		tab: ManageTab;
 		filter: ManageFilter;
 		onChange: (next: ManageFilter) => void;
+		showParentFilter?: boolean;
 	} = $props();
 
 	const statusOptions = $derived(tab === "project" ? PROJECT_STATUSES : tab === "ticket" ? TICKET_STATUSES : ([] as readonly string[]));
@@ -75,7 +77,7 @@
 		{/each}
 	</div>
 
-	{#if parentOptions.length > 0}
+	{#if showParentFilter && parentOptions.length > 0}
 		<select
 			class="pos-manage-filter-select"
 			value={filter.parentPath ?? ""}

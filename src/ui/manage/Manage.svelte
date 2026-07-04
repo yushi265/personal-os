@@ -1,57 +1,83 @@
 <script lang="ts">
+	import { Notice } from "obsidian";
+	import { untrack } from "svelte";
 	import type { Writable } from "svelte/store";
 	import type PersonalOSPlugin from "../../main";
 	import { t } from "../../i18n/ja";
 	import type { SavedView } from "../../settings/settings";
-	import { CreateEntityModal } from "../modals/CreateEntityModal";
-	import { QuickAddModal } from "../modals/QuickAddModal";
 	import {
-		buildManageRows,
 		DEFAULT_ENTITY_SORT,
-		DEFAULT_TODO_SORT,
 		EMPTY_MANAGE_FILTER,
 		filterToQueryString,
 		queryStringToFilter,
 		type ManageFilter,
 		type ManageSort,
 		type ManageSortKey,
-		type ManageTab,
 	} from "./manageData";
-	import ManageFilterBar from "./ManageFilterBar.svelte";
-	import ManageTable from "./ManageTable.svelte";
+	import { makeProjectDetailScreen, popOne, popTo, pushScreen, reconcileStack, type ManageScreen } from "./manageNav";
+	import type { ManageRefreshToken } from "./ManageView";
+	import ProjectListScreen from "./ProjectListScreen.svelte";
 
-	let { plugin, refreshToken }: { plugin: PersonalOSPlugin; refreshToken: Writable<number> } = $props();
+	let {
+		plugin,
+		refreshToken,
+		navigateRequest,
+	}: {
+		plugin: PersonalOSPlugin;
+		refreshToken: Writable<ManageRefreshToken>;
+		navigateRequest: Writable<{ token: number; screen: ManageScreen } | null>;
+	} = $props();
 
-	let tab = $state<ManageTab>("project");
-	let filter = $state<ManageFilter>({ ...EMPTY_MANAGE_FILTER });
-	let sort = $state<ManageSort>({ ...DEFAULT_ENTITY_SORT });
+	// 画面スタック。project-listは常にindex 0固定(design-drilldown-nav.md §2.1)
+	let stack = $state<ManageScreen[]>([{ kind: "project-list" }]);
+	const current = $derived(stack[stack.length - 1]);
+
+	// プロジェクト一覧のフィルタ・ソート・折りたたみ状態はスタック外の永続state(§2.3)
+	let listFilter = $state<ManageFilter>({ ...EMPTY_MANAGE_FILTER });
+	let listSort = $state<ManageSort>({ ...DEFAULT_ENTITY_SORT });
+	let collapsedGoals = $state<Set<string>>(new Set());
+
 	let savedViewName = $state("");
 	let selectedSavedViewId = $state("");
 
-	// capabilityが後から無効化された場合、Todosタブを選択中なら他タブへ退避する(§5)
-	$effect(() => {
-		if (tab === "todo" && !plugin.capability.todoFeatures) tab = "project";
-	});
-
-	// ManageView自身が保存したSavedView(viewMode==="manage")のみを選択肢に出す(§3.4)
 	const manageSavedViews = $derived.by((): SavedView[] => {
 		void $refreshToken;
 		return plugin.savedViewService.list().filter((v) => v.viewMode === "manage");
 	});
 
-	function changeTab(next: ManageTab): void {
-		tab = next;
-		filter = { ...EMPTY_MANAGE_FILTER };
-		sort = next === "todo" ? { ...DEFAULT_TODO_SORT } : { ...DEFAULT_ENTITY_SORT };
-		selectedSavedViewId = "";
+	const breadcrumbs = $derived(
+		stack.map((screen, i) => ({
+			label: breadcrumbLabel(screen),
+			onClick: () => (stack = popTo(stack, i)),
+		}))
+	);
+
+	function breadcrumbLabel(screen: ManageScreen): string {
+		if (screen.kind === "project-list") return t("manage.title");
+		return plugin.store.get(screen.path)?.title ?? t("manage.nav.unknown");
 	}
 
-	function changeFilter(next: ManageFilter): void {
-		filter = next;
+	function goBack(): void {
+		stack = popOne(stack);
 	}
 
-	function changeSort(key: ManageSortKey): void {
-		sort = sort.key === key ? { key, order: sort.order === "asc" ? "desc" : "asc" } : { key, order: "asc" };
+	function goToProjectDetail(path: string): void {
+		stack = pushScreen(stack, makeProjectDetailScreen(path));
+	}
+
+	function toggleGoal(key: string): void {
+		const next = new Set(collapsedGoals);
+		if (next.has(key)) next.delete(key);
+		else next.add(key);
+		collapsedGoals = next;
+	}
+
+	function changeListFilter(next: ManageFilter): void {
+		listFilter = next;
+	}
+
+	function changeListSort(key: ManageSortKey): void {
+		listSort = listSort.key === key ? { key, order: listSort.order === "asc" ? "desc" : "asc" } : { key, order: "asc" };
 	}
 
 	function openPath(path: string): void {
@@ -62,95 +88,108 @@
 		selectedSavedViewId = id;
 		const view = manageSavedViews.find((v) => v.id === id);
 		if (!view) return;
-		tab = view.tab ?? "project";
-		filter = queryStringToFilter(view.query);
-		sort = view.sort;
+		listFilter = queryStringToFilter(view.query);
+		listSort = view.sort;
 	}
 
 	async function saveCurrentView(): Promise<void> {
 		const name = savedViewName.trim() || t("manage.savedView.unnamed");
 		await plugin.savedViewService.save({
 			name,
-			query: filterToQueryString(filter, tab),
-			sort,
+			query: filterToQueryString(listFilter, "project"),
+			sort: listSort,
 			viewMode: "manage",
-			tab,
 		});
 		savedViewName = "";
 	}
 
-	function openNew(): void {
-		if (tab === "todo") {
-			new QuickAddModal(plugin.app, {
-				todoService: plugin.todoService,
-				store: plugin.store,
-				settings: plugin.settings,
-				todoFeatures: plugin.capability.todoFeatures,
-			}).open();
-			return;
-		}
-		new CreateEntityModal(plugin.app, {
-			entityService: plugin.entityService,
-			store: plugin.store,
-			settings: plugin.settings,
-			initialType: tab,
-			initialParentPath: filter.parentPath,
-		}).open();
-	}
+	// index-updated由来の再描画契機ごとにrename追従+消滅検証を行う(§2.4)。
+	// untrack()でstackの読み書きをこの effect の依存対象から外し、$refreshTokenの変化のみに反応させる
+	// (そうしないとstack自身への代入が同じeffectを再度トリガし、無駄な再検証ループになるため)
+	$effect(() => {
+		const { renames } = $refreshToken;
+		untrack(() => {
+			const result = reconcileStack(stack, plugin.store, renames);
+			stack = result.stack;
+			if (result.truncated) new Notice(t("manage.nav.entityGone"));
+		});
+	});
 
-	// $refreshTokenを読むことで、index-updated等由来の再描画契機にも追従する(design-ui-first.md §6)
-	const rows = $derived.by(() => {
-		void $refreshToken;
-		return buildManageRows(plugin, tab, filter, sort);
+	// Dashboard等の外部からのナビゲーション要求。現在の深いスタックは保持せず [project-list, screen] にリセットする(§2.5)
+	$effect(() => {
+		const req = $navigateRequest;
+		if (!req) return;
+		untrack(() => {
+			stack = [{ kind: "project-list" }, req.screen];
+		});
 	});
 </script>
 
 <div class="pos-manage">
 	<div class="pos-manage-header">
 		<h2 class="pos-manage-title">{t("manage.title")}</h2>
-		<div class="pos-manage-tabs">
-			<button class="pos-manage-tab-btn" class:pos-manage-tab-active={tab === "project"} onclick={() => changeTab("project")}>
-				{t("manage.tab.projects")}
-			</button>
-			<button class="pos-manage-tab-btn" class:pos-manage-tab-active={tab === "ticket"} onclick={() => changeTab("ticket")}>
-				{t("manage.tab.tickets")}
-			</button>
-			{#if plugin.capability.todoFeatures}
-				<button class="pos-manage-tab-btn" class:pos-manage-tab-active={tab === "todo"} onclick={() => changeTab("todo")}>
-					{t("manage.tab.todos")}
-				</button>
-			{/if}
-		</div>
-		<button class="pos-manage-new-btn" onclick={openNew}>{t("manage.newButton")}</button>
 	</div>
 
-	{#if !plugin.capability.todoFeatures}
-		<div class="pos-widget pos-widget-banner">
-			<p>{t("manage.todoDisabledNotice")}</p>
+	<nav class="pos-manage-breadcrumb" aria-label="breadcrumb">
+		{#if stack.length > 1}
+			<button class="pos-manage-back-btn" onclick={goBack}>{t("manage.nav.back")}</button>
+		{/if}
+		{#each breadcrumbs as bc, i (i)}
+			<button
+				class="pos-manage-breadcrumb-item"
+				class:pos-manage-breadcrumb-current={i === stack.length - 1}
+				onclick={bc.onClick}
+			>
+				{bc.label}
+			</button>
+			{#if i < breadcrumbs.length - 1}<span class="pos-manage-breadcrumb-sep">▸</span>{/if}
+		{/each}
+	</nav>
+
+	{#if current.kind === "project-list"}
+		<div class="pos-manage-savedview">
+			<select
+				class="pos-manage-savedview-select"
+				value={selectedSavedViewId}
+				onchange={(e) => applySavedView((e.target as HTMLSelectElement).value)}
+			>
+				<option value="">{t("manage.savedView.placeholder")}</option>
+				{#each manageSavedViews as view (view.id)}
+					<option value={view.id}>{view.name}</option>
+				{/each}
+			</select>
+			<input
+				class="pos-manage-savedview-name"
+				type="text"
+				placeholder={t("manage.savedView.namePlaceholder")}
+				bind:value={savedViewName}
+			/>
+			<button onclick={saveCurrentView}>{t("manage.savedView.save")}</button>
+		</div>
+
+		<ProjectListScreen
+			{plugin}
+			filter={listFilter}
+			sort={listSort}
+			{collapsedGoals}
+			onFilterChange={changeListFilter}
+			onSortChange={changeListSort}
+			onToggleGoal={toggleGoal}
+			onNavigate={goToProjectDetail}
+		/>
+	{:else if current.kind === "project-detail"}
+		{@const entity = plugin.store.get(current.path)}
+		<div class="pos-manage-placeholder">
+			<h3>{entity?.title ?? t("manage.nav.unknown")}</h3>
+			<p>{t("manage.nav.placeholderNotice")}</p>
+			<button onclick={() => openPath(current.path)}>{t("manage.nav.openNote")}</button>
+		</div>
+	{:else if current.kind === "ticket-detail"}
+		{@const entity = plugin.store.get(current.path)}
+		<div class="pos-manage-placeholder">
+			<h3>{entity?.title ?? t("manage.nav.unknown")}</h3>
+			<p>{t("manage.nav.placeholderNotice")}</p>
+			<button onclick={() => openPath(current.path)}>{t("manage.nav.openNote")}</button>
 		</div>
 	{/if}
-
-	<ManageFilterBar {plugin} {tab} {filter} onChange={changeFilter} />
-
-	<div class="pos-manage-savedview">
-		<select
-			class="pos-manage-savedview-select"
-			value={selectedSavedViewId}
-			onchange={(e) => applySavedView((e.target as HTMLSelectElement).value)}
-		>
-			<option value="">{t("manage.savedView.placeholder")}</option>
-			{#each manageSavedViews as view (view.id)}
-				<option value={view.id}>{view.name}</option>
-			{/each}
-		</select>
-		<input
-			class="pos-manage-savedview-name"
-			type="text"
-			placeholder={t("manage.savedView.namePlaceholder")}
-			bind:value={savedViewName}
-		/>
-		<button onclick={saveCurrentView}>{t("manage.savedView.save")}</button>
-	</div>
-
-	<ManageTable {tab} {rows} {sort} {plugin} onSortChange={changeSort} onOpen={openPath} />
 </div>

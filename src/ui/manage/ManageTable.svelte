@@ -11,6 +11,7 @@
 		plugin,
 		onSortChange,
 		onOpen,
+		onNavigate,
 	}: {
 		tab: ManageTab;
 		rows: ManageRowData[];
@@ -18,6 +19,7 @@
 		plugin: PersonalOSPlugin;
 		onSortChange: (key: ManageSortKey) => void;
 		onOpen: (path: string) => void;
+		onNavigate?: (path: string) => void;
 	} = $props();
 
 	interface ColumnDef {
@@ -84,7 +86,7 @@
 			</tr>
 		{:else}
 			{#each rows as row (rowKey(row))}
-				<ManageRow {row} {tab} {plugin} {onOpen} />
+				<ManageRow {row} {tab} {plugin} {onOpen} {onNavigate} />
 			{/each}
 		{/if}
 	</tbody>

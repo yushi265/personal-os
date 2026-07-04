@@ -20,11 +20,14 @@
 		tab,
 		plugin,
 		onOpen,
+		onNavigate,
 	}: {
 		row: ManageRowData;
 		tab: ManageTab;
 		plugin: PersonalOSPlugin;
 		onOpen: (path: string) => void;
+		/** 指定時、行の空白部分クリックでentity詳細へ遷移する(design-drilldown-nav.md §3.1.1)。todo行には渡さない */
+		onNavigate?: (path: string) => void;
 	} = $props();
 
 	function statusOptions(entity: Entity): { value: string; label: string }[] {
@@ -121,20 +124,22 @@
 
 {#if row.kind === "entity" && row.entity}
 	{@const entity = row.entity}
-	<tr class="pos-manage-row">
-		<td><TitleCell value={entity.title} onCommit={(next) => commitTitle(entity, next)} /></td>
-		<td><StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} /></td>
-		<td>
+	<tr class="pos-manage-row" class:pos-manage-row-navigable={!!onNavigate} onclick={() => onNavigate?.(entity.path)}>
+		<td onclick={(e) => e.stopPropagation()}><TitleCell value={entity.title} onCommit={(next) => commitTitle(entity, next)} /></td>
+		<td onclick={(e) => e.stopPropagation()}>
+			<StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} />
+		</td>
+		<td onclick={(e) => e.stopPropagation()}>
 			<ParentCell
 				value={tab === "project" ? entity.goal : entity.project}
 				options={parentOptions()}
 				onCommit={(next) => commitParent(entity, next)}
 			/>
 		</td>
-		<td>
+		<td onclick={(e) => e.stopPropagation()}>
 			<PriorityCell value={entity.priority ?? ""} options={priorityOptions()} onCommit={(next) => commitPriority(entity, next)} />
 		</td>
-		<td>
+		<td onclick={(e) => e.stopPropagation()}>
 			{#if entity.type !== "goal"}
 				<div class="pos-progress-bar" aria-label="{entity.progress ?? 0}%">
 					<div class="pos-progress-bar-fill" style="width: {entity.progress ?? 0}%"></div>
@@ -142,13 +147,13 @@
 				<span class="pos-progress-label">{entity.progress ?? 0}%</span>
 			{/if}
 		</td>
-		<td><DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} /></td>
-		<td>
+		<td onclick={(e) => e.stopPropagation()}><DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} /></td>
+		<td onclick={(e) => e.stopPropagation()}>
 			{#each entity.labels as label (label)}
 				<span class="pos-manage-chip pos-manage-chip-static">{label}</span>
 			{/each}
 		</td>
-		<td>
+		<td onclick={(e) => e.stopPropagation()}>
 			<RowMenu
 				onOpenNote={() => onOpen(entity.path)}
 				onShowPreview={() => showPreview(entity.path)}

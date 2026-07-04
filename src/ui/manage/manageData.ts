@@ -219,6 +219,51 @@ export function buildManageRows(plugin: PersonalOSPlugin, tab: ManageTab, filter
 	}));
 }
 
+export interface GoalGroup {
+	goal: Entity | null; // null = 未分類
+	projects: Entity[];
+}
+
+const GOAL_STATUS_RANK: Record<string, number> = { active: 0, paused: 1, done: 2, archived: 3 };
+
+function goalKeyOf(plugin: PersonalOSPlugin, project: Entity): string | null {
+	return project.goal && plugin.store.get(project.goal) ? project.goal : null;
+}
+
+/**
+ * Goalごとにグルーピングする(design-drilldown-nav.md §3.1)。goalのstatus順(active→paused→done→archived)→title順、
+ * 未分類(goal未設定 or 参照先がIndexStoreに存在しない不整合データ)は末尾固定。
+ *
+ * Goalセクション自体の有無は「archived除外」(構造的な絞り込み)のみで決め、キーワード/status/priority/tags/period
+ * といった内容フィルタで0件になっても、そのGoalセクションは`projects: []`のまま残す(§3.6・§8.3 G-5)。
+ */
+export function groupProjectsByGoal(plugin: PersonalOSPlugin, filter: ManageFilter, sort: ManageSort): GoalGroup[] {
+	let allProjects = plugin.store.listByType("project");
+	if (!filter.showArchived) allProjects = allProjects.filter((e) => e.status !== "archived");
+
+	const byGoal = new Map<string | null, Entity[]>();
+	for (const project of allProjects) {
+		const key = goalKeyOf(plugin, project);
+		if (!byGoal.has(key)) byGoal.set(key, []);
+	}
+
+	const rows = buildManageRows(plugin, "project", filter, sort); // 既存関数をtab固定で流用(内容フィルタ+ソート)
+	for (const row of rows) {
+		const key = goalKeyOf(plugin, row.entity!);
+		byGoal.get(key)!.push(row.entity!);
+	}
+
+	const goalRank = (g: Entity | null) => (g ? (GOAL_STATUS_RANK[g.status] ?? 99) : 100);
+	const groups: GoalGroup[] = Array.from(byGoal.entries()).map(([path, projects]) => ({
+		goal: path ? (plugin.store.get(path) ?? null) : null,
+		projects,
+	}));
+	return groups.sort((a, b) => {
+		const r = goalRank(a.goal) - goalRank(b.goal);
+		return r !== 0 ? r : (a.goal?.title ?? "￿").localeCompare(b.goal?.title ?? "￿");
+	});
+}
+
 /** Preview(§4.6)からも使うため、フィルタ候補集計ヘルパーをここに置く */
 export function collectKnownTags(store: IndexStore): string[] {
 	const set = new Set<string>();
