@@ -12,10 +12,23 @@
 - 実機確認の観点: スライドアニメの方向・速度感 / スティッキーヘッダーの重なり / 空Vaultでのオンボーディング表示 / ステータスバー件数とクリック遷移 / Ctrl+ホバープレビュー / Undoトーストのボタン挙動 / キーボード操作(↑↓/Enter/n/Backspace)
 - 未実装メモ: 「x」キーのTodoトグル(entity行に対象なしのため意図的スコープ外)/ Widget側ホバープレビュー(任意扱い)
 
-## 第4次機能追加: ブラウザUI(requirements-browser-ui.md v1.0 準拠)— UX改善後に再確認
+## 第4次機能追加: ブラウザUI(design-browser-ui.md v1.0 準拠、2026-07-04全Phase承認)
 
-- [ ] 設計書(design-browser-ui.md: スタック選定/API設計/Phase分割)→ ユーザーレビュー
-- [ ] 実装Phase(設計で確定)
+- [x] 設計書(design-browser-ui.md)→ commit `b3fff10`
+- [x] Phase P1: サーバー基盤+認証+設定(HttpServer/AuthGuard/TokenStore/api/meta)+ テスト16件(累計283件)→ commit `fe1fdd5`
+- [x] Phase P2: REST API全面実装(ApiRouter+テスト42件、累計325件)→ commit `e8afeb2`
+- [x] Phase P3: webapp基盤+一覧画面(workspaces/Vite/shadcn/ホーム/プロジェクト一覧)→ commit `87a6161`
+  - 要検討メモ: ホーム集計がclient側N+1(P5でサーバー集約エンドポイント追加を検討)
+- [x] Phase P4: 詳細画面+全操作(EditableCell/Todo/メモ/楽観的更新)→ commit `06b730c`
+  - 方式差メモ: ブラウザ版のArchive/削除は確認ダイアログ(Obsidian内はUndoトースト)
+- [x] Phase P5: SSE同期+仕上げ(SseHub/切断バナー/api/summary/静的配信/webapp-dist同梱)+ テスト13件(累計338件)→ commit `ffd1356`
+
+### ブラウザUI 完了レビュー(2026-07-04)
+
+- P1〜P5全完了。テスト338件全パス、0エラー0警告、webapp同梱ビルド成功、テストVault反映済み
+- 受け入れ基準10項目: 8項目○ / 2項目△(#5 双方向即反映・#8 切断バナー→自動復帰 — コード・テスト済みだが実ブラウザ目視が必要)
+- 実機確認手順: 設定→Personal OS→「ブラウザUIを有効にする」ON → Notice/「ブラウザで開く」ボタンのURL(トークン付き)で開く
+- 方式差(意図的): ブラウザ版のArchive/削除は確認ダイアログ(Undo APIなし)。ホーム集計は/api/summaryでサーバー側集計(N+1解消済み)
 
 ## 第3次機能追加: タイムスタンプ付きメモ(requirements-memo.md v1.0 準拠)
 
