@@ -47,6 +47,11 @@ export class VaultRepository {
 		return af instanceof TFile ? af : null;
 	}
 
+	/** vault内に同じbasenameのMarkdownファイルが複数存在するか(親リンクをbasenameのみで書いてよいかの判定に使う) */
+	hasBasenameCollision(title: string): boolean {
+		return this.app.vault.getMarkdownFiles().filter((f) => f.basename === title).length > 1;
+	}
+
 	async readBody(path: string): Promise<string> {
 		const file = this.getFile(path);
 		if (!file) return "";

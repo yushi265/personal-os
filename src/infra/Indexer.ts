@@ -32,6 +32,12 @@ export class Indexer {
 		for (const file of files) {
 			await this.reindexFile(file, { silent: true });
 		}
+		// 2周目: 1周目の時点ではIndexStoreが構築途中で、type-aware解決(resolveLink)が
+		// 参照先エンティティのtypeをまだ引けないことがある(同basenameの衝突ケースで特に顕著)。
+		// 全エンティティ登録後に同じファイル群を再度reindexすることで、正しいtypeの参照先に解決し直す。
+		for (const file of files) {
+			await this.reindexFile(file, { silent: true });
+		}
 		if (this.progressService) await this.progressService.recalcAll();
 		this.eventBus.emitEvent("index-updated");
 	}
@@ -96,9 +102,21 @@ export class Indexer {
 		return countCommentHeadings(headings);
 	}
 
-	private resolveLink(sourcePath: string): (link: string) => string | null {
-		return (link: string) => {
+	/**
+	 * basename衝突(同名の別typeファイルが存在する)対策のtype-aware解決。
+	 * metadataCacheの素の解決結果が期待typeと一致しなければ、IndexStoreから同titleかつ
+	 * 期待typeのエンティティを探し直して優先する。見つからなければ従来の解決結果にフォールバックする。
+	 */
+	private resolveLink(sourcePath: string): (link: string, expectedType?: EntityType) => string | null {
+		return (link: string, expectedType?: EntityType) => {
 			const dest = this.app.metadataCache.getFirstLinkpathDest(link, sourcePath);
+			if (dest && (!expectedType || this.store.get(dest.path)?.type === expectedType)) {
+				return dest.path;
+			}
+			if (expectedType) {
+				const byTitle = this.store.listByType(expectedType).find((e) => e.title === link);
+				if (byTitle) return byTitle.path;
+			}
 			return dest ? dest.path : null;
 		};
 	}

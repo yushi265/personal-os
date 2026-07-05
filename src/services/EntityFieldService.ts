@@ -79,10 +79,7 @@ export class EntityFieldService {
 		await this.applyMultiple(path, (fm) => {
 			fm.order = newOrder;
 			if (newGoal === undefined) delete fm.goal;
-			else {
-				const target = this.store.get(newGoal);
-				fm.goal = `[[${target?.title ?? newGoal}]]`;
-			}
+			else fm.goal = this.wikilinkFor(newGoal);
 		});
 		await this.activityLog.log("update", `${entity.title}: goal → ${newGoal ? (this.store.get(newGoal)?.title ?? newGoal) : t("manage.field.unset")}`);
 	}
@@ -90,6 +87,14 @@ export class EntityFieldService {
 	/** 複数frontmatterフィールドを1回のvault書き込みでまとめて更新する内部ヘルパー */
 	private async applyMultiple(path: string, fn: (fm: Record<string, unknown>) => void): Promise<void> {
 		await this.repo.updateFrontmatter(path, fn);
+	}
+
+	// goal/project参照先のwikilink文字列を組み立てる(EntityService.createと同じ変換規則)。
+	// basename衝突(同名の別typeファイルが存在する)がある場合はパス付きリンクで一意にする。
+	private wikilinkFor(targetPath: string): string {
+		const title = this.store.get(targetPath)?.title ?? targetPath;
+		const linkTarget = this.repo.hasBasenameCollision(title) ? targetPath.replace(/\.md$/, "") : title;
+		return `[[${linkTarget}]]`;
 	}
 
 	private async renameTitle(entity: Entity, newTitle: string): Promise<void> {
@@ -189,8 +194,7 @@ export class EntityFieldService {
 					delete fm[key];
 					break;
 				}
-				const target = this.store.get(String(value));
-				fm[key] = `[[${target?.title ?? String(value)}]]`;
+				fm[key] = this.wikilinkFor(String(value));
 				break;
 			}
 			case "tags":

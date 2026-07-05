@@ -109,14 +109,15 @@ function isValidDate(value: unknown): value is string {
 
 function resolveEntityLink(
 	raw: unknown,
-	resolveLink: (link: string) => string | null,
+	resolveLink: (link: string, expectedType?: EntityType) => string | null,
 	warnings: string[],
-	fieldName: string
+	fieldName: string,
+	expectedType?: EntityType
 ): string | undefined {
 	if (raw === undefined || raw === null) return undefined;
 	const str = String(raw);
 	const linkText = str.replace(/^\[\[|\]\]$/g, "");
-	const resolved = resolveLink(linkText);
+	const resolved = resolveLink(linkText, expectedType);
 	if (resolved === null) {
 		warnings.push(`${fieldName}のリンク解決に失敗: ${str}`);
 		return str;
@@ -127,7 +128,7 @@ function resolveEntityLink(
 export function parseEntity(
 	file: { path: string; basename: string },
 	fm: Record<string, unknown> | undefined,
-	resolveLink: (link: string) => string | null
+	resolveLink: (link: string, expectedType?: EntityType) => string | null
 ): ParseResult {
 	if (!fm?.type) return { ok: false, reason: parseErrorNoType() };
 	if (!ENTITY_TYPES.includes(fm.type as EntityType)) return { ok: false, reason: parseErrorInvalidType(fm.type) };
@@ -141,8 +142,8 @@ export function parseEntity(
 
 	const warnings: string[] = [];
 
-	const goal = resolveEntityLink(fm.goal, resolveLink, warnings, "goal");
-	const project = resolveEntityLink(fm.project, resolveLink, warnings, "project");
+	const goal = resolveEntityLink(fm.goal, resolveLink, warnings, "goal", "goal");
+	const project = resolveEntityLink(fm.project, resolveLink, warnings, "project", "project");
 
 	let priority: Priority | undefined;
 	if (fm.priority !== undefined && fm.priority !== null) {

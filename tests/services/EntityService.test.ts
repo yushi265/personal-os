@@ -25,6 +25,7 @@ function makeRepo(createdPath: string, overrides: Partial<Record<string, unknown
 	return {
 		readBody: vi.fn().mockResolvedValue(""),
 		createEntityNote: vi.fn().mockResolvedValue({ path: createdPath, basename: createdPath.split("/").pop()!.replace(/\.md$/, "") }),
+		hasBasenameCollision: vi.fn().mockReturnValue(false),
 		...overrides,
 	} as unknown as VaultRepository;
 }
@@ -108,5 +109,40 @@ describe("EntityService.create — initial progress: 0 avoids the create-then-wr
 		await service.create({ type: "goal", title: "new-goal" });
 
 		expect(repo.createEntityNote).toHaveBeenCalledWith("goal", "new-goal", expect.not.stringContaining("progress"));
+	});
+});
+
+// バグ修正: 同basename(例: プロジェクト「てすと」とチケット「てすと」)が存在すると、basenameのみの
+// wikilinkはgetFirstLinkpathDestで曖昧に解決され、誤ったtypeのファイルへ紐づいてしまう。
+// 衝突がある場合はパス付きリンクを書いて曖昧さを排除する。
+describe("EntityService.create — writes unambiguous parent links on basename collision", () => {
+	it("writes a bare-title wikilink when there is no basename collision", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "PersonalOS/Projects/proj-a.md", type: "project", title: "proj-a" }));
+		const repo = makeRepo("PersonalOS/Tickets/new-ticket.md", { hasBasenameCollision: vi.fn().mockReturnValue(false) });
+		const service = new EntityService(repo, store, settings);
+
+		await service.create({ type: "ticket", title: "new-ticket", project: "PersonalOS/Projects/proj-a.md" });
+
+		expect(repo.createEntityNote).toHaveBeenCalledWith("ticket", "new-ticket", expect.stringContaining('project: "[[proj-a]]"'));
+	});
+
+	it("writes a path-qualified wikilink when the project title collides with another file's basename", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "PersonalOS/Projects/てすと.md", type: "project", title: "てすと" }));
+		const hasBasenameCollision = vi.fn().mockReturnValue(true);
+		const repo = makeRepo("PersonalOS/Tickets/new-ticket.md", { hasBasenameCollision });
+		const service = new EntityService(repo, store, settings);
+
+		const file = await service.create({ type: "ticket", title: "new-ticket", project: "PersonalOS/Projects/てすと.md" });
+
+		expect(hasBasenameCollision).toHaveBeenCalledWith("てすと");
+		expect(repo.createEntityNote).toHaveBeenCalledWith(
+			"ticket",
+			"new-ticket",
+			expect.stringContaining('project: "[[PersonalOS/Projects/てすと]]"')
+		);
+		// 楽観的upsertも衝突時のパス付きリンクで正しくproject解決できること
+		expect(store.get(file.path)?.project).toBe("PersonalOS/Projects/てすと.md");
 	});
 });

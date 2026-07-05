@@ -46,6 +46,11 @@ export class EntityService {
 			: "";
 		const goalTitle = input.goal ? (this.store.get(input.goal)?.title ?? input.goal) : undefined;
 		const projectTitle = input.project ? (this.store.get(input.project)?.title ?? input.project) : undefined;
+		// basename衝突(同名の別typeファイルが存在する)がある場合、basenameのみのwikilinkは
+		// 解決先が曖昧になるため、パス付きリンクを書いて一意にする(既存の衝突なしケースは従来通り見た目を保つ)。
+		const goalLinkText = goalTitle && this.repo.hasBasenameCollision(goalTitle) ? input.goal!.replace(/\.md$/, "") : goalTitle;
+		const projectLinkText =
+			projectTitle && this.repo.hasBasenameCollision(projectTitle) ? input.project!.replace(/\.md$/, "") : projectTitle;
 		const replacedBody = templateBody
 			.replaceAll("{{title}}", safeTitle)
 			.replaceAll("{{date}}", today())
@@ -59,8 +64,8 @@ export class EntityService {
 		};
 		if (input.priority) fm.priority = input.priority;
 		if (input.due) fm.due = input.due;
-		if (goalTitle) fm.goal = `[[${goalTitle}]]`;
-		if (projectTitle) fm.project = `[[${projectTitle}]]`;
+		if (goalLinkText) fm.goal = `[[${goalLinkText}]]`;
+		if (projectLinkText) fm.project = `[[${projectLinkText}]]`;
 		// progressを初期値0で書き込んでおく。省略すると直後のreindex→recalcAncestorsが
 		// undefined(未設定)≠0(計算値)とみなして即座に2回目の書き込みを発生させ、
 		// 他プラグイン(update-time-on-editなど)とのfrontmatter競合の引き金になる。
@@ -73,7 +78,12 @@ export class EntityService {
 
 		// ⑤ IndexStoreへ楽観的にupsert(metadataCache "changed" イベントの到着を待たず即座に画面へ反映する。
 		// 後続の実イベントによるreindexFileが同じ内容で上書きするため整合性は保たれる)
-		this.upsertOptimistically(file, fm, { goalTitle, goalPath: input.goal, projectTitle, projectPath: input.project });
+		this.upsertOptimistically(file, fm, {
+			goalLinkText,
+			goalPath: input.goal,
+			projectLinkText,
+			projectPath: input.project,
+		});
 
 		// ⑥ ログ
 		if (this.activityLog) {
@@ -91,11 +101,11 @@ export class EntityService {
 	private upsertOptimistically(
 		file: TFile,
 		fm: Record<string, unknown>,
-		links: { goalTitle?: string; goalPath?: string; projectTitle?: string; projectPath?: string }
+		links: { goalLinkText?: string; goalPath?: string; projectLinkText?: string; projectPath?: string }
 	): void {
 		const resolveLink = (link: string): string | null => {
-			if (links.goalTitle && link === links.goalTitle) return links.goalPath ?? null;
-			if (links.projectTitle && link === links.projectTitle) return links.projectPath ?? null;
+			if (links.goalLinkText && link === links.goalLinkText) return links.goalPath ?? null;
+			if (links.projectLinkText && link === links.projectLinkText) return links.projectPath ?? null;
 			return null;
 		};
 		const result = parseEntity({ path: file.path, basename: file.basename }, fm, resolveLink);

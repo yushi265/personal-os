@@ -23,6 +23,7 @@ function makeRepo(overrides: Partial<Record<string, unknown>> = {}) {
 	return {
 		updateFrontmatter: vi.fn().mockResolvedValue(undefined),
 		renameNote: vi.fn().mockResolvedValue("PersonalOS/Tickets/new-title.md"),
+		hasBasenameCollision: vi.fn().mockReturnValue(false),
 		...overrides,
 	} as unknown as VaultRepository;
 }
@@ -210,5 +211,90 @@ describe("EntityFieldService.reorderAndReassignGoal", () => {
 		fn(fm);
 		expect(fm.order).toBe(100);
 		expect(fm.goal).toBeUndefined();
+	});
+});
+
+// バグ修正: 同basenameの別ファイルが存在するとbasenameのみのwikilinkは曖昧に解決されるため、
+// 衝突がある場合はパス付きリンクを書く。
+describe("EntityFieldService — unambiguous parent links on basename collision", () => {
+	it("updateField('project'): writes a bare-title wikilink when there is no collision", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity());
+		store.upsertEntity({
+			path: "PersonalOS/Projects/proj-a.md",
+			type: "project",
+			title: "proj-a",
+			status: "active",
+			tags: [],
+			labels: [],
+			blockers: [],
+			extra: {},
+		});
+		const repo = makeRepo({ hasBasenameCollision: vi.fn().mockReturnValue(false) });
+		const service = new EntityFieldService(repo, store, makeActivityLog());
+
+		await service.updateField("PersonalOS/Tickets/ticket-a.md", "project", "PersonalOS/Projects/proj-a.md");
+
+		const fn = (repo.updateFrontmatter as ReturnType<typeof vi.fn>).mock.calls[0][1] as (
+			fm: Record<string, unknown>
+		) => void;
+		const fm: Record<string, unknown> = {};
+		fn(fm);
+		expect(fm.project).toBe("[[proj-a]]");
+	});
+
+	it("updateField('project'): writes a path-qualified wikilink when the title collides with another file's basename", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity());
+		store.upsertEntity({
+			path: "PersonalOS/Projects/てすと.md",
+			type: "project",
+			title: "てすと",
+			status: "active",
+			tags: [],
+			labels: [],
+			blockers: [],
+			extra: {},
+		});
+		const hasBasenameCollision = vi.fn().mockReturnValue(true);
+		const repo = makeRepo({ hasBasenameCollision });
+		const service = new EntityFieldService(repo, store, makeActivityLog());
+
+		await service.updateField("PersonalOS/Tickets/ticket-a.md", "project", "PersonalOS/Projects/てすと.md");
+
+		const fn = (repo.updateFrontmatter as ReturnType<typeof vi.fn>).mock.calls[0][1] as (
+			fm: Record<string, unknown>
+		) => void;
+		const fm: Record<string, unknown> = {};
+		fn(fm);
+		expect(hasBasenameCollision).toHaveBeenCalledWith("てすと");
+		expect(fm.project).toBe("[[PersonalOS/Projects/てすと]]");
+	});
+
+	it("reorderAndReassignGoal: writes a path-qualified goal link when the title collides", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ type: "project", path: "PersonalOS/Projects/p1.md", title: "p1" }));
+		store.upsertEntity({
+			path: "PersonalOS/Goals/てすと.md",
+			type: "goal",
+			title: "てすと",
+			status: "active",
+			tags: [],
+			labels: [],
+			blockers: [],
+			extra: {},
+		});
+		const hasBasenameCollision = vi.fn().mockReturnValue(true);
+		const repo = makeRepo({ hasBasenameCollision });
+		const service = new EntityFieldService(repo, store, makeActivityLog());
+
+		await service.reorderAndReassignGoal("PersonalOS/Projects/p1.md", 150, "PersonalOS/Goals/てすと.md");
+
+		const fn = (repo.updateFrontmatter as ReturnType<typeof vi.fn>).mock.calls[0][1] as (
+			fm: Record<string, unknown>
+		) => void;
+		const fm: Record<string, unknown> = {};
+		fn(fm);
+		expect(fm.goal).toBe("[[PersonalOS/Goals/てすと]]");
 	});
 });
