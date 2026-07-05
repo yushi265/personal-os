@@ -61,6 +61,10 @@ export class EntityService {
 		if (input.due) fm.due = input.due;
 		if (goalTitle) fm.goal = `[[${goalTitle}]]`;
 		if (projectTitle) fm.project = `[[${projectTitle}]]`;
+		// progressを初期値0で書き込んでおく。省略すると直後のreindex→recalcAncestorsが
+		// undefined(未設定)≠0(計算値)とみなして即座に2回目の書き込みを発生させ、
+		// 他プラグイン(update-time-on-editなど)とのfrontmatter競合の引き金になる。
+		if (input.type === "ticket" || input.type === "project") fm.progress = 0;
 
 		const body = `${buildFrontmatterBlock(fm)}\n${replacedBody}`;
 

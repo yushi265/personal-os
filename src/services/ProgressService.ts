@@ -59,6 +59,13 @@ export class ProgressService implements ProgressRecalculator {
 	/** 値が同一なら書き込みをスキップする(無限ループ・無駄なGit差分の防止) */
 	private async writeBack(entity: Entity, progress: number): Promise<void> {
 		if (entity.progress === progress) return;
+		// 計算値が0でfm側にprogressキー自体がまだ無いなら、作成直後のデフォルト状態と等価なため書き込みをスキップする。
+		// (通常はEntityService.createが初期progress: 0を書き込むためここには来ないが、
+		// テンプレート等で別の生成経路が将来できても他プラグインとの書き込み競合を防ぐための多重防御)
+		if (progress === 0 && entity.progress === undefined) {
+			entity.progress = progress;
+			return;
+		}
 		this.selfWriteGuard.markWrite(entity.path);
 		await this.repo.updateFrontmatter(entity.path, (fm) => {
 			fm.progress = progress;

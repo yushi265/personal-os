@@ -5,8 +5,10 @@ import { IndexStore } from "../../src/infra/IndexStore";
 import { SelfWriteGuard } from "../../src/infra/SelfWriteGuard";
 import type { VaultRepository } from "../../src/infra/VaultRepository";
 import { EntityFieldService } from "../../src/services/EntityFieldService";
+import { EntityService } from "../../src/services/EntityService";
 import { ProgressService } from "../../src/services/ProgressService";
 import type { ActivityLogger } from "../../src/infra/types";
+import { DEFAULT_SETTINGS, type POSSettings } from "../../src/settings/settings";
 
 function makeEntity(overrides: Partial<Entity> = {}): Entity {
 	return {
@@ -94,5 +96,30 @@ describe("ProgressService writeBack x SelfWriteGuard", () => {
 		// EntityFieldService (and VaultRepository) have no reference to SelfWriteGuard at all,
 		// so a non-progress plugin write must never be reported as suppressed.
 		expect(guard.isSuppressed("PersonalOS/Tickets/ticket-a.md")).toBe(false);
+	});
+});
+
+// バグ再現防止: 作成直後にmetadataCache changed→recalcAncestorsが走っても、
+// 他プラグイン(update-time-on-editなど)とのfrontmatter競合を招く2回目の書き込みが発生しないこと
+describe("EntityService.create x ProgressService.recalcAncestors — no double write right after creation", () => {
+	it("does not call updateFrontmatter when recalcAncestors runs immediately after create (no todos yet)", async () => {
+		const store = new IndexStore();
+		const guard = new SelfWriteGuard();
+		const repo = {
+			readBody: vi.fn().mockResolvedValue(""),
+			createEntityNote: vi.fn().mockResolvedValue({ path: "PersonalOS/Tickets/new-ticket.md", basename: "new-ticket" }),
+			updateFrontmatter: vi.fn().mockResolvedValue(undefined),
+		} as unknown as VaultRepository;
+		const settings = DEFAULT_SETTINGS as POSSettings;
+		const entityService = new EntityService(repo, store, settings);
+		const progressService = new ProgressService(repo, store, guard);
+
+		const file = await entityService.create({ type: "ticket", title: "new-ticket" });
+		// simulate the metadataCache "changed" event firing right after creation and
+		// the indexer invoking progress recalculation for the newly created ticket.
+		await progressService.recalcAncestors(file.path);
+
+		expect(repo.updateFrontmatter).not.toHaveBeenCalled();
+		expect(guard.isSuppressed(file.path)).toBe(false);
 	});
 });

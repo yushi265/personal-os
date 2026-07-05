@@ -85,3 +85,28 @@ describe("EntityService.create — optimistic IndexStore upsert (instant visibil
 		expect(store.get(file.path)).toBeDefined();
 	});
 });
+
+// バグ修正: 作成直後の二重書き込みによるfrontmatter破損(create → 即reindex → progress未設定とみなしたwriteBack)
+describe("EntityService.create — initial progress: 0 avoids the create-then-writeback double write", () => {
+	it("writes progress: 0 into the initial frontmatter for ticket/project types", async () => {
+		const store = new IndexStore();
+		const eventBus = makeEventBus();
+		const repo = makeRepo("PersonalOS/Tickets/new-ticket.md");
+		const service = new EntityService(repo, store, settings, undefined, undefined, eventBus);
+
+		const file = await service.create({ type: "ticket", title: "new-ticket" });
+
+		expect(repo.createEntityNote).toHaveBeenCalledWith("ticket", "new-ticket", expect.stringContaining("progress: 0"));
+		expect(store.get(file.path)?.progress).toBe(0);
+	});
+
+	it("does not write a progress key for goal, which has no progress field", async () => {
+		const store = new IndexStore();
+		const repo = makeRepo("PersonalOS/Goals/new-goal.md");
+		const service = new EntityService(repo, store, settings);
+
+		await service.create({ type: "goal", title: "new-goal" });
+
+		expect(repo.createEntityNote).toHaveBeenCalledWith("goal", "new-goal", expect.not.stringContaining("progress"));
+	});
+});
