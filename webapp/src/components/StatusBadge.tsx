@@ -1,18 +1,17 @@
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+// statusピル(design-refs/geist-final.dc.html §一覧画面)。h22 radius9999 border padding 0 10px mono。
+// backlog等はborder+muted文字。active/doingはborder+fg文字+6pxのaccentドット付き。
+const ACTIVE_STATUSES = new Set(["active", "doing"]);
 
-const STATUS_VARIANT: Record<string, BadgeProps["variant"]> = {
-  active: "success",
-  doing: "success",
-  backlog: "secondary",
-  ready: "secondary",
-  waiting: "warning",
-  review: "warning",
-  done: "outline",
-  archived: "outline",
-  paused: "secondary",
-};
-
-// statusバッジの色分け(design-browser-ui.md §6.4)。status値は固定(CLAUDE.md エンティティモデル参照)なので固定マップでよい。
 export function StatusBadge({ status }: { status: string }) {
-  return <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{status}</Badge>;
+  const isActive = ACTIVE_STATUSES.has(status);
+  return (
+    <span
+      className={`inline-flex h-[22px] items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-2.5 font-mono text-[11px] ${
+        isActive ? "text-fg" : "text-muted-foreground"
+      }`}
+    >
+      {isActive && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />}
+      {status}
+    </span>
+  );
 }

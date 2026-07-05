@@ -1,13 +1,21 @@
 import type { Priority } from "@domain/entity";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
 
-const PRIORITY_VARIANT: Record<Priority, BadgeProps["variant"]> = {
-  high: "destructive",
-  medium: "warning",
-  low: "secondary",
-};
-
+// priorityピル(design-refs/geist-final.dc.html §一覧画面)。
+// high=bg:fg文字:bg(反転塗り) / medium=border+fg文字 / low・なし="—"のfaint mono表記。
 export function PriorityBadge({ priority }: { priority?: Priority }) {
-  if (!priority) return <span className="text-muted-foreground">—</span>;
-  return <Badge variant={PRIORITY_VARIANT[priority]}>{priority}</Badge>;
+  if (!priority || priority === "low") {
+    return <span className="font-mono text-[11px] text-faint">—</span>;
+  }
+  if (priority === "high") {
+    return (
+      <span className="inline-flex h-[22px] items-center whitespace-nowrap rounded-full bg-fg px-2.5 font-mono text-[11px] text-bg">
+        {priority}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex h-[22px] items-center whitespace-nowrap rounded-full border border-border px-2.5 font-mono text-[11px] text-fg">
+      {priority}
+    </span>
+  );
 }

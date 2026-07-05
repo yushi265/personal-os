@@ -1,17 +1,14 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ChevronRight, FolderKanban } from "lucide-react";
+import { ChevronRight, FolderKanban, Search } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { PROJECT_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { useEntities } from "@/hooks/useEntities";
 import { useCreateEntity } from "@/hooks/useEntityMutations";
-import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PriorityBadge } from "@/components/PriorityBadge";
@@ -21,7 +18,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { t } from "@i18n/ja";
 
-const MotionTableRow = motion.create(TableRow);
+const MotionRow = motion.create("div");
 
 function matchesFilter(project: Entity, keyword: string, statuses: Set<string>): boolean {
   if (statuses.size > 0 && !statuses.has(project.status)) return false;
@@ -29,8 +26,10 @@ function matchesFilter(project: Entity, keyword: string, statuses: Set<string>):
   return project.title.toLowerCase().includes(keyword.trim().toLowerCase());
 }
 
-// プロジェクト一覧(design-browser-ui.md §6.2・§6.4)。Goal概念廃止(design-remove-goal.md G3)によりフラットなTable 1枚とする。
-// フィルタは簡易(キーワード+statusチップ、design §9 P3行の指定通り)。
+// プロジェクト一覧(design-refs/geist-final.dc.html §一覧画面)。
+// デザインはGoal別ヘッダ行を持つが、現行モデルはGoal概念廃止(design-remove-goal.md G3)によりフラットな
+// 単一テーブルとする(このファイルの§一覧画面の適合ルール参照)。
+// フィルタは簡易(キーワード+statusチップ、design-browser-ui.md §9 P3行の指定通り)。ロジックは既存のまま維持。
 export function Projects() {
   const { data: projects, isLoading, isError } = useEntities("project");
   const navigate = useNavigate();
@@ -43,8 +42,8 @@ export function Projects() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold">{t("webapp.projects.title")}</h1>
+      <div className="space-y-6">
+        <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.projects.title")}</h1>
         <div className="space-y-2">
           <Skeleton className="h-9 w-64" />
           <Skeleton className="h-40 w-full" />
@@ -55,8 +54,8 @@ export function Projects() {
   if (isError) return <p className="text-destructive">{t("webapp.loadError")}</p>;
   if ((projects ?? []).length === 0) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold">{t("webapp.projects.title")}</h1>
+      <div className="space-y-6">
+        <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.projects.title")}</h1>
         <EmptyState
           icon={FolderKanban}
           title={t("webapp.empty.projects.title")}
@@ -90,89 +89,83 @@ export function Projects() {
   };
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">{t("webapp.projects.title")}</h1>
-
-      <div className="flex items-center gap-2">
-        <input
-          className="h-9 w-64 rounded-md border border-input bg-background px-3 text-sm"
-          placeholder={t("webapp.projects.filterKeyword")}
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-        />
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm">
-              {t("webapp.projects.filterStatus")}
-              {statuses.size > 0 ? ` (${statuses.size})` : ""}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56">
-            <div className="space-y-2">
-              {PROJECT_STATUSES.map((status) => (
-                <label key={status} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={statuses.has(status)} onCheckedChange={() => toggleStatus(status)} />
-                  {status}
-                </label>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.projects.title")}</h1>
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-[280px] items-center gap-1.5 rounded-md border border-border bg-surface px-2.5">
+            <Search className="h-3.5 w-3.5 shrink-0 text-faint" />
+            <input
+              className="h-full w-full bg-transparent text-[13px] outline-none placeholder:text-faint"
+              placeholder={t("webapp.projects.filterKeyword")}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] text-fg transition-colors hover:bg-hairline"
+              >
+                {t("webapp.projects.filterStatus")}
+                {statuses.size > 0 ? ` (${statuses.size})` : ""}
+                <span className="text-[10px] text-faint">▼</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56">
+              <div className="space-y-2">
+                {PROJECT_STATUSES.map((status) => (
+                  <label key={status} className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={statuses.has(status)} onCheckedChange={() => toggleStatus(status)} />
+                    {status}
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Progress</TableHead>
-            <TableHead>Due</TableHead>
-            <TableHead className="w-6" />
-          </TableRow>
-        </TableHeader>
-        <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
+      <div className="overflow-hidden rounded-lg border border-border">
+        <motion.div variants={staggerContainer} initial="initial" animate="animate">
           {visibleProjects.map((project) => (
-            <MotionTableRow
+            <MotionRow
               key={project.path}
               variants={staggerItem}
               transition={listTransition(!!reduced)}
-              className="group cursor-pointer"
+              className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
               onClick={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}
             >
-              <TableCell className="font-medium">{project.title}</TableCell>
-              <TableCell>
+              <span className="w-[300px] shrink-0 truncate text-sm font-medium">{project.title}</span>
+              <span className="w-24 shrink-0">
                 <StatusBadge status={project.status} />
-              </TableCell>
-              <TableCell>
+              </span>
+              <span className="w-20 shrink-0">
                 <PriorityBadge priority={project.priority} />
-              </TableCell>
-              <TableCell>
+              </span>
+              <span className="shrink-0">
                 <ProgressBar value={project.progress} />
-              </TableCell>
-              <TableCell>
+              </span>
+              <span className="w-24 shrink-0 font-mono text-xs">
                 <DueLabel due={project.due} today={now} />
-              </TableCell>
-              <TableCell>
-                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
-              </TableCell>
-            </MotionTableRow>
+              </span>
+              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
+            </MotionRow>
           ))}
-          <TableRow>
-            <TableCell colSpan={6}>
-              <Input
-                value={newProjectTitle}
-                onChange={(e) => setNewProjectTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.nativeEvent.isComposing) submitNewProject();
-                }}
-                placeholder={t("webapp.detail.addProjectPlaceholder")}
-                className="h-8 border-none bg-transparent shadow-none focus-visible:ring-0"
-              />
-            </TableCell>
-          </TableRow>
-        </motion.tbody>
-      </Table>
+          <div className="flex h-10 cursor-text items-center px-5">
+            <input
+              value={newProjectTitle}
+              onChange={(e) => setNewProjectTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) submitNewProject();
+              }}
+              placeholder={t("webapp.detail.addProjectPlaceholder")}
+              className="h-full w-full bg-transparent text-[13px] text-faint outline-none placeholder:text-faint"
+            />
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }

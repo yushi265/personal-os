@@ -1,7 +1,11 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
-// shadcn/ui標準構成(CSS変数ベースのカラー、design-browser-ui.md §6.5のダークモード方針と合わせ`darkMode: "class"`)
+// Geistデザインシステム(design-refs/geist-final.dc.html)のトークンを直接var(...)参照する。
+// shadcn標準のセマンティックキー(background/foreground/primary等)はindex.cssで同じCSS変数に
+// 再マッピングしているため、既存コンポーネント(bg-background等のTailwindユーティリティ経由で色を使う設計)は無修正のまま追従する。
+// 加えて、デザインHTMLの変数名(--bg/--fg/--surface/--hairline/--faint/--ghost/--accent)にそのまま対応する
+// ユーティリティ(bg-fg, text-faint, border-hairline等)も追加し、新規実装で仕様の表記に忠実に書けるようにする。
 export default {
   darkMode: "class",
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
@@ -12,40 +16,55 @@ export default {
       screens: { "2xl": "1400px" },
     },
     extend: {
+      fontFamily: {
+        // 日本語はGeistが非対応のためシステムJPフォントにフォールバック(IBM Plex Sans JPは同梱しない)
+        sans: ["Geist", "Hiragino Sans", "Noto Sans JP", "sans-serif"],
+        mono: ["Geist Mono", "monospace"],
+      },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        border: "var(--border)",
+        input: "var(--border)",
+        ring: "var(--accent)",
+        background: "var(--bg)",
+        foreground: "var(--fg)",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "var(--fg)",
+          foreground: "var(--bg)",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "var(--surface)",
+          foreground: "var(--fg)",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "var(--surface)",
+          foreground: "var(--muted)",
         },
+        // shadcn標準の"accent"はhoverの中立背景として使われている箇所が多いため、
+        // デザインの強調色(青)ではなくhairlineへ割り当てる。強調色自体は"brand"として独立させる。
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "var(--hairline)",
+          foreground: "var(--fg)",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "var(--surface)",
+          foreground: "var(--fg)",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "var(--surface)",
+          foreground: "var(--fg)",
         },
+        // デザインHTMLの生トークン名をそのまま使えるようにするエイリアス
+        bg: "var(--bg)",
+        fg: "var(--fg)",
+        surface: "var(--surface)",
+        hairline: "var(--hairline)",
+        faint: "var(--faint)",
+        ghost: "var(--ghost)",
+        brand: "var(--accent)",
       },
       borderRadius: {
         lg: "var(--radius)",

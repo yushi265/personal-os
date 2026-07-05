@@ -31,6 +31,15 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  // サイドバーの検索ボックス(design-refs/geist-final.dc.html §サイドバー)からのクリックでも
+  // このコマンドパレットを起動できるようにする(design-browser-ui.md §6.4の機能を維持したまま
+  // 起動口を追加するだけなので、CustomEventで疎結合に連携する)。
+  React.useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("pos:open-command-palette", handler);
+    return () => window.removeEventListener("pos:open-command-palette", handler);
+  }, []);
+
   const go = (path: string) => {
     setOpen(false);
     navigate(path);
