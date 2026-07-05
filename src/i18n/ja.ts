@@ -91,6 +91,7 @@ const MESSAGES = {
 	"preview.blockerList.add": "追加",
 	"preview.blockerList.remove": "削除",
 	"preview.todoDisabledNotice": "Tasks / Dataviewプラグインが必要です。Todoセクションは無効化されています。",
+	"preview.todo.editText": "テキストを編集",
 	"preview.todo.promote": "昇格",
 	"preview.todo.delete": "削除",
 	"preview.todo.moveUp": "上へ移動",

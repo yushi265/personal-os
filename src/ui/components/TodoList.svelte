@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Notice } from "obsidian";
+	import { Menu, Notice, Platform } from "obsidian";
 	import type { Priority } from "../../domain/entity";
 	import { PRIORITIES } from "../../domain/entity";
 	import type { Todo } from "../../domain/todo";
@@ -9,6 +9,7 @@
 	import { t, todoDeletedUndoNotice } from "../../i18n/ja";
 	import { showUndoNotice } from "../undoNotice";
 	import { PromoteTodoModal } from "../modals/PromoteModal";
+	import { longpress } from "../longpress";
 	import TitleCell from "./TitleCell.svelte";
 	import PriorityCell from "./PriorityCell.svelte";
 	import DateCell from "./DateCell.svelte";
@@ -99,6 +100,35 @@
 		}).open();
 	}
 
+	// モバイル(design: モバイル長押しメニュー化): 長押しメニューの「テキストを編集」からTitleCellの編集開始を
+	// 起動する外部トリガー。todoごとに別要素のTitleCellがあるため、keyごとにトークンを持つ(ManageRow.svelteと同じ方式)
+	let editTodoTokens = $state<Record<string, number>>({});
+	function requestEditTodoText(todo: Todo): void {
+		const key = todoKey(todo);
+		editTodoTokens[key] = (editTodoTokens[key] ?? 0) + 1;
+	}
+
+	function openTodoMenu(todo: Todo, index: number, x: number, y: number): void {
+		const menu = new Menu();
+		menu.addItem((item) => item.setTitle(t("preview.todo.editText")).onClick(() => requestEditTodoText(todo)));
+		menu.addItem((item) =>
+			item
+				.setTitle(t("preview.todo.moveUp"))
+				.setDisabled(index === 0)
+				.onClick(() => void moveTodo(todo, { kind: "up" })),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle(t("preview.todo.moveDown"))
+				.setDisabled(index === visibleTodos.length - 1)
+				.onClick(() => void moveTodo(todo, { kind: "down" })),
+		);
+		menu.addItem((item) => item.setTitle(t("preview.todo.promote")).onClick(() => promoteTodo(todo)));
+		menu.addSeparator();
+		menu.addItem((item) => item.setTitle(t("preview.todo.delete")).onClick(() => void deleteTodo(todo)));
+		menu.showAtPosition({ x, y });
+	}
+
 	// フッタ「+ Todoを追加」フォーム(design-ui-first.md §4.4、失敗時は入力内容を保持する)。addTarget未指定時は表示しない
 	let newTodoText = $state("");
 	let newTodoDue = $state("");
@@ -135,6 +165,7 @@
 				class="pos-widget-item pos-preview-todo-row"
 				ondragover={(e) => e.preventDefault()}
 				ondrop={(e) => handleDrop(e, todo)}
+				use:longpress={{ enabled: Platform.isMobile, onLongPress: (x, y) => openTodoMenu(todo, i, x, y) }}
 			>
 				<!-- 上段(モバイル): チェックボックス+本文。display:contentsによりデスクトップでは従来通りliの直下フラットフレックス項目として扱われる -->
 				<div class="pos-todo-row-top">
@@ -150,7 +181,11 @@
 					</span>
 					<input type="checkbox" checked={todo.done} onchange={() => toggleTodo(todo)} />
 					<span class="pos-preview-todo-text">
-						<TitleCell value={todo.text} onCommit={(next) => commitTodoText(todo, next)} />
+						<TitleCell
+							value={todo.text}
+							onCommit={(next) => commitTodoText(todo, next)}
+							editRequestToken={editTodoTokens[todoKey(todo)] ?? 0}
+						/>
 					</span>
 				</div>
 				<!-- 下段(モバイル): メタ情報(親バッジ/優先度/期限) -->

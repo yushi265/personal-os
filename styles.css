@@ -2128,8 +2128,7 @@ body.is-mobile .pos-preview-todo-row {
 }
 
 body.is-mobile .pos-todo-row-top,
-body.is-mobile .pos-todo-row-meta,
-body.is-mobile .pos-todo-row-actions {
+body.is-mobile .pos-todo-row-meta {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
@@ -2156,9 +2155,10 @@ body.is-mobile .pos-preview-todo-drag {
 	display: none;
 }
 
+/* 長押しメニュー(上へ移動/下へ移動/昇格/削除)が代替のため、操作ボタン群は不要
+   (design: モバイル長押しメニュー化)。displayをcontentsからnoneへ上書きするだけなので詳細度は同一クラスセレクタで足りる */
 body.is-mobile .pos-todo-row-actions {
-	justify-content: flex-end;
-	column-gap: var(--size-4-3);
+	display: none;
 }
 
 /* ==== モバイルブラッシュアップ: CommentSection/BlockerList/TagChipsの入力行 ==== */
