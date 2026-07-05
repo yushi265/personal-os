@@ -1997,6 +1997,10 @@ body.is-mobile .pos-tagchips-remove {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	/* iOS WebViewは<button>にネイティブの丸背景(appearance)を描画するため、
+	   透明背景を指定していても実機では「巨大な円」に見える。明示的に無効化する */
+	-webkit-appearance: none;
+	appearance: none;
 }
 
 /* pos-title-edit-btnはデスクトップではホバー時のみ表示するプログレッシブエンハンスメントだが、

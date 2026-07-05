@@ -193,19 +193,31 @@
 			<StatusCell value={entity.status} options={statusOptions(entity)} onCommit={(next) => commitStatus(entity, next)} />
 		</td>
 		{#if showParentColumn}
-			<td class="pos-manage-cell-parent" onclick={(e) => e.stopPropagation()}>
+			<td
+				class="pos-manage-cell-parent"
+				class:pos-cell-empty={!entity.project}
+				onclick={(e) => e.stopPropagation()}
+			>
 				<ParentCell value={entity.project} options={parentOptions()} onCommit={(next) => commitParent(entity, next)} />
 			</td>
 		{/if}
-		<td class="pos-manage-cell-priority" onclick={(e) => e.stopPropagation()}>
+		<td
+			class="pos-manage-cell-priority"
+			class:pos-cell-empty={!entity.priority}
+			onclick={(e) => e.stopPropagation()}
+		>
 			<PriorityCell value={entity.priority ?? ""} options={priorityOptions()} onCommit={(next) => commitPriority(entity, next)} />
 		</td>
-		<td class="pos-manage-cell-progress" onclick={(e) => e.stopPropagation()}>
+		<td
+			class="pos-manage-cell-progress"
+			class:pos-cell-empty={entity.type === "goal" || fraction.total === 0}
+			onclick={(e) => e.stopPropagation()}
+		>
 			{#if entity.type !== "goal"}
 				<ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} />
 			{/if}
 		</td>
-		<td class="pos-manage-cell-due" onclick={(e) => e.stopPropagation()}>
+		<td class="pos-manage-cell-due" class:pos-cell-empty={!entity.due} onclick={(e) => e.stopPropagation()}>
 			<DateCell value={entity.due} onCommit={(next) => commitDue(entity, next)} relative />
 		</td>
 		<td class="pos-manage-cell-labels" onclick={(e) => e.stopPropagation()}>
