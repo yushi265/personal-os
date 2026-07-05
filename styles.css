@@ -1886,10 +1886,9 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 		display: none;
 	}
 
+	/* カードタップ自体で遷移できるため冗長(ユーザーフィードバック): ›シェブロンも非表示 */
 	.pos-manage-cell-nav {
-		order: 6;
-		width: auto;
-		text-align: right;
+		display: none;
 	}
 }
 
@@ -1968,10 +1967,9 @@ body.is-mobile .pos-manage-cell-actions {
 	display: none;
 }
 
+/* カードタップ自体で遷移できるため冗長(ユーザーフィードバック): ›シェブロンも非表示 */
 body.is-mobile .pos-manage-cell-nav {
-	order: 6;
-	width: auto;
-	text-align: right;
+	display: none;
 }
 
 @container (max-width: 480px) {
@@ -2017,7 +2015,6 @@ body.is-mobile .pos-preview-fields .pos-cell-text-input {
    アイコン専用ボタン(⋮/✎/›/戻る/×)は44×44pxの正方形を確保する。デスクトップは既存の40px(V3)のまま。 */
 
 body.is-mobile .pos-kanban-card-menu,
-body.is-mobile .pos-manage-nav-chevron,
 body.is-mobile .pos-manage-back-btn,
 body.is-mobile .pos-dashboard-refresh,
 body.is-mobile .pos-manage-entity-switcher-btn,
@@ -2050,7 +2047,6 @@ body.is-mobile .pos-manage-tab-btn,
 body.is-mobile .pos-kanban-toggle-btn,
 body.is-mobile .pos-manage-onboarding-action,
 body.is-mobile .pos-blockerlist-add-btn,
-body.is-mobile .pos-comment-action,
 body.is-mobile .pos-manage-inline-create-row,
 body.is-mobile .pos-preview-todo-action {
 	min-height: 44px;
@@ -2071,9 +2067,13 @@ body.is-mobile .pos-manage-filter-summary,
 body.is-mobile .pos-manage-tabs,
 body.is-mobile .pos-kanban-toggle,
 body.is-mobile .pos-manage-todo-controls,
-body.is-mobile .pos-blockerlist-add,
-body.is-mobile .pos-comment-item-actions {
+body.is-mobile .pos-blockerlist-add {
 	gap: var(--size-4-2);
+}
+
+/* 長押しメニュー(編集/削除)が代替のため、コメントのインラインボタンは不要(design: モバイル長押しメニュー化) */
+body.is-mobile .pos-comment-item-actions {
+	display: none;
 }
 
 /* ==== モバイルブラッシュアップ: 入力欄フォントサイズ16px(iOS WebViewの自動ズーム防止) ====

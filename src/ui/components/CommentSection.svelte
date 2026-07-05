@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { Menu, Platform } from "obsidian";
 	import type { Comment } from "../../domain/comment";
 	import type PersonalOSPlugin from "../../main";
 	import { commentDeletedUndoNotice, t } from "../../i18n/ja";
 	import { showUndoNotice } from "../undoNotice";
+	import { longpress } from "../longpress";
 
 	/**
 	 * タイムスタンプ付きコメントの共通表示・操作部品(design-memo.md §4.1。旧称: MemoSection)。
@@ -125,6 +127,14 @@
 	function showMore(): void {
 		visibleCount += 10;
 	}
+
+	// モバイル(design: モバイル長押しメニュー化): 長押しで編集/削除のMenuを出す。デスクトップのボタンと同じ操作を代替する
+	function openCommentMenu(comment: Comment, index: number, x: number, y: number): void {
+		const menu = new Menu();
+		menu.addItem((item) => item.setTitle(t("comment.edit")).onClick(() => startEdit(index, comment)));
+		menu.addItem((item) => item.setTitle(t("comment.delete")).onClick(() => void requestRemove(comment)));
+		menu.showAtPosition({ x, y });
+	}
 </script>
 
 <div class="pos-comment-section">
@@ -152,7 +162,10 @@
 	{:else}
 		<ul class="pos-comment-list">
 			{#each visible as comment, i (i)}
-				<li class="pos-comment-item">
+				<li
+					class="pos-comment-item"
+					use:longpress={{ enabled: Platform.isMobile, onLongPress: (x, y) => openCommentMenu(comment, i, x, y) }}
+				>
 					{#if editingIndex === i}
 						<textarea
 							class="pos-comment-edit-text"
