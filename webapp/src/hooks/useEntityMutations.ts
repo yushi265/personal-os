@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Entity } from "@domain/entity";
 import {
@@ -13,6 +13,32 @@ import {
 import type { CreateEntityInput, EntityFieldKey, EntityFieldValue } from "@/api/types";
 import { priorityChangedUndoNotice, statusChangedUndoNotice, t } from "@i18n/ja";
 import { useOptimisticMutation } from "./useOptimisticMutation";
+
+/**
+ * status/priorityのインライン編集はProjects一覧行(ProjectRow)・ProjectDetailのチケット表(TicketRow)からも
+ * 呼ばれる(a4c275d)。これらは対象entity自身の ["entity", path] クエリを一度も取得していないことが多く、
+ * そのキャッシュに読み書きするだけでは(a)楽観的更新が一覧に反映されない (b) previousが取得できずtoastが
+ * 出ない、という2つの不具合を招く。呼び出し時に確実に持っている `entity` スナップショットをprevious/patchの
+ * 基準にし、entity単体キャッシュ・一覧([\"entities\", *])・親の子一覧([\"entity\", parentPath, \"children\"])の
+ * 3箇所をまとめて書き換えることで、呼び出し元がどの画面かによらず即時反映されるようにする。
+ */
+function patchEntityCaches(queryClient: QueryClient, entity: Entity, patch: Partial<Entity>) {
+  queryClient.setQueryData<Entity>(["entity", entity.path], (old) => (old ? { ...old, ...patch } : old));
+  queryClient.setQueriesData<Entity[]>({ queryKey: ["entities"], exact: false }, (old) =>
+    old?.map((e) => (e.path === entity.path ? { ...e, ...patch } : e))
+  );
+  if (entity.project) {
+    queryClient.setQueryData<Entity[]>(["entity", entity.project, "children"], (old) =>
+      old?.map((e) => (e.path === entity.path ? { ...e, ...patch } : e))
+    );
+  }
+}
+
+function entityInvalidateKeys(entity: Entity): QueryKey[] {
+  const keys: QueryKey[] = [["entity", entity.path], ["entities"], ["summary"]];
+  if (entity.project) keys.push(["entity", entity.project, "children"]);
+  return keys;
+}
 
 /** 新規Entity作成(プロジェクト一覧のインライン追加・詳細画面の+チケット追加)。作成直後の一覧再取得のみでよく楽観的更新は行わない */
 export function useCreateEntity() {
@@ -37,14 +63,14 @@ export function useUpdateEntityField(entity: Entity | undefined) {
     onMutate: async ({ key, value }) => {
       if (!entity) return undefined;
       await queryClient.cancelQueries({ queryKey: ["entity", entity.path] });
-      const previous = queryClient.getQueryData<Entity>(["entity", entity.path]);
-      queryClient.setQueryData<Entity>(["entity", entity.path], (old) => (old ? { ...old, [key]: value } : old));
+      const previous = entity;
+      patchEntityCaches(queryClient, entity, { [key]: value } as Partial<Entity>);
       return previous;
     },
     onErrorRollback: (previous) => {
-      if (entity) queryClient.setQueryData(["entity", entity.path], previous);
+      if (previous) patchEntityCaches(queryClient, previous, previous);
     },
-    invalidateKeys: entity ? [["entity", entity.path], ["entities"]] : [],
+    invalidateKeys: entity ? entityInvalidateKeys(entity) : [],
     onSuccessCustom: ({ key, value }, previous) => {
       if (key !== "priority") return;
       if (isUndoRef.current) {
@@ -82,14 +108,14 @@ export function useChangeEntityStatus(entity: Entity | undefined) {
     onMutate: async (next) => {
       if (!entity) return undefined;
       await queryClient.cancelQueries({ queryKey: ["entity", entity.path] });
-      const previous = queryClient.getQueryData<Entity>(["entity", entity.path]);
-      queryClient.setQueryData<Entity>(["entity", entity.path], (old) => (old ? { ...old, status: next } : old));
+      const previous = entity;
+      patchEntityCaches(queryClient, entity, { status: next });
       return previous;
     },
     onErrorRollback: (previous) => {
-      if (entity) queryClient.setQueryData(["entity", entity.path], previous);
+      if (previous) patchEntityCaches(queryClient, previous, previous);
     },
-    invalidateKeys: entity ? [["entity", entity.path], ["entities"]] : [],
+    invalidateKeys: entity ? entityInvalidateKeys(entity) : [],
     onSuccessCustom: (next, previous) => {
       if (isUndoRef.current) {
         isUndoRef.current = false;
