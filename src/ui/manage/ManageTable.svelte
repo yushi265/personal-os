@@ -141,7 +141,6 @@
 	const projectColumns: ColumnDef[] = [
 		{ key: "title", labelKey: "manage.column.title" },
 		{ key: "status", labelKey: "manage.column.status" },
-		{ key: null, labelKey: "manage.column.goal", isParent: true },
 		{ key: "priority", labelKey: "manage.column.priority" },
 		{ key: "progress", labelKey: "manage.column.progress" },
 		{ key: "due", labelKey: "manage.column.due" },

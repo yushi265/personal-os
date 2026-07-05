@@ -240,6 +240,10 @@ function goalKeyOf(plugin: ManageDataPlugin, project: Entity): string | null {
  *
  * Goalセクション自体の有無は「archived除外」(構造的な絞り込み)のみで決め、キーワード/status/priority/tags/period
  * といった内容フィルタで0件になっても、そのGoalセクションは`projects: []`のまま残す(§3.6・§8.3 G-5)。
+ *
+ * Goal概念の廃止(design-remove-goal.md)によりObsidian側UI(ProjectListScreen等)からは呼ばれなくなったが、
+ * webapp(browser UI、design-browser-ui.md)側のプロジェクト一覧がGoalグルーピング表示をG3まで維持するため、
+ * `src/server/ApiRouter.ts`(`GET /api/entities?group=goal`)からの呼び出しのために残置する。
  */
 export function groupProjectsByGoal(plugin: ManageDataPlugin, filter: ManageFilter, sort: ManageSort): GoalGroup[] {
 	let allProjects = plugin.store.listByType("project");
@@ -283,23 +287,6 @@ export function buildProjectTicketRows(
 	const q = filterToQuery(filter, "ticket");
 	tickets = tickets.filter((e) => evaluate(q, e, (p) => plugin.store.get(p)?.title));
 	return sortEntityRows(tickets, sort).map((entity) => ({ kind: "entity", entity }));
-}
-
-/**
- * Goal詳細画面の配下プロジェクト一覧(buildProjectTicketRowsのgoal版)。
- * 全プロジェクトを走査してから絞るのではなく、getChildren(goalPath)を起点にそのgoalの子のみを対象にする。
- */
-export function buildGoalProjectRows(
-	plugin: ManageDataPlugin,
-	goalPath: string,
-	filter: ManageFilter,
-	sort: ManageSort
-): ManageRowData[] {
-	let projects = plugin.store.getChildren(goalPath).filter((e) => e.type === "project");
-	if (!filter.showArchived) projects = projects.filter((e) => e.status !== "archived");
-	const q = filterToQuery(filter, "project");
-	projects = projects.filter((e) => evaluate(q, e, (p) => plugin.store.get(p)?.title));
-	return sortEntityRows(projects, sort).map((entity) => ({ kind: "entity", entity }));
 }
 
 /**
@@ -352,43 +339,19 @@ export function entityProgressFraction(store: IndexStore, entity: Entity): Progr
 	return entity.type === "project" ? projectTodoFraction(store, entity.path) : ticketTodoFraction(store, entity.path);
 }
 
-/**
- * Goalヘッダの配下Project集計進捗(design: Goalセクションの集計進捗)。
- * 0件ならnull(非表示)。projects側で既にarchived除外済みであることを前提とする(groupProjectsByGoal参照)。
- */
-export function goalGroupProgress(projects: Entity[]): number | null {
-	if (projects.length === 0) return null;
-	const sum = projects.reduce((acc, p) => acc + (p.progress ?? 0), 0);
-	return Math.round(sum / projects.length);
-}
-
 /** インライン新規作成行(InlineCreateRow.svelte)のタイトルバリデーション。空白のみは不可(design-ui-first.md §4.2 titleRequiredと同方針) */
 export function isValidInlineTitle(title: string): boolean {
 	return title.trim().length > 0;
 }
 
-/** GoalGroupの識別key(goal未設定=未分類はこの固定文字列)。ProjectListScreen.svelteのgroupKey()と揃える */
-function goalGroupKey(goal: Entity | null): string {
-	return goal?.path ?? "__unclassified__";
-}
-
 /**
- * 「n」キーでのインライン新規作成フォーカス先(Phase U2→U3改善、design追補)。
- * 先頭固定ではなく、展開中(折りたたまれていない)最初のGoalセクションのindexを返す。
- * 全セクションが折りたたみ中の場合は先頭(0)にフォールバックする。
- */
-export function firstExpandedGroupIndex(groups: GoalGroup[], collapsedGoals: Set<string>): number {
-	const idx = groups.findIndex((g) => !collapsedGoals.has(goalGroupKey(g.goal)));
-	return idx >= 0 ? idx : 0;
-}
-
-/**
- * オンボーディング判定(design-drilldown-nav.md追補、Phase U3): Vault内にGoal/Projectが1件も無いかどうか。
+ * オンボーディング判定(design-drilldown-nav.md追補、Phase U3): Vault内にProjectが1件も無いかどうか。
  * archivedを含む全件で判定する(フィルタ結果ではなくVaultそのものの状態を見るため)。
  * 管理View(ProjectListScreen)・Dashboardの両方の空ウェルカム画面表示判定から共通で使う。
+ * Goal概念の廃止(design-remove-goal.md G2)によりGoalの有無はもう判定に含めない。
  */
 export function isManageVaultEmpty(store: IndexStore): boolean {
-	return store.listByType("goal").length === 0 && store.listByType("project").length === 0;
+	return store.listByType("project").length === 0;
 }
 
 /** Entityのlabelsに加え、Todoのlabelsも集計対象に含める(Todoタブのlabelsフィルタ候補のため) */

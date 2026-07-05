@@ -8,7 +8,6 @@
 	import StatusCell from "../components/StatusCell.svelte";
 	import PriorityCell from "../components/PriorityCell.svelte";
 	import DateCell from "../components/DateCell.svelte";
-	import ParentCell from "../components/ParentCell.svelte";
 	import TitleCell from "../components/TitleCell.svelte";
 	import TodoList from "../components/TodoList.svelte";
 	import NotePanel from "../components/NotePanel.svelte";
@@ -78,10 +77,6 @@
 		return [{ value: "", label: t("manage.field.unset") }, ...PRIORITIES.map((p) => ({ value: p, label: p }))];
 	}
 
-	function goalOptions(): { value: string; label: string }[] {
-		return plugin.store.listByType("goal").map((e) => ({ value: e.path, label: e.title }));
-	}
-
 	// ---- 書き込み経路(design-ui-first.md §4.2): statusのみEntityService、他はEntityFieldService ----
 	function commitTitle(next: string): Promise<void> {
 		return plugin.entityFieldService.updateField(screen.path, "title", next);
@@ -94,9 +89,6 @@
 	}
 	function commitDue(next: string | undefined): Promise<void> {
 		return plugin.entityFieldService.updateField(screen.path, "due", next);
-	}
-	function commitGoal(next: string | undefined): Promise<void> {
-		return plugin.entityFieldService.updateField(screen.path, "goal", next);
 	}
 
 	function changeTicketFilter(next: ManageFilter): void {
@@ -158,9 +150,6 @@
 
 		<dt>{t("preview.field.due")}</dt>
 		<dd><DateCell value={entity.due} onCommit={commitDue} relative /></dd>
-
-		<dt>{t("preview.field.goal")}</dt>
-		<dd><ParentCell value={entity.goal} options={goalOptions()} onCommit={commitGoal} /></dd>
 
 		<dt>{t("preview.field.progress")}</dt>
 		<dd>

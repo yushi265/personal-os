@@ -18,33 +18,28 @@
 		onViewAll,
 	}: {
 		plugin: PersonalOSPlugin;
-		type: EntityType;
+		type: Extract<EntityType, "project" | "ticket">;
 		entities: Entity[];
 		onNavigate: (path: string, event: MouseEvent | KeyboardEvent) => void;
 		onViewAll?: () => void;
 	} = $props();
 
 	const titleKey = {
-		goal: "dashboard.widget.activeGoals",
 		project: "dashboard.widget.activeProjects",
 		ticket: "dashboard.widget.activeTickets",
 	} as const;
 
-	const icon = { goal: "🎯", project: "📁", ticket: "🎫" } as const;
+	const icon = { project: "📁", ticket: "🎫" } as const;
 </script>
 
 <section class="pos-widget">
-	<WidgetHeader
-		icon={icon[type as "goal" | "project" | "ticket"]}
-		title={t(titleKey[type as "goal" | "project" | "ticket"])}
-		count={entities.length}
-		{onViewAll}
-	/>
+	<WidgetHeader icon={icon[type]} title={t(titleKey[type])} count={entities.length} {onViewAll} />
 	{#if entities.length === 0}
 		<p class="pos-widget-empty pos-widget-empty-ok">✓ {t("dashboard.empty.active")}</p>
 	{:else}
 		<ul class="pos-widget-list">
 			{#each entities as entity (entity.path)}
+				{@const fraction = entityProgressFraction(plugin.store, entity)}
 				<li class="pos-widget-item pos-widget-item-column">
 					<div class="pos-widget-item-row">
 						<span
@@ -60,10 +55,7 @@
 						<PriorityLabel value={entity.priority ?? ""} label={entity.priority ?? ""} />
 						<DueLabel value={entity.due} />
 					</div>
-					{#if type !== "goal"}
-						{@const fraction = entityProgressFraction(plugin.store, entity)}
-						<ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} />
-					{/if}
+					<ProgressIndicator progress={entity.progress ?? 0} done={fraction.done} total={fraction.total} />
 				</li>
 			{/each}
 		</ul>

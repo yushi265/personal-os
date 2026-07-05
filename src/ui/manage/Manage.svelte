@@ -21,7 +21,6 @@
 	} from "./manageData";
 	import {
 		isManageSavedViewVisible,
-		makeGoalDetailScreen,
 		makeProjectDetailScreen,
 		makeTicketDetailScreen,
 		popOne,
@@ -35,7 +34,6 @@
 	import ProjectListScreen from "./ProjectListScreen.svelte";
 	import ProjectDetailScreen from "./ProjectDetailScreen.svelte";
 	import TicketDetailScreen from "./TicketDetailScreen.svelte";
-	import GoalDetailScreen from "./GoalDetailScreen.svelte";
 
 	let {
 		plugin,
@@ -96,7 +94,6 @@
 	let listFilter = $state<ManageFilter>({ ...EMPTY_MANAGE_FILTER });
 	let listSort = $state<ManageSort>({ ...DEFAULT_ENTITY_SORT });
 	let listFilterExpanded = $state(false);
-	let collapsedGoals = $state<Set<string>>(new Set());
 
 	// キーボード操作(Phase U2): 「n」でインライン新規作成行へフォーカスを要求する外部トリガー
 	let focusNewRowToken = $state(0);
@@ -146,21 +143,9 @@
 		stack = pushScreen(stack, makeTicketDetailScreen(path));
 	}
 
-	function goToGoalDetail(path: string): void {
-		slideDirection = "push";
-		stack = pushScreen(stack, makeGoalDetailScreen(path));
-	}
-
 	// project-detail/ticket-detailのフレーム固有state(§2.3)は、スタック末尾を丸ごと差し替える形で更新する
 	function updateCurrentScreen(next: ManageScreen): void {
 		stack = [...stack.slice(0, -1), next];
-	}
-
-	function toggleGoal(key: string): void {
-		const next = new Set(collapsedGoals);
-		if (next.has(key)) next.delete(key);
-		else next.add(key);
-		collapsedGoals = next;
 	}
 
 	function changeListFilter(next: ManageFilter): void {
@@ -200,7 +185,6 @@
 			store: plugin.store,
 			onChooseProject: goToProjectDetail,
 			onChooseTicket: goToTicketDetail,
-			onChooseGoal: goToGoalDetail,
 		}).open();
 	}
 
@@ -310,14 +294,11 @@
 			{refreshTick}
 			filter={listFilter}
 			sort={listSort}
-			{collapsedGoals}
 			filterExpanded={listFilterExpanded}
 			onFilterChange={changeListFilter}
 			onFilterExpandedChange={(next) => (listFilterExpanded = next)}
 			onSortChange={changeListSort}
-			onToggleGoal={toggleGoal}
 			onNavigate={goToProjectDetail}
-			onNavigateGoal={goToGoalDetail}
 			{focusNewRowToken}
 		>
 			{#snippet toolbarExtra()}
@@ -338,16 +319,6 @@
 		/>
 	{:else if current.kind === "ticket-detail"}
 		<TicketDetailScreen {plugin} {refreshTick} screen={current} onScreenChange={updateCurrentScreen} />
-	{:else if current.kind === "goal-detail"}
-		<GoalDetailScreen
-			{plugin}
-			{refreshTick}
-			screen={current}
-			onScreenChange={updateCurrentScreen}
-			onNavigateProject={goToProjectDetail}
-			onOpenNote={openPath}
-			{focusNewRowToken}
-		/>
 	{/if}
 	</div>
 	{/key}

@@ -6,7 +6,6 @@ export type TicketStatus = (typeof TICKET_STATUSES)[number];
 export type WidgetId =
 	| "today-todo"
 	| "overdue"
-	| "active-goals"
 	| "active-projects"
 	| "active-tickets"
 	| "review-needed"
@@ -78,7 +77,6 @@ export const DEFAULT_SETTINGS: POSSettings = {
 		widgets: [
 			{ id: "today-todo", visible: true },
 			{ id: "overdue", visible: true },
-			{ id: "active-goals", visible: true },
 			{ id: "active-projects", visible: true },
 			{ id: "active-tickets", visible: true },
 			{ id: "review-needed", visible: true },

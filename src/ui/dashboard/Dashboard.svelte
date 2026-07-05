@@ -3,7 +3,7 @@
 	import type PersonalOSPlugin from "../../main";
 	import type { Todo } from "../../domain/todo";
 	import { t } from "../../i18n/ja";
-	import { makeGoalDetailScreen, makeProjectDetailScreen, makeTicketDetailScreen, resolveNavigateAction } from "../manage/manageNav";
+	import { makeProjectDetailScreen, makeTicketDetailScreen, resolveNavigateAction } from "../manage/manageNav";
 	import type { DashboardData } from "./dashboardData";
 	import TodayTodoWidget from "./widgets/TodayTodoWidget.svelte";
 	import OverdueWidget from "./widgets/OverdueWidget.svelte";
@@ -31,7 +31,7 @@
 
 	/**
 	 * ナビゲーション主動作(design-drilldown-nav.md §4.1)。
-	 * goal/project/ticketは対応する詳細画面へ、それ以外(review/resource/inbox)または修飾クリック時はノートを開く。
+	 * project/ticketは対応する詳細画面へ、それ以外(goal/review/resource/inbox)または修飾クリック時はノートを開く。
 	 */
 	function navigateOrOpen(path: string, modifierClick: boolean): void {
 		const entity = plugin.store.get(path);
@@ -42,10 +42,6 @@
 		}
 		if (action === "ticket-detail") {
 			void plugin.openManageAt(makeTicketDetailScreen(path));
-			return;
-		}
-		if (action === "goal-detail") {
-			void plugin.openManageAt(makeGoalDetailScreen(path));
 			return;
 		}
 		openPath(path);
@@ -94,7 +90,6 @@
 			<ol class="pos-manage-onboarding-steps">
 				<li>{t("onboarding.welcome.step1")}</li>
 				<li>{t("onboarding.welcome.step2")}</li>
-				<li>{t("onboarding.welcome.step3")}</li>
 			</ol>
 			<button type="button" class="pos-manage-onboarding-action" onclick={openManage}>
 				{t("onboarding.welcome.dashboardOpenManage")}
@@ -120,14 +115,6 @@
 					todos={$data.overdueTodos}
 					entities={$data.overdueEntities}
 					onToggle={toggleTodo}
-					onNavigate={handleNavigate}
-					onViewAll={viewAll}
-				/>
-			{:else if w.id === "active-goals"}
-				<ActiveEntitiesWidget
-					{plugin}
-					type="goal"
-					entities={$data.activeGoals}
 					onNavigate={handleNavigate}
 					onViewAll={viewAll}
 				/>

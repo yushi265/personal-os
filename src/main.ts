@@ -34,7 +34,7 @@ import { KanbanView, VIEW_TYPE_KANBAN } from "./ui/kanban/KanbanView";
 import { SearchView, VIEW_TYPE_SEARCH } from "./ui/search/SearchView";
 import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
 import { ManageView, VIEW_TYPE_MANAGE } from "./ui/manage/ManageView";
-import { makeGoalDetailScreen, makeProjectDetailScreen, makeTicketDetailScreen, type ManageScreen } from "./ui/manage/manageNav";
+import { makeProjectDetailScreen, makeTicketDetailScreen, type ManageScreen } from "./ui/manage/manageNav";
 import { EntitySwitcherModal } from "./ui/modals/EntitySwitcherModal";
 import { statusBarTodoTitle, serverStartedNotice, serverStartFailedNotice, migrateGoalsToLabelsNotice, t } from "./i18n/ja";
 import { TokenStore } from "./server/TokenStore";
@@ -496,13 +496,12 @@ export default class PersonalOSPlugin extends Plugin {
 		if (leaf.view instanceof ManageView) leaf.view.navigateTo(screen);
 	}
 
-	/** エンティティ版クイックスイッチャー(Phase U2)。goal/project/ticketいずれも管理Viewの詳細画面へ遷移する */
+	/** エンティティ版クイックスイッチャー(Phase U2)。project/ticketいずれも管理Viewの詳細画面へ遷移する */
 	openEntitySwitcher(): void {
 		new EntitySwitcherModal(this.app, {
 			store: this.store,
 			onChooseProject: (path) => void this.openManageAt(makeProjectDetailScreen(path)),
 			onChooseTicket: (path) => void this.openManageAt(makeTicketDetailScreen(path)),
-			onChooseGoal: (path) => void this.openManageAt(makeGoalDetailScreen(path)),
 		}).open();
 	}
 

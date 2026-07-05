@@ -32,8 +32,9 @@
 	} = $props();
 
 	const statusOptions = $derived(tab === "project" ? PROJECT_STATUSES : TICKET_STATUSES);
-	const parentOptions = $derived(tab === "project" ? plugin.store.listByType("goal") : plugin.store.listByType("project"));
-	const parentLabel = $derived(tab === "project" ? t("manage.filter.parentGoal") : t("manage.filter.parentProject"));
+	// Goal概念の廃止(design-remove-goal.md G2)によりProjectには親が無くなったため、親フィルタはticketタブ(親=project)のみが対象
+	const parentOptions = $derived(tab === "ticket" ? plugin.store.listByType("project") : []);
+	const parentLabel = t("manage.filter.parentProject");
 	const tagOptions = $derived(collectKnownTags(plugin.store));
 	const labelOptions = $derived(collectKnownLabels(plugin.store));
 

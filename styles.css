@@ -1359,82 +1359,6 @@
 	color: var(--text-faint);
 }
 
-.pos-manage-goal-section {
-	margin-bottom: var(--size-4-4);
-}
-
-.pos-manage-goal-header {
-	display: flex;
-	align-items: center;
-	gap: var(--size-4-2);
-	width: 100%;
-	background: var(--background-secondary);
-	padding: var(--size-4-2) var(--size-4-3);
-	border-radius: var(--radius-s);
-	transition: background-color 0.1s ease;
-}
-
-.pos-manage-goal-header:hover {
-	background: var(--background-modifier-hover);
-}
-
-/* 折りたたみ専用の独立したクリック領域(design: タイトル遷移とのクリック競合回避、lessons.md N1参照) */
-.pos-manage-goal-toggle-btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	background: transparent;
-	border: none;
-	box-shadow: none;
-	padding: var(--size-2-1);
-	cursor: pointer;
-}
-
-.pos-manage-goal-toggle {
-	display: inline-block;
-	color: var(--text-muted);
-	transition: transform 0.15s ease;
-}
-
-.pos-manage-goal-toggle-open {
-	transform: rotate(90deg);
-}
-
-.pos-manage-goal-title {
-	font-weight: var(--font-semibold, 600);
-	font-size: var(--font-ui-medium);
-	flex: 1;
-	min-width: 0;
-}
-
-.pos-manage-goal-status {
-	font-size: var(--font-ui-smaller);
-	color: var(--text-muted);
-}
-
-.pos-manage-goal-count {
-	font-size: var(--font-ui-smaller);
-	color: var(--text-muted);
-	background: var(--background-modifier-border);
-	padding: var(--size-2-1) var(--size-4-2);
-	border-radius: var(--radius-pill, 999px);
-}
-
-.pos-manage-goal-progress {
-	flex: 0 0 auto;
-	width: 96px;
-}
-
-.pos-manage-goal-new-btn {
-	cursor: pointer;
-}
-
-.pos-manage-goal-create-row {
-	margin-top: var(--size-4-4);
-	border-top: 1px solid var(--background-modifier-border);
-	padding-top: var(--size-4-3);
-}
-
 .pos-manage-placeholder {
 	color: var(--text-muted);
 	padding: var(--size-4-4) 0;
@@ -1841,7 +1765,6 @@
 
 /* ==== Obsidian UI V3: 数字のガタつき防止 ==== */
 
-.pos-manage-goal-count,
 .pos-row-badge,
 .pos-kanban-card-meta,
 .pos-preview-todo-row {

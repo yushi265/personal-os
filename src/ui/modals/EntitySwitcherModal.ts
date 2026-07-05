@@ -7,13 +7,12 @@ export interface EntitySwitcherModalOptions {
 	store: IndexStore;
 	onChooseProject: (path: string) => void;
 	onChooseTicket: (path: string) => void;
-	onChooseGoal: (path: string) => void;
 }
 
 /**
- * goal/project/ticket向けのクイックスイッチャー(Phase U2)。
+ * project/ticket向けのクイックスイッチャー(Phase U2)。
  * Obsidianネイティブのクイックスイッチャーと同じ見た目・あいまい検索をFuzzySuggestModal継承で得る。
- * archived除外。いずれのtypeも選択時は対応する詳細画面へ遷移する(呼び出し元がonChooseGoal/onChooseProject/onChooseTicketを実装する)。
+ * archived除外。いずれのtypeも選択時は対応する詳細画面へ遷移する(呼び出し元がonChooseProject/onChooseTicketを実装する)。
  */
 export class EntitySwitcherModal extends FuzzySuggestModal<Entity> {
 	constructor(
@@ -27,8 +26,7 @@ export class EntitySwitcherModal extends FuzzySuggestModal<Entity> {
 	getItems(): Entity[] {
 		const projects = this.opts.store.listByType("project").filter((e) => e.status !== "archived");
 		const tickets = this.opts.store.listByType("ticket").filter((e) => e.status !== "archived");
-		const goals = this.opts.store.listByType("goal").filter((e) => e.status !== "archived");
-		return [...projects, ...tickets, ...goals];
+		return [...projects, ...tickets];
 	}
 
 	getItemText(item: Entity): string {
@@ -47,6 +45,5 @@ export class EntitySwitcherModal extends FuzzySuggestModal<Entity> {
 	onChooseItem(item: Entity): void {
 		if (item.type === "project") this.opts.onChooseProject(item.path);
 		else if (item.type === "ticket") this.opts.onChooseTicket(item.path);
-		else this.opts.onChooseGoal(item.path);
 	}
 }

@@ -58,7 +58,7 @@ export class CreateEntityModal extends Modal {
 		private opts: CreateEntityModalOptions
 	) {
 		super(app);
-		this.type = opts.initialType ?? "goal";
+		this.type = opts.initialType ?? "project";
 		this.priority = opts.settings.defaultPriority;
 		this.parentPath = opts.initialParentPath;
 	}
@@ -80,7 +80,7 @@ export class CreateEntityModal extends Modal {
 
 		new Setting(contentEl).setName(t("modal.createEntity.type")).addDropdown((dropdown) =>
 			dropdown
-				.addOptions({ goal: "goal", project: "project", ticket: "ticket" })
+				.addOptions({ project: "project", ticket: "ticket" })
 				.setValue(this.type)
 				.onChange((value) => {
 					this.type = value as EntityType;
@@ -105,8 +105,7 @@ export class CreateEntityModal extends Modal {
 		titleInputEl?.focus();
 		if (titleInputEl) bindEnterSubmit(titleInputEl, () => void this.submit());
 
-		if (this.type === "project" || this.type === "ticket") {
-			const parentType: EntityType = this.type === "project" ? "goal" : "project";
+		if (this.type === "ticket") {
 			new Setting(contentEl).setName(t("modal.createEntity.parent")).addText((text) => {
 				if (this.parentPath) {
 					const parentEntity = this.opts.store.get(this.parentPath);
@@ -115,7 +114,7 @@ export class CreateEntityModal extends Modal {
 				new EntitySuggest(
 					this.app,
 					text.inputEl,
-					() => this.opts.store.listByType(parentType),
+					() => this.opts.store.listByType("project"),
 					(entity) => {
 						this.parentPath = entity.path;
 					}
@@ -180,7 +179,6 @@ export class CreateEntityModal extends Modal {
 			priority: this.priority,
 			due: this.due || undefined,
 			templateName: this.templateName || undefined,
-			goal: this.type === "project" ? this.parentPath : undefined,
 			project: this.type === "ticket" ? this.parentPath : undefined,
 		};
 

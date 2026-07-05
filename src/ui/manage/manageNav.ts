@@ -20,15 +20,7 @@ export type ManageScreen =
 			todoScope: "direct" | "all";
 			showDoneTodos: boolean;
 	  }
-	| { kind: "ticket-detail"; path: string; showDoneTodos: boolean }
-	| {
-			kind: "goal-detail";
-			path: string;
-			// ページ内設定(§2.3): project-detailのticketFilter/ticketSort/ticketFilterExpandedと同じ扱い
-			projectFilter: ManageFilter;
-			projectSort: ManageSort;
-			projectFilterExpanded: boolean;
-	  };
+	| { kind: "ticket-detail"; path: string; showDoneTodos: boolean };
 
 export function makeProjectDetailScreen(path: string): ManageScreen {
 	return {
@@ -44,16 +36,6 @@ export function makeProjectDetailScreen(path: string): ManageScreen {
 
 export function makeTicketDetailScreen(path: string): ManageScreen {
 	return { kind: "ticket-detail", path, showDoneTodos: false };
-}
-
-export function makeGoalDetailScreen(path: string): ManageScreen {
-	return {
-		kind: "goal-detail",
-		path,
-		projectFilter: { ...EMPTY_MANAGE_FILTER },
-		projectSort: { ...DEFAULT_ENTITY_SORT },
-		projectFilterExpanded: false,
-	};
 }
 
 /** 末尾に新しい画面を積む(常に新規状態で積む。同一pathの既存フレームがあっても再利用しない、§2.5参照) */
@@ -72,17 +54,17 @@ export function popOne(stack: ManageScreen[]): ManageScreen[] {
 	return popTo(stack, stack.length - 2);
 }
 
-export type NavigateAction = "project-detail" | "ticket-detail" | "goal-detail" | "open-note";
+export type NavigateAction = "project-detail" | "ticket-detail" | "open-note";
 
 /**
  * Dashboard等からの行クリック時の遷移先を決定する純粋関数(design-drilldown-nav.md §4.1)。
- * goal/project/ticketは対応する詳細画面へ、それ以外(review/resource/inbox、またはundefined=store未登録)
- * または修飾クリック時はノートを開く。
+ * project/ticketは対応する詳細画面へ、それ以外(goal/review/resource/inbox、またはundefined=store未登録)
+ * または修飾クリック時はノートを開く。goalは詳細画面が撤去された(design-remove-goal.md G2)ため、
+ * ノートを開くフォールバックに含まれる。
  */
 export function resolveNavigateAction(entityType: EntityType | undefined, modifierClick: boolean): NavigateAction {
 	if (!modifierClick && entityType === "project") return "project-detail";
 	if (!modifierClick && entityType === "ticket") return "ticket-detail";
-	if (!modifierClick && entityType === "goal") return "goal-detail";
 	return "open-note";
 }
 
@@ -103,7 +85,6 @@ export function screenPath(screen: ManageScreen): string | undefined {
 export function expectedTypeOf(screen: ManageScreen): EntityType | undefined {
 	if (screen.kind === "project-detail") return "project";
 	if (screen.kind === "ticket-detail") return "ticket";
-	if (screen.kind === "goal-detail") return "goal";
 	return undefined;
 }
 

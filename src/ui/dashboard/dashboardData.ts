@@ -28,7 +28,6 @@ export interface DashboardData {
 	overdueEntities: Entity[];
 	/** 上部statライン用(Phase V1): 未完了Todoの総数(todayTodos/overdueTodosは部分集合のため別途集計) */
 	openTodosCount: number;
-	activeGoals: Entity[];
 	activeProjects: Entity[];
 	activeTickets: Entity[];
 	reviewNeeded: Entity[];
@@ -90,7 +89,6 @@ export async function buildDashboardData(plugin: PersonalOSPlugin): Promise<Dash
 		overdueTodos: todoFeatures ? plugin.store.getAllTodos().filter((t) => isTodoOverdue(t, now)) : [],
 		overdueEntities: entities.filter((e) => isOverdue(e, now)),
 		openTodosCount: todoFeatures ? plugin.store.getAllTodos().filter((t) => !t.done).length : 0,
-		activeGoals: plugin.store.listByType("goal").filter((e) => e.status === "active"),
 		activeProjects: plugin.store.listByType("project").filter((e) => e.status === "active"),
 		activeTickets: plugin.store.listByType("ticket").filter((e) => e.status === "doing"),
 		reviewNeeded: entities.filter((e) => isReviewNeeded(e, now)),

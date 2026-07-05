@@ -74,9 +74,9 @@
 		return [{ value: "", label: t("manage.field.unset") }, ...PRIORITIES.map((p) => ({ value: p, label: p }))];
 	}
 
+	// Goal概念の廃止(design-remove-goal.md G2)によりProjectには親が無くなったため、親選択肢はticketタブ(親=project)のみが対象
 	function parentOptions(): { value: string; label: string }[] {
-		const parentType = tab === "project" ? "goal" : "project";
-		return plugin.store.listByType(parentType).map((e) => ({ value: e.path, label: e.title }));
+		return plugin.store.listByType("project").map((e) => ({ value: e.path, label: e.title }));
 	}
 
 	// ---- Entity書き込み経路(design-ui-first.md §4.2): statusのみEntityService、他はEntityFieldService ----
@@ -90,8 +90,7 @@
 		return plugin.entityFieldService.updateField(entity.path, "due", next);
 	}
 	function commitParent(entity: Entity, next: string | undefined): Promise<void> {
-		const key = tab === "project" ? "goal" : "project";
-		return plugin.entityFieldService.updateField(entity.path, key, next);
+		return plugin.entityFieldService.updateField(entity.path, "project", next);
 	}
 	function commitTitle(entity: Entity, next: string): Promise<void> {
 		return plugin.entityFieldService.updateField(entity.path, "title", next);
@@ -103,12 +102,10 @@
 		editTitleToken++;
 	}
 
-	// RowMenu「Goalを変更…」/「Projectを変更…」: ParentCell(列)が無い画面(showParentColumn=false)からの再割り当て導線
+	// RowMenu「Projectを変更…」: ParentCell(列)が無い画面(showParentColumn=false)からの再割り当て導線。ticketタブのみで使う
 	function changeParent(entity: Entity): void {
-		const parentType = tab === "project" ? "goal" : "project";
 		new ParentPickerModal(plugin.app, {
 			store: plugin.store,
-			parentType,
 			onChoose: (path) => void commitParent(entity, path),
 		}).open();
 	}
@@ -197,11 +194,7 @@
 		</td>
 		{#if showParentColumn}
 			<td class="pos-manage-cell-parent" onclick={(e) => e.stopPropagation()}>
-				<ParentCell
-					value={tab === "project" ? entity.goal : entity.project}
-					options={parentOptions()}
-					onCommit={(next) => commitParent(entity, next)}
-				/>
+				<ParentCell value={entity.project} options={parentOptions()} onCommit={(next) => commitParent(entity, next)} />
 			</td>
 		{/if}
 		<td class="pos-manage-cell-priority" onclick={(e) => e.stopPropagation()}>
@@ -226,8 +219,8 @@
 				onShowPreview={() => showPreview(entity.path)}
 				onRename={onNavigate ? requestRenameTitle : undefined}
 				onPromote={tab === "ticket" ? () => promoteEntity(entity) : undefined}
-				onChangeParent={() => changeParent(entity)}
-				changeParentLabel={tab === "project" ? t("manage.rowMenu.changeGoal") : t("manage.rowMenu.changeProject")}
+				onChangeParent={tab === "ticket" ? () => changeParent(entity) : undefined}
+				changeParentLabel={tab === "ticket" ? t("manage.rowMenu.changeProject") : undefined}
 				onMoveUp={onMoveUp}
 				onMoveDown={onMoveDown}
 				onArchive={() => archiveEntity(entity)}
