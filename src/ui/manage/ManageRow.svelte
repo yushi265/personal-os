@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Platform } from "obsidian";
+	import { Notice, Platform } from "obsidian";
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, validStatusesOf } from "../../domain/entity";
 	import type PersonalOSPlugin from "../../main";
@@ -73,6 +73,11 @@
 		return valid.map((s) => ({ value: s, label: names?.[s] ?? s }));
 	}
 
+	// RowMenu「▸ ステータス」: 現在値(選んでも無意味)とarchived(専用のArchive項目がある)を候補から除く
+	function changeStatusOptions(entity: Entity): { value: string; label: string }[] {
+		return statusOptions(entity).filter((o) => o.value !== entity.status && o.value !== "archived");
+	}
+
 	function priorityOptions(): { value: string; label: string }[] {
 		return [{ value: "", label: t("manage.field.unset") }, ...PRIORITIES.map((p) => ({ value: p, label: p }))];
 	}
@@ -85,6 +90,16 @@
 	// ---- Entity書き込み経路(design-ui-first.md §4.2): statusのみEntityService、他はEntityFieldService ----
 	function commitStatus(entity: Entity, next: string): Promise<void> {
 		return plugin.entityService.changeStatus(entity.path, next);
+	}
+
+	// RowMenu「▸ ステータス」からの変更: StatusCellと違い楽観的更新用の表示状態を持たないため、
+	// 失敗時はStatusCellと同じNoticeのみ出す(store側の再indexで表示は変更前のstatusに戻る)
+	async function changeStatusFromMenu(entity: Entity, next: string): Promise<void> {
+		try {
+			await commitStatus(entity, next);
+		} catch {
+			new Notice(t("manage.updateFailed"));
+		}
 	}
 	function commitPriority(entity: Entity, next: string): Promise<void> {
 		return plugin.entityFieldService.updateField(entity.path, "priority", next);
@@ -158,6 +173,8 @@
 		return {
 			onOpenNote: () => onOpen(entity.path),
 			onShowPreview: () => showPreview(entity.path),
+			statusOptions: changeStatusOptions(entity),
+			onChangeStatus: (next) => void changeStatusFromMenu(entity, next),
 			onRename: onNavigate ? requestRenameTitle : undefined,
 			onPromote: tab === "ticket" ? () => promoteEntity(entity) : undefined,
 			onChangeParent: tab === "ticket" ? () => changeParent(entity) : undefined,

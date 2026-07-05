@@ -22,10 +22,25 @@ export interface RowMenuActions {
 	onMoveUp?: () => void;
 	onMoveDown?: () => void;
 	onDelete: () => void;
+	/**
+	 * ステータス変更(長押し/⋮メニューへのステータス変更追加): 現在値とarchivedを除いた候補一覧。
+	 * KanbanCard.svelteの⋮メニューと表示形式(「▸ ラベル」/現在値は候補から除く)を揃えている。
+	 * 空配列またはundefinedならセクション自体を出さない。
+	 */
+	statusOptions?: { value: string; label: string }[];
+	onChangeStatus?: (next: string) => void;
 }
 
 export function buildRowMenu(actions: RowMenuActions): Menu {
 	const menu = new Menu();
+	if (actions.onChangeStatus && actions.statusOptions && actions.statusOptions.length > 0) {
+		for (const option of actions.statusOptions) {
+			menu.addItem((item) =>
+				item.setTitle(`▸ ${option.label}`).onClick(() => actions.onChangeStatus!(option.value))
+			);
+		}
+		menu.addSeparator();
+	}
 	menu.addItem((item) => item.setTitle(t("manage.rowMenu.openNote")).onClick(actions.onOpenNote));
 	menu.addItem((item) => item.setTitle(t("manage.rowMenu.showPreview")).onClick(actions.onShowPreview));
 	if (actions.onRename) {
