@@ -371,6 +371,7 @@ const MESSAGES = {
 	"modal.parentPicker.noneProject": "Projectなしにする",
 	"manage.toolbar.entitySwitcher": "プロジェクト/チケットを検索",
 	"manage.kbdHint": "⌨ ↑↓ 移動 / Enter 開く / n 新規作成 / Backspace 戻る",
+	"manage.mobileHint": "長押しでメニュー",
 
 	"onboarding.welcome.title": "Personal OSへようこそ",
 	"onboarding.welcome.step1": "① プロジェクトを作る",

@@ -821,6 +821,14 @@
 	font-size: var(--font-ui-smaller);
 }
 
+/* モバイル一覧下部の長押しヒント(design: モバイル長押しメニュー化)。⌨ヒント同様、控えめな1行に留める */
+.pos-manage-mobile-hint {
+	margin: var(--size-4-2) 0 0;
+	padding: 0 var(--size-4-2);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+}
+
 /* ---- スティッキーヘッダー(Phase U3) ---- */
 /* --pos-manage-nav-h / --pos-manage-toolbar-h はManage.svelteがResizeObserverで計測して.pos-manageに設定する */
 
@@ -1873,9 +1881,9 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 		display: none;
 	}
 
+	/* 長押しでRowMenuを開けるようになったため(design: モバイル長押しメニュー化)、⋮ボタン自体は不要 */
 	.pos-manage-cell-actions {
-		order: 5;
-		margin-left: auto;
+		display: none;
 	}
 
 	.pos-manage-cell-nav {
@@ -1955,9 +1963,9 @@ body.is-mobile .pos-manage-cell-labels:empty {
 	display: none;
 }
 
+/* 長押しでRowMenuを開けるようになったため(design: モバイル長押しメニュー化)、⋮ボタン自体は不要 */
 body.is-mobile .pos-manage-cell-actions {
-	order: 5;
-	margin-left: auto;
+	display: none;
 }
 
 body.is-mobile .pos-manage-cell-nav {
@@ -2009,12 +2017,10 @@ body.is-mobile .pos-preview-fields .pos-cell-text-input {
    アイコン専用ボタン(⋮/✎/›/戻る/×)は44×44pxの正方形を確保する。デスクトップは既存の40px(V3)のまま。 */
 
 body.is-mobile .pos-kanban-card-menu,
-body.is-mobile .pos-manage-row-menu-btn,
 body.is-mobile .pos-manage-nav-chevron,
 body.is-mobile .pos-manage-back-btn,
 body.is-mobile .pos-dashboard-refresh,
 body.is-mobile .pos-manage-entity-switcher-btn,
-body.is-mobile .pos-title-edit-btn,
 body.is-mobile .pos-tagchips-remove {
 	min-width: 44px;
 	min-height: 44px;
@@ -2028,9 +2034,10 @@ body.is-mobile .pos-tagchips-remove {
 }
 
 /* pos-title-edit-btnはデスクトップではホバー時のみ表示するプログレッシブエンハンスメントだが、
-   モバイルにはホバー概念が無いため常時表示に切り替える */
+   モバイルは長押しメニューの「名前を変更」が代替のため、ボタン自体を隠す
+   (design: モバイル長押しメニュー化) */
 body.is-mobile .pos-title-edit-btn {
-	opacity: 1;
+	display: none;
 }
 
 /* テキストボタン/チップ類は正方形化まではせず、タップしやすい高さ(44px)だけ確保する */

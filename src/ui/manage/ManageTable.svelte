@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Notice } from "obsidian";
+	import { Notice, Platform } from "obsidian";
 	import { computeOrderForInsert } from "../../domain/entity";
 	import { t, type MessageKey } from "../../i18n/ja";
 	import type PersonalOSPlugin from "../../main";
@@ -222,4 +222,7 @@
 			{/if}
 		</tbody>
 	</table>
+	{#if Platform.isMobile && rows.length > 0}
+		<p class="pos-manage-mobile-hint">{t("manage.mobileHint")}</p>
+	{/if}
 </div>

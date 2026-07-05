@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Platform } from "obsidian";
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, validStatusesOf } from "../../domain/entity";
 	import type PersonalOSPlugin from "../../main";
@@ -15,6 +16,8 @@
 	import RowMenu from "../components/RowMenu.svelte";
 	import RowBadges from "../components/RowBadges.svelte";
 	import ProgressIndicator from "../components/ProgressIndicator.svelte";
+	import { buildRowMenu, type RowMenuActions } from "../components/rowMenuBuilder";
+	import { longpress } from "../longpress";
 	import { entityProgressFraction, type ManageRowData, type ManageSort, type ManageTab } from "./manageData";
 
 	let {
@@ -149,6 +152,28 @@
 			todos: plugin.store.getTodos(entity.path).filter((todo) => !todo.done).length,
 		};
 	}
+
+	// RowMenu(⋮ボタン)とモバイル長押しメニューで同じ項目を出すための共有アクション定義(二重実装を避ける)
+	function rowMenuActions(entity: Entity): RowMenuActions {
+		return {
+			onOpenNote: () => onOpen(entity.path),
+			onShowPreview: () => showPreview(entity.path),
+			onRename: onNavigate ? requestRenameTitle : undefined,
+			onPromote: tab === "ticket" ? () => promoteEntity(entity) : undefined,
+			onChangeParent: tab === "ticket" ? () => changeParent(entity) : undefined,
+			changeParentLabel: tab === "ticket" ? t("manage.rowMenu.changeProject") : undefined,
+			onMoveUp,
+			onMoveDown,
+			onArchive: () => archiveEntity(entity),
+			onDelete: () => deleteEntity(entity),
+		};
+	}
+
+	// モバイル(design-reorder-and-notes.md追補): 長押しでRowMenuと同内容のMenuをタッチ座標に表示する。
+	// 発火後のtouchendでカードタップ(=onNavigate遷移)相当のclickは抑止される(longpress.ts側)
+	function openLongPressMenu(entity: Entity, x: number, y: number): void {
+		buildRowMenu(rowMenuActions(entity)).showAtPosition({ x, y });
+	}
 </script>
 
 {#if row.entity}
@@ -165,6 +190,7 @@
 		ondragover={onDragOverRow}
 		ondragleave={onDragLeaveRow}
 		ondrop={onDropRow}
+		use:longpress={{ enabled: Platform.isMobile, onLongPress: (x, y) => openLongPressMenu(entity, x, y) }}
 	>
 		<td
 			class="pos-manage-cell-drag"
@@ -226,18 +252,7 @@
 			{/each}
 		</td>
 		<td class="pos-manage-cell-actions" onclick={(e) => e.stopPropagation()}>
-			<RowMenu
-				onOpenNote={() => onOpen(entity.path)}
-				onShowPreview={() => showPreview(entity.path)}
-				onRename={onNavigate ? requestRenameTitle : undefined}
-				onPromote={tab === "ticket" ? () => promoteEntity(entity) : undefined}
-				onChangeParent={tab === "ticket" ? () => changeParent(entity) : undefined}
-				changeParentLabel={tab === "ticket" ? t("manage.rowMenu.changeProject") : undefined}
-				onMoveUp={onMoveUp}
-				onMoveDown={onMoveDown}
-				onArchive={() => archiveEntity(entity)}
-				onDelete={() => deleteEntity(entity)}
-			/>
+			<RowMenu {...rowMenuActions(entity)} />
 		</td>
 		{#if onNavigate}
 			<td class="pos-manage-nav-cell pos-manage-cell-nav" onclick={(e) => e.stopPropagation()}>
