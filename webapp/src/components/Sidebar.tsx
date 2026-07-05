@@ -58,7 +58,9 @@ export function Sidebar({ connected }: { connected: boolean }) {
 
   return (
     <aside
-      className="flex h-screen shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 ease-in-out"
+      // ページ地(--bg)とサイドバー(--surface)が同トーンになったぶん、右方向のうっすらとした影で
+      // メイン領域との境目を補強する(darkはborderの明度差が効くため影はほぼ効かない=補助として無害)。
+      className="flex h-screen shrink-0 flex-col border-r border-border bg-surface shadow-[2px_0_8px_rgba(0,0,0,0.03)] transition-[width] duration-200 ease-in-out dark:shadow-[2px_0_8px_rgba(0,0,0,0.4)]"
       style={{ width: collapsed ? COLLAPSED_WIDTH : OPEN_WIDTH }}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 px-4">

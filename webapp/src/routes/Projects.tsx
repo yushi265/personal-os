@@ -184,7 +184,7 @@ export function Projects() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <SortableColumnHeader
           columns={PROJECT_COLUMNS}
           sort={sort}

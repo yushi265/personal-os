@@ -50,17 +50,19 @@ export default {
           foreground: "var(--fg)",
         },
         popover: {
-          DEFAULT: "var(--surface)",
+          // ポップオーバー/セレクト/コマンドパレット/ダイアログは浮遊レイヤーとしてページ地より明るい--elevatedに乗せる
+          DEFAULT: "var(--elevated)",
           foreground: "var(--fg)",
         },
         card: {
-          DEFAULT: "var(--surface)",
+          DEFAULT: "var(--elevated)",
           foreground: "var(--fg)",
         },
         // デザインHTMLの生トークン名をそのまま使えるようにするエイリアス
         bg: "var(--bg)",
         fg: "var(--fg)",
         surface: "var(--surface)",
+        elevated: "var(--elevated)",
         hairline: "var(--hairline)",
         faint: "var(--faint)",
         ghost: "var(--ghost)",
@@ -70,6 +72,13 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      // --shadow-*トークン(index.css)経由の多層シャドウ。既存のshadow-sm/md/lgクラスがそのまま
+      // Card/Input/Popover/Dialog等の立体感トークンを参照するようになる(コンポーネント側の変更を最小化)。
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
       },
       keyframes: {
         shimmer: {

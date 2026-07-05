@@ -48,8 +48,10 @@
    同じ変数を指すよう再マッピングしている。 */
 @layer base {
   :root {
-    --bg: #ffffff;
+    /* ページ全体の地(canvas)。カード類は下の--elevatedでこれより明るい面として浮かせる */
+    --bg: #fafafa;
     --surface: #fafafa;
+    --elevated: #ffffff;
     --border: #eaeaea;
     --hairline: #f2f2f2;
     --fg: #171717;
@@ -60,11 +62,17 @@
     --destructive: #e5484d;
     --destructive-foreground: #ffffff;
     --radius: 0.5rem;
+    /* 立体感トークン: カード・ポップオーバー・ダイアログ等が参照する多層シャドウ(奥行き用に2〜3枚重ね) */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.05), 0 10px 24px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.06), 0 20px 48px rgba(0, 0, 0, 0.12);
   }
 
   .dark {
     --bg: #000000;
     --surface: #0a0a0a;
+    /* darkは影がほぼ見えないため、--surfaceよりわずかに明るい面を「浮いている」手がかりにする */
+    --elevated: #111111;
     --border: #262626;
     --hairline: #1a1a1a;
     --fg: #ededed;
@@ -75,6 +83,10 @@
     --accent: #1fbf6e;
     --destructive: #e5484d;
     --destructive-foreground: #ffffff;
+    /* dark影は明度差で浮かせるのが主、影は黒背景に沈むための補助(白アルファでうっすら縁取り) */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.07);
   }
 }
 
@@ -98,6 +110,14 @@ body,
 [class*="border-"],
 [class*="text-"] {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
+}
+
+/* sonnerのトースト(main.tsxでToaster配置)はTailwindコンポーネントを経由しないため、
+   浮遊レイヤーとして他のポップオーバー/ダイアログと同じ--elevated背景+shadow-lgをここで直接当てる。 */
+[data-sonner-toast] {
+  background: var(--elevated) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

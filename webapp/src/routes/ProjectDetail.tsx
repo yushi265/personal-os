@@ -182,7 +182,7 @@ export function ProjectDetail() {
         <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-faint">
           {t("webapp.detail.tickets")} — {tickets.length}
         </span>
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
           <SortableColumnHeader
             columns={TICKET_COLUMNS}
             sort={sort}

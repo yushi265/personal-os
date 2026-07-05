@@ -97,7 +97,7 @@ export function Home() {
         return (
           <motion.div key={card.label} variants={staggerItem} transition={listTransition(!!reduced)}>
             <Link to={card.to}>
-              <Card className="group border-border bg-bg transition-all duration-150 hover:-translate-y-0.5 hover:border-fg/20">
+              <Card className="group border-border transition-all duration-150 hover:-translate-y-0.5 hover:border-fg/20 hover:shadow-md">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardDescription className="font-mono text-[11px] uppercase tracking-[0.06em]">{card.label}</CardDescription>
