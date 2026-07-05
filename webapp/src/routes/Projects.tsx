@@ -15,8 +15,19 @@ import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DueLabel } from "@/components/DueLabel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { EmptyState } from "@/components/EmptyState";
+import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
 import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
+import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
 import { t } from "@i18n/ja";
+
+// ProjectRow/TicketRow(ProjectDetail.tsx)の行セル幅と揃える(SortableColumnHeaderの列位置合わせ)
+const PROJECT_COLUMNS: SortableColumn[] = [
+  { key: "title", label: t("modal.createEntity.titleField"), className: "w-[300px] shrink-0 text-left" },
+  { key: "status", label: t("preview.field.status"), className: "w-24 shrink-0 text-left" },
+  { key: "priority", label: t("preview.field.priority"), className: "w-20 shrink-0 text-left" },
+  { key: "progress", label: t("preview.field.progress"), className: "w-40 shrink-0 text-left" },
+  { key: "due", label: t("preview.field.due"), className: "w-24 shrink-0 text-left" },
+];
 
 const MotionRow = motion.create("div");
 
@@ -79,6 +90,7 @@ export function Projects() {
   const [keyword, setKeyword] = React.useState("");
   const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
   const [newProjectTitle, setNewProjectTitle] = React.useState("");
+  const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
   const now = today();
   const reduced = useReducedMotion();
 
@@ -116,7 +128,10 @@ export function Projects() {
     });
   };
 
-  const visibleProjects = (projects ?? []).filter((p) => matchesFilter(p, keyword, statuses));
+  const visibleProjects = sortEntities(
+    (projects ?? []).filter((p) => matchesFilter(p, keyword, statuses)),
+    sort
+  );
 
   const submitNewProject = () => {
     const title = newProjectTitle.trim();
@@ -170,6 +185,11 @@ export function Projects() {
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border">
+        <SortableColumnHeader
+          columns={PROJECT_COLUMNS}
+          sort={sort}
+          onSort={(key) => setSort((prev) => nextSortState(prev, key))}
+        />
         <motion.div variants={staggerContainer} initial="initial" animate="animate">
           {visibleProjects.map((project) => (
             <ProjectRow

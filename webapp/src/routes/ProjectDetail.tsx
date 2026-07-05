@@ -30,10 +30,21 @@ import { NotFoundScreen } from "@/components/NotFoundScreen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
 import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
+import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
 import { confirmArchiveMessage, confirmDeleteMessage, t } from "@i18n/ja";
 
 const MotionRow = motion.create("div");
+
+// TicketRowの行セル幅と揃える(SortableColumnHeaderの列位置合わせ)
+const TICKET_COLUMNS: SortableColumn[] = [
+  { key: "title", label: t("modal.createEntity.titleField"), className: "min-w-0 flex-1 text-left" },
+  { key: "status", label: t("preview.field.status"), className: "w-[110px] shrink-0 text-left" },
+  { key: "priority", label: t("preview.field.priority"), className: "w-[90px] shrink-0 text-left" },
+  { key: "progress", label: t("preview.field.progress"), className: "w-[200px] shrink-0 text-left" },
+  { key: "due", label: t("preview.field.due"), className: "w-20 shrink-0 text-left" },
+];
 
 // チケットテーブル行(Projects.tsxのProjectRowと同様、行ごとのmutationフック呼び出しのため専用コンポーネントに分離)。
 function TicketRow({
@@ -94,6 +105,7 @@ export function ProjectDetail() {
   const [todoScope, setTodoScope] = React.useState<"direct" | "all">("direct");
   const [confirmAction, setConfirmAction] = React.useState<"archive" | "delete" | null>(null);
   const [newTicketTitle, setNewTicketTitle] = React.useState("");
+  const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
   const reduced = useReducedMotion();
 
   if (entityQuery.isError) {
@@ -113,7 +125,10 @@ export function ProjectDetail() {
   }
 
   const entity = entityQuery.data;
-  const tickets = (childrenQuery.data ?? []).filter((c) => c.type === "ticket");
+  const tickets = sortEntities(
+    (childrenQuery.data ?? []).filter((c) => c.type === "ticket"),
+    sort
+  );
   const progress = entity.progress ?? 0;
 
   const submitNewTicket = () => {
@@ -168,6 +183,11 @@ export function ProjectDetail() {
           {t("webapp.detail.tickets")} — {tickets.length}
         </span>
         <div className="overflow-hidden rounded-lg border border-border">
+          <SortableColumnHeader
+            columns={TICKET_COLUMNS}
+            sort={sort}
+            onSort={(key) => setSort((prev) => nextSortState(prev, key))}
+          />
           <motion.div variants={staggerContainer} initial="initial" animate="animate">
             {tickets.map((ticket) => (
               <TicketRow
