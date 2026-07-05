@@ -1,5 +1,19 @@
 # Personal OS 実装 TODO
 
+## Goal概念の廃止(2026-07-05 ユーザー確定: 定期レビュー予定なし、分類はラベルで)
+
+方針: 階層をProject→Ticket→Todoの3層に。既存データ非破壊(goal→labels変換コマンド、GoalノートはArchive退避、type:goalのパース互換は維持)
+
+- [x] Phase G1: 移行コマンド+domain/services整理(migrate-goals-to-labels / create-goal廃止 / 互換残置)+ テスト6件(累計419件)→ commit `3b66340`
+- [x] Phase G2: Obsidian UI撤去(フラット一覧化 / GoalDetailScreen・Active Goals Widget・goal系導線の削除 / -886行)テスト403件全パス → commit `28dc3ea`
+- [x] Phase G3: webapp+API撤去(GoalDetailルート / group=goal / ホーム集計)+ 受け入れ確認、テスト397件全パス → commit `d6c9e90`
+
+### Goal廃止 完了レビュー(2026-07-05)
+
+- G1〜G3完了。階層は Project→Ticket→Todo の3層に。テスト397件全パス、Obsidian+webapp両対応、テストVault反映済み
+- 互換維持: type:goalのパース / goal:クエリのSavedView / EntityFieldServiceのgoalキー / migrate-goals-to-labelsコマンド(冪等)
+- ユーザー実行事項: Cmd+P →「Migrate goals to labels」を1回実行(既存プロジェクトのgoal→labels変換+GoalノートをArchiveへ)
+
 ## フィードバック対応第2弾(2026-07-04)
 
 - [x] Phase F1: ノート開くボタン撤去 / Enter作成の即時反映バグ(IndexStore楽観upsert+dataview:metadata-change購読)/ 削除ボタン赤トーンダウン / statusソート / Goal・Project付け替えメニュー + テスト6件(累計349件)→ commit `eab8170`
