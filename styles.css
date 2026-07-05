@@ -1882,12 +1882,12 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 	}
 
 	/* 長押しでRowMenuを開けるようになったため(design: モバイル長押しメニュー化)、⋮ボタン自体は不要 */
-	.pos-manage-cell-actions {
+	.pos-manage-table .pos-manage-cell-actions {
 		display: none;
 	}
 
 	/* カードタップ自体で遷移できるため冗長(ユーザーフィードバック): ›シェブロンも非表示 */
-	.pos-manage-cell-nav {
+	.pos-manage-table .pos-manage-cell-nav {
 		display: none;
 	}
 }
@@ -1963,12 +1963,12 @@ body.is-mobile .pos-manage-cell-labels:empty {
 }
 
 /* 長押しでRowMenuを開けるようになったため(design: モバイル長押しメニュー化)、⋮ボタン自体は不要 */
-body.is-mobile .pos-manage-cell-actions {
+body.is-mobile .pos-manage-table .pos-manage-cell-actions {
 	display: none;
 }
 
 /* カードタップ自体で遷移できるため冗長(ユーザーフィードバック): ›シェブロンも非表示 */
-body.is-mobile .pos-manage-cell-nav {
+body.is-mobile .pos-manage-table .pos-manage-cell-nav {
 	display: none;
 }
 
