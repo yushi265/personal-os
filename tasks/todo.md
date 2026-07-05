@@ -1,5 +1,10 @@
 # Personal OS 実装 TODO
 
+## Blockers概念の廃止(2026-07-05 ユーザー確定)
+
+- 方針: 読み取り・UI・判定を撤去。既存データは未知プロパティとしてextra保持(ファイル無変更・移行不要)。「待ちの理由」はstatus waiting+コメントで代替
+- [x] Phase B廃止: isBlocked/Blocked Widget/⛔バッジ/BlockerList(Obsidian+webapp)/Exportセクション撤去、テスト427件全パス → commit `a4c7d64`
+
 ## Goal概念の廃止(2026-07-05 ユーザー確定: 定期レビュー予定なし、分類はラベルで)
 
 方針: 階層をProject→Ticket→Todoの3層に。既存データ非破壊(goal→labels変換コマンド、GoalノートはArchive退避、type:goalのパース互換は維持)
