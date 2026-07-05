@@ -18,19 +18,14 @@ interface SummaryCardDef {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// tone別のグラデーション(design P6-C9)。ライト/ダーク両テーマで破綻しないよう彩度低めのfrom/toに留める。
-const TONE_GRADIENT: Record<SummaryCardDef["tone"], string> = {
-  default: "from-sky-500/10 to-sky-500/0",
-  danger: "from-red-500/15 to-red-500/0",
-  warning: "from-amber-500/15 to-amber-500/0",
-  accent: "from-violet-500/15 to-violet-500/0",
-};
-
-const TONE_ICON_CLASS: Record<SummaryCardDef["tone"], string> = {
-  default: "text-sky-600 dark:text-sky-400",
-  danger: "text-red-600 dark:text-red-400",
+// Geist案(design-refs/geist-final.dc.html)は白黒基調+控えめなアクセントの世界観のため、
+// 旧デザイン(P6-C9)の彩度高めのグラデーション背景は撤去する。トーン別の強調は「値が1件以上ある時だけ
+// 該当色にする」アイコン/数値の色分けのみに絞る。
+const TONE_ACCENT_CLASS: Record<SummaryCardDef["tone"], string> = {
+  default: "text-muted-foreground",
+  danger: "text-destructive",
   warning: "text-amber-600 dark:text-amber-400",
-  accent: "text-violet-600 dark:text-violet-400",
+  accent: "text-brand",
 };
 
 // ホーム画面(design-browser-ui.md §6.2、§9 P4行「5. ホームからの詳細ジャンプ」)。
@@ -102,20 +97,20 @@ export function Home() {
         return (
           <motion.div key={card.label} variants={staggerItem} transition={listTransition(!!reduced)}>
             <Link to={card.to}>
-              <Card
-                className={`group relative overflow-hidden bg-gradient-to-br transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md ${TONE_GRADIENT[card.tone]}`}
-              >
+              <Card className="group border-border bg-bg transition-all duration-150 hover:-translate-y-0.5 hover:border-fg/20">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardDescription>{card.label}</CardDescription>
-                    <Icon className={`h-4 w-4 ${TONE_ICON_CLASS[card.tone]}`} />
+                    <CardDescription className="font-mono text-[11px] uppercase tracking-[0.06em]">{card.label}</CardDescription>
+                    <Icon
+                      className={`h-4 w-4 text-faint ${
+                        (card.tone === "danger" || card.tone === "warning") && card.value > 0 ? TONE_ACCENT_CLASS[card.tone] : ""
+                      }`}
+                    />
                   </div>
                   <CardTitle
-                    className={
-                      (card.tone === "danger" || card.tone === "warning") && card.value > 0
-                        ? TONE_ICON_CLASS[card.tone]
-                        : undefined
-                    }
+                    className={`font-mono ${
+                      (card.tone === "danger" || card.tone === "warning") && card.value > 0 ? TONE_ACCENT_CLASS[card.tone] : ""
+                    }`}
                   >
                     <CountUp value={card.value} />
                   </CardTitle>

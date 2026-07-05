@@ -54,7 +54,7 @@ export function NotePanel({ path }: NotePanelProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-muted-foreground">{t("preview.section.note")}</h3>
+      <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-faint">{t("preview.section.note")}</span>
       <div className="space-y-1">
         <Textarea
           value={text}
@@ -62,6 +62,7 @@ export function NotePanel({ path }: NotePanelProps) {
           onBlur={handleBlur}
           placeholder={t("note.placeholder")}
           rows={3}
+          className="min-h-14 rounded-lg text-[13px]"
         />
         <div className="flex h-4 justify-end text-xs text-muted-foreground">{statusText}</div>
       </div>

@@ -24,7 +24,7 @@ export function DateEdit({ value, today, onCommit }: DateEditProps) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="rounded px-1 py-0.5 hover:bg-accent"
+          className="rounded px-1 py-0.5 text-[13px] hover:bg-accent"
           onClick={(e) => e.stopPropagation()}
         >
           <DueLabel due={value} today={today} />

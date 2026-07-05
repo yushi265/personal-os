@@ -21,11 +21,13 @@ interface TodoListPanelProps {
   parent: string;
   scope: "direct" | "all";
   today: string;
+  /** 直下/すべてのセグメントなど、見出し行に並べる追加コントロール(design-refs/geist-final.dc.html §プロジェクト詳細Todo列)。 */
+  scopeControl?: React.ReactNode;
 }
 
 // Todo一覧+全操作(完了トグル/text・due・priorityインライン編集/削除/昇格/追加)。design §9 P4行、TodoList.svelte互換。
 // design P6-B4: 完了チェックのマイクロインタラクション(spring・取り消し線・行フェード)+全件完了時の小さなお祝い演出。
-export function TodoListPanel({ parent, scope, today }: TodoListPanelProps) {
+export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPanelProps) {
   const { data: todos, isLoading } = useTodos(parent, scope);
   const toggle = useToggleTodo();
   const update = useUpdateTodo();
@@ -86,13 +88,16 @@ export function TodoListPanel({ parent, scope, today }: TodoListPanelProps) {
   };
 
   return (
-    <div className="relative space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground">{t("preview.section.todos")}</h3>
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Checkbox checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />
-          {t("manage.filter.showDone")}
-        </label>
+    <div className="relative space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-faint">{t("preview.section.todos")}</span>
+        <div className="flex items-center gap-3">
+          {scopeControl}
+          <label className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <Checkbox checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />
+            {t("manage.filter.showDone")}
+          </label>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -109,7 +114,11 @@ export function TodoListPanel({ parent, scope, today }: TodoListPanelProps) {
         )}
       </AnimatePresence>
 
-      {visible.length === 0 && <p className="text-sm text-muted-foreground">{t("preview.empty.todos")}</p>}
+      {visible.length === 0 && (
+        <div className="rounded-lg border border-dashed border-border p-[18px] text-center text-[13px] text-faint">
+          {t("preview.empty.todos")}
+        </div>
+      )}
 
       <ul className="space-y-1">
         <AnimatePresence initial={false}>

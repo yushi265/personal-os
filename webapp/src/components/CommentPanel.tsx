@@ -41,7 +41,7 @@ export function CommentPanel({ path }: CommentPanelProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-muted-foreground">{t("preview.section.comment")}</h3>
+      <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-faint">{t("preview.section.comment")}</span>
 
       <div className="space-y-1">
         <Textarea
@@ -55,6 +55,7 @@ export function CommentPanel({ path }: CommentPanelProps) {
           }}
           placeholder={t("comment.placeholder")}
           rows={2}
+          className="rounded-lg text-[13px]"
         />
         <div className="flex justify-end">
           <Button size="sm" onClick={submitAdd} disabled={!draft.trim()}>

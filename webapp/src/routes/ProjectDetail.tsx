@@ -7,7 +7,6 @@ import { PROJECT_STATUSES } from "@domain/entity";
 import { today } from "@domain/date";
 import { ApiError } from "@/api/client";
 import { useEntity, useChildren } from "@/hooks/useEntity";
-import { useMeta } from "@/hooks/useMeta";
 import {
   useArchiveEntity,
   useChangeEntityStatus,
@@ -19,6 +18,10 @@ import { TitleEditable } from "@/components/EditableCell/TitleEditable";
 import { StatusSelect } from "@/components/EditableCell/StatusSelect";
 import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DateEdit } from "@/components/EditableCell/DateEdit";
+import { PropertyLabel } from "@/components/PropertyLabel";
+import { SegmentedControl } from "@/components/SegmentedControl";
+import { StatusBadge } from "@/components/StatusBadge";
+import { PriorityBadge } from "@/components/PriorityBadge";
 import { ProgressBar } from "@/components/ProgressBar";
 import { DueLabel } from "@/components/DueLabel";
 import { TodoListPanel } from "@/components/TodoListPanel";
@@ -26,17 +29,15 @@ import { NotePanel } from "@/components/NotePanel";
 import { CommentPanel } from "@/components/CommentPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NotFoundScreen } from "@/components/NotFoundScreen";
-import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { obsidianOpenUri } from "@/lib/obsidian";
 import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { confirmArchiveMessage, confirmDeleteMessage, t } from "@i18n/ja";
 
-const MotionTableRow = motion.create(TableRow);
+const MotionRow = motion.create("div");
 
-// プロジェクト詳細画面(design-browser-ui.md §9 P4行、requirements §3.2/§3.3)。
+// プロジェクト詳細画面(design-refs/geist-final.dc.html §プロジェクト詳細、requirements §3.2/§3.3)。
 export function ProjectDetail() {
   const { path: encodedPath } = useParams();
   const path = encodedPath ? decodeURIComponent(encodedPath) : "";
@@ -45,7 +46,6 @@ export function ProjectDetail() {
 
   const entityQuery = useEntity(path);
   const childrenQuery = useChildren(path);
-  const { data: meta } = useMeta();
 
   const updateField = useUpdateEntityField(entityQuery.data);
   const changeStatus = useChangeEntityStatus(entityQuery.data);
@@ -76,6 +76,7 @@ export function ProjectDetail() {
 
   const entity = entityQuery.data;
   const tickets = (childrenQuery.data ?? []).filter((c) => c.type === "ticket");
+  const progress = entity.progress ?? 0;
 
   const submitNewTicket = () => {
     if (!newTicketTitle.trim()) return;
@@ -86,115 +87,113 @@ export function ProjectDetail() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <TitleEditable
-            value={entity.title}
-            as="h1"
-            className="text-2xl font-semibold"
-            onCommit={(title) => updateField.mutate({ key: "title", value: title })}
-          />
-          {meta && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={obsidianOpenUri(meta.vaultName, entity.path)}>{t("webapp.detail.openInObsidian")}</a>
-            </Button>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <StatusSelect status={entity.status} options={PROJECT_STATUSES} onCommit={(next) => changeStatus.mutate(next)} />
-          <PrioritySelect priority={entity.priority} onCommit={(priority) => updateField.mutate({ key: "priority", value: priority })} />
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground">{t("preview.field.due")}</span>
+    <div className="space-y-8">
+      <div className="space-y-5 border-b border-border pb-7">
+        <TitleEditable
+          value={entity.title}
+          as="h1"
+          className="text-[28px] font-semibold tracking-[-0.03em]"
+          onCommit={(title) => updateField.mutate({ key: "title", value: title })}
+        />
+        <div className="flex flex-wrap items-end gap-12">
+          <div className="flex flex-col gap-1.5">
+            <PropertyLabel>{t("preview.field.status")}</PropertyLabel>
+            <StatusSelect status={entity.status} options={PROJECT_STATUSES} onCommit={(next) => changeStatus.mutate(next)} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <PropertyLabel>{t("preview.field.priority")}</PropertyLabel>
+            <PrioritySelect priority={entity.priority} onCommit={(priority) => updateField.mutate({ key: "priority", value: priority })} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <PropertyLabel>{t("preview.field.due")}</PropertyLabel>
             <DateEdit value={entity.due} today={now} onCommit={(due) => updateField.mutate({ key: "due", value: due })} />
           </div>
-          <ProgressBar value={entity.progress} />
-        </div>
-        <div className="flex gap-2 pt-1">
-          <Button variant="outline" size="sm" onClick={() => setConfirmAction("archive")}>
-            {t("preview.action.archive")}
-          </Button>
-          <Button variant="outline" size="sm" className="text-destructive" onClick={() => setConfirmAction("delete")}>
-            {t("preview.action.delete")}
-          </Button>
+          <div className="flex min-w-[200px] flex-1 flex-col gap-1.5">
+            <PropertyLabel>
+              {t("preview.field.progress")} — {progress}%
+            </PropertyLabel>
+            <ProgressBar value={entity.progress} showPercent={false} className="max-w-[260px]" />
+          </div>
+          <div className="ml-auto flex shrink-0 gap-2">
+            <Button variant="outline" size="sm" className="h-8" onClick={() => setConfirmAction("archive")}>
+              {t("preview.action.archive")}
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 text-destructive" onClick={() => setConfirmAction("delete")}>
+              {t("preview.action.delete")}
+            </Button>
+          </div>
         </div>
       </div>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-medium text-muted-foreground">{t("webapp.detail.tickets")}</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Due</TableHead>
-              <TableHead className="w-6" />
-            </TableRow>
-          </TableHeader>
-          <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
+        <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-faint">
+          {t("webapp.detail.tickets")} — {tickets.length}
+        </span>
+        <div className="overflow-hidden rounded-lg border border-border">
+          <motion.div variants={staggerContainer} initial="initial" animate="animate">
             {tickets.map((ticket) => (
-              <MotionTableRow
+              <MotionRow
                 key={ticket.path}
                 variants={staggerItem}
                 transition={listTransition(!!reduced)}
-                className="group cursor-pointer"
+                className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
                 onClick={() => navigate(`/tickets/${encodeURIComponent(ticket.path)}`)}
               >
-                <TableCell className="font-medium">{ticket.title}</TableCell>
-                <TableCell>
-                  <span className="rounded-full border px-2.5 py-0.5 text-xs font-semibold">{ticket.status}</span>
-                </TableCell>
-                <TableCell>{ticket.priority ?? "—"}</TableCell>
-                <TableCell>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{ticket.title}</span>
+                <span className="w-[110px] shrink-0">
+                  <StatusBadge status={ticket.status} />
+                </span>
+                <span className="w-[90px] shrink-0">
+                  <PriorityBadge priority={ticket.priority} />
+                </span>
+                <span className="flex w-[200px] shrink-0 items-center gap-2">
                   <ProgressBar value={ticket.progress} />
-                </TableCell>
-                <TableCell>
+                </span>
+                <span className="w-20 shrink-0 font-mono text-xs">
                   <DueLabel due={ticket.due} today={now} />
-                </TableCell>
-                <TableCell>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
-                </TableCell>
-              </MotionTableRow>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
+              </MotionRow>
             ))}
-            <TableRow>
-              <TableCell colSpan={6}>
-                <Input
-                  value={newTicketTitle}
-                  onChange={(e) => setNewTicketTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.nativeEvent.isComposing) submitNewTicket();
-                  }}
-                  placeholder={t("webapp.detail.addTicketPlaceholder")}
-                  className="h-8 border-none bg-transparent shadow-none focus-visible:ring-0"
-                />
-              </TableCell>
-            </TableRow>
-          </motion.tbody>
-        </Table>
-      </section>
-
-      <section className="space-y-2">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">{t("manage.projectDetail.todoScope")}</span>
-          <Button variant={todoScope === "direct" ? "secondary" : "ghost"} size="sm" onClick={() => setTodoScope("direct")}>
-            {t("manage.projectDetail.scopeDirect")}
-          </Button>
-          <Button variant={todoScope === "all" ? "secondary" : "ghost"} size="sm" onClick={() => setTodoScope("all")}>
-            {t("manage.projectDetail.scopeAll")}
-          </Button>
+            <div className="flex h-10 cursor-text items-center px-5">
+              <Input
+                value={newTicketTitle}
+                onChange={(e) => setNewTicketTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) submitNewTicket();
+                }}
+                placeholder={t("webapp.detail.addTicketPlaceholder")}
+                className="h-full border-none bg-transparent px-0 text-[13px] shadow-none focus-visible:ring-0"
+              />
+            </div>
+          </motion.div>
         </div>
-        <TodoListPanel parent={path} scope={todoScope} today={now} />
       </section>
 
-      <section>
-        <NotePanel path={path} />
-      </section>
+      <div className="flex flex-col gap-8 lg:flex-row">
+        <section className="flex-1">
+          <TodoListPanel
+            parent={path}
+            scope={todoScope}
+            today={now}
+            scopeControl={
+              <SegmentedControl
+                value={todoScope}
+                onChange={setTodoScope}
+                options={[
+                  { value: "direct", label: t("manage.projectDetail.scopeDirect") },
+                  { value: "all", label: t("manage.projectDetail.scopeAll") },
+                ]}
+              />
+            }
+          />
+        </section>
 
-      <section>
-        <CommentPanel path={path} />
-      </section>
+        <section className="flex-1 space-y-6">
+          <NotePanel path={path} />
+          <CommentPanel path={path} />
+        </section>
+      </div>
 
       <ConfirmDialog
         open={confirmAction === "archive"}
