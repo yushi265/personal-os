@@ -16,7 +16,19 @@ function invalidateForPath(queryClient: QueryClient, path: string): void {
   queryClient.invalidateQueries({ queryKey: ["note", path] });
 
   const cached = queryClient.getQueryData<Entity>(["entity", path]);
-  queryClient.invalidateQueries({ queryKey: cached ? ["entities", cached.type] : ["entities"] });
+  if (cached) {
+    queryClient.invalidateQueries({ queryKey: ["entities", cached.type] });
+    // 親の子一覧はpathからではなくcached.projectから辿る必要があり、["entity", path]の前方一致には含まれない
+    if (cached.project) queryClient.invalidateQueries({ queryKey: ["entity", cached.project, "children"] });
+  } else {
+    // 作成直後などまだ["entity", path]を一度も取得しておらずキャッシュが無い場合、type・親projectが分からないため
+    // ["entities"]全体に加えて「children」を含む全キー([\"entity\", *, \"children\"])を広めに無効化する。
+    // 過剰無効化にはなるが、どの親一覧に新規entityが属すか特定できない以上、正しさを優先する。
+    queryClient.invalidateQueries({ queryKey: ["entities"] });
+    queryClient.invalidateQueries({
+      predicate: (query) => query.queryKey[0] === "entity" && query.queryKey[2] === "children",
+    });
+  }
   queryClient.invalidateQueries({ queryKey: ["summary"] });
 }
 

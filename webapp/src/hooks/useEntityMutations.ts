@@ -40,11 +40,18 @@ function entityInvalidateKeys(entity: Entity): QueryKey[] {
   return keys;
 }
 
-/** 新規Entity作成(プロジェクト一覧のインライン追加・詳細画面の+チケット追加)。作成直後の一覧再取得のみでよく楽観的更新は行わない */
+/** 新規Entity作成(プロジェクト一覧のインライン追加・詳細画面の+チケット追加)。作成直後の一覧再取得のみでよく楽観的更新は行わない。
+ *  作成されたentity自身は["entity", path]を一度も取得していないためそこは無効化不要だが、一覧([\"entities\"])に加えて
+ *  親(input.project)がある場合はその子一覧([\"entity\", project, \"children\"])とsummaryも合わせて無効化する
+ *  (812f605のentityInvalidateKeysと同じ観点、createはentity形状ではなくinput形状なのでここだけ別実装)。 */
 export function useCreateEntity() {
   return useOptimisticMutation<CreateEntityInput>({
     mutationFn: (input) => createEntity(input),
-    invalidateKeys: [["entities"]],
+    invalidateKeys: (input) => {
+      const keys: QueryKey[] = [["entities"], ["summary"]];
+      if (input.project) keys.push(["entity", input.project, "children"]);
+      return keys;
+    },
   });
 }
 
@@ -139,23 +146,25 @@ export function useChangeEntityStatus(entity: Entity | undefined) {
   return mutation;
 }
 
+/** archive/delete/promoteも作成・status変更と同じく親の子一覧([\"entity\", project, \"children\"])とsummaryの
+ *  無効化漏れがあった(entity.projectがある場合、["entities"]のprefixだけでは["entity", project, "children"]に届かない) */
 export function useArchiveEntity(entity: Entity | undefined) {
   return useOptimisticMutation<void>({
     mutationFn: () => archiveEntity(entity!.path),
-    invalidateKeys: [["entities"]],
+    invalidateKeys: entity ? entityInvalidateKeys(entity) : [["entities"]],
   });
 }
 
 export function useDeleteEntity(entity: Entity | undefined) {
   return useOptimisticMutation<void>({
     mutationFn: () => deleteEntity(entity!.path),
-    invalidateKeys: [["entities"]],
+    invalidateKeys: entity ? entityInvalidateKeys(entity) : [["entities"]],
   });
 }
 
 export function usePromoteTicket(entity: Entity | undefined) {
   return useOptimisticMutation<void>({
     mutationFn: () => promoteTicket(entity!.path),
-    invalidateKeys: entity ? [["entity", entity.path], ["entities"]] : [],
+    invalidateKeys: entity ? entityInvalidateKeys(entity) : [],
   });
 }
