@@ -23,6 +23,9 @@ export function useOptimisticMutation<TVars, TContext = unknown>(opts: {
   onErrorRollback?: (context: TContext | undefined, vars: TVars) => void;
   invalidateKeys: QueryKey[] | ((vars: TVars) => QueryKey[]);
   successMessage?: (vars: TVars) => string | void;
+  /** successMessageの代わりにトースト表示を完全に委譲したい場合(例: Undoアクション付きトースト)。
+   *  指定時はsuccessMessageは呼ばれない。contextはonMutateの戻り値。 */
+  onSuccessCustom?: (vars: TVars, context: TContext | undefined) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -33,7 +36,11 @@ export function useOptimisticMutation<TVars, TContext = unknown>(opts: {
       opts.onErrorRollback?.(context as TContext | undefined, vars);
       toast.error(errorMessage(err));
     },
-    onSuccess: (_data, vars) => {
+    onSuccess: (_data, vars, context) => {
+      if (opts.onSuccessCustom) {
+        opts.onSuccessCustom(vars, context as TContext | undefined);
+        return;
+      }
       const msg = opts.successMessage?.(vars);
       if (msg) toast.success(msg);
     },

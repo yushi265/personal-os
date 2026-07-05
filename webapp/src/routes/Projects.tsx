@@ -6,12 +6,12 @@ import { motion, useReducedMotion } from "motion/react";
 import { PROJECT_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { useEntities } from "@/hooks/useEntities";
-import { useCreateEntity } from "@/hooks/useEntityMutations";
+import { useChangeEntityStatus, useCreateEntity, useUpdateEntityField } from "@/hooks/useEntityMutations";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/StatusBadge";
-import { PriorityBadge } from "@/components/PriorityBadge";
+import { StatusSelect } from "@/components/EditableCell/StatusSelect";
+import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DueLabel } from "@/components/DueLabel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { EmptyState } from "@/components/EmptyState";
@@ -19,6 +19,48 @@ import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { t } from "@i18n/ja";
 
 const MotionRow = motion.create("div");
+
+// 一覧行(design-browser-ui.md §9 P3行の拡張): status/priorityをインライン編集可能にするため、
+// 行ごとにmutationフックを呼ぶ専用コンポーネントに分離する(Rules of Hooks: .map()コールバック内で
+// 直接フックを呼べないため)。
+function ProjectRow({
+  project,
+  today: now,
+  reduced,
+  onNavigate,
+}: {
+  project: Entity;
+  today: string;
+  reduced: boolean;
+  onNavigate: () => void;
+}) {
+  const changeStatus = useChangeEntityStatus(project);
+  const updateField = useUpdateEntityField(project);
+
+  return (
+    <MotionRow
+      variants={staggerItem}
+      transition={listTransition(reduced)}
+      className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
+      onClick={onNavigate}
+    >
+      <span className="w-[300px] shrink-0 truncate text-sm font-medium">{project.title}</span>
+      <span className="w-24 shrink-0">
+        <StatusSelect status={project.status} options={PROJECT_STATUSES} onCommit={(next) => changeStatus.mutate(next)} />
+      </span>
+      <span className="w-20 shrink-0">
+        <PrioritySelect priority={project.priority} onCommit={(priority) => updateField.mutate({ key: "priority", value: priority })} />
+      </span>
+      <span className="shrink-0">
+        <ProgressBar value={project.progress} />
+      </span>
+      <span className="w-24 shrink-0 font-mono text-xs">
+        <DueLabel due={project.due} today={now} />
+      </span>
+      <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
+    </MotionRow>
+  );
+}
 
 function matchesFilter(project: Entity, keyword: string, statuses: Set<string>): boolean {
   if (statuses.size > 0 && !statuses.has(project.status)) return false;
@@ -130,28 +172,13 @@ export function Projects() {
       <div className="overflow-hidden rounded-lg border border-border">
         <motion.div variants={staggerContainer} initial="initial" animate="animate">
           {visibleProjects.map((project) => (
-            <MotionRow
+            <ProjectRow
               key={project.path}
-              variants={staggerItem}
-              transition={listTransition(!!reduced)}
-              className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
-              onClick={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}
-            >
-              <span className="w-[300px] shrink-0 truncate text-sm font-medium">{project.title}</span>
-              <span className="w-24 shrink-0">
-                <StatusBadge status={project.status} />
-              </span>
-              <span className="w-20 shrink-0">
-                <PriorityBadge priority={project.priority} />
-              </span>
-              <span className="shrink-0">
-                <ProgressBar value={project.progress} />
-              </span>
-              <span className="w-24 shrink-0 font-mono text-xs">
-                <DueLabel due={project.due} today={now} />
-              </span>
-              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
-            </MotionRow>
+              project={project}
+              today={now}
+              reduced={!!reduced}
+              onNavigate={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}
+            />
           ))}
           <div className="flex h-10 cursor-text items-center px-5">
             <input

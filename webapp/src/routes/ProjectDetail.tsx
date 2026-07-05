@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { PROJECT_STATUSES } from "@domain/entity";
+import { PROJECT_STATUSES, TICKET_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { ApiError } from "@/api/client";
 import { useEntity, useChildren } from "@/hooks/useEntity";
@@ -20,8 +20,6 @@ import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DateEdit } from "@/components/EditableCell/DateEdit";
 import { PropertyLabel } from "@/components/PropertyLabel";
 import { SegmentedControl } from "@/components/SegmentedControl";
-import { StatusBadge } from "@/components/StatusBadge";
-import { PriorityBadge } from "@/components/PriorityBadge";
 import { ProgressBar } from "@/components/ProgressBar";
 import { DueLabel } from "@/components/DueLabel";
 import { TodoListPanel } from "@/components/TodoListPanel";
@@ -36,6 +34,46 @@ import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { confirmArchiveMessage, confirmDeleteMessage, t } from "@i18n/ja";
 
 const MotionRow = motion.create("div");
+
+// チケットテーブル行(Projects.tsxのProjectRowと同様、行ごとのmutationフック呼び出しのため専用コンポーネントに分離)。
+function TicketRow({
+  ticket,
+  today: now,
+  reduced,
+  onNavigate,
+}: {
+  ticket: Entity;
+  today: string;
+  reduced: boolean;
+  onNavigate: () => void;
+}) {
+  const changeStatus = useChangeEntityStatus(ticket);
+  const updateField = useUpdateEntityField(ticket);
+
+  return (
+    <MotionRow
+      variants={staggerItem}
+      transition={listTransition(reduced)}
+      className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
+      onClick={onNavigate}
+    >
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">{ticket.title}</span>
+      <span className="w-[110px] shrink-0">
+        <StatusSelect status={ticket.status} options={TICKET_STATUSES} onCommit={(next) => changeStatus.mutate(next)} />
+      </span>
+      <span className="w-[90px] shrink-0">
+        <PrioritySelect priority={ticket.priority} onCommit={(priority) => updateField.mutate({ key: "priority", value: priority })} />
+      </span>
+      <span className="flex w-[200px] shrink-0 items-center gap-2">
+        <ProgressBar value={ticket.progress} />
+      </span>
+      <span className="w-20 shrink-0 font-mono text-xs">
+        <DueLabel due={ticket.due} today={now} />
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
+    </MotionRow>
+  );
+}
 
 // プロジェクト詳細画面(design-refs/geist-final.dc.html §プロジェクト詳細、requirements §3.2/§3.3)。
 export function ProjectDetail() {
@@ -132,28 +170,13 @@ export function ProjectDetail() {
         <div className="overflow-hidden rounded-lg border border-border">
           <motion.div variants={staggerContainer} initial="initial" animate="animate">
             {tickets.map((ticket) => (
-              <MotionRow
+              <TicketRow
                 key={ticket.path}
-                variants={staggerItem}
-                transition={listTransition(!!reduced)}
-                className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
-                onClick={() => navigate(`/tickets/${encodeURIComponent(ticket.path)}`)}
-              >
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{ticket.title}</span>
-                <span className="w-[110px] shrink-0">
-                  <StatusBadge status={ticket.status} />
-                </span>
-                <span className="w-[90px] shrink-0">
-                  <PriorityBadge priority={ticket.priority} />
-                </span>
-                <span className="flex w-[200px] shrink-0 items-center gap-2">
-                  <ProgressBar value={ticket.progress} />
-                </span>
-                <span className="w-20 shrink-0 font-mono text-xs">
-                  <DueLabel due={ticket.due} today={now} />
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
-              </MotionRow>
+                ticket={ticket}
+                today={now}
+                reduced={!!reduced}
+                onNavigate={() => navigate(`/tickets/${encodeURIComponent(ticket.path)}`)}
+              />
             ))}
             <div className="flex h-10 cursor-text items-center px-5">
               <Input

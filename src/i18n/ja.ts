@@ -207,6 +207,7 @@ const MESSAGES = {
 	"webapp.empty.projects.title": "プロジェクトがありません",
 	"webapp.empty.projects.body": "最初のプロジェクトを作成して始めましょう。",
 	"webapp.celebration.allDone": "すべて完了しました",
+	"webapp.undo.reverted": "元に戻しました",
 
 	"settings.section.capability": "依存プラグイン",
 	"settings.capability.dataview": "Dataview",
@@ -423,6 +424,16 @@ export function dueTodayLabel(): string {
 /** 期限N日後ラベル(describeDue用。値埋め込みのためt()とは別関数とする) */
 export function dueInDaysLabel(days: number): string {
 	return `${days}日後`;
+}
+
+/** Undoトースト(webapp一覧のstatus変更): 変更前後を埋め込むためt()とは別関数とする */
+export function statusChangedUndoNotice(from: string, to: string): string {
+	return `ステータスを変更しました: ${from} → ${to}`;
+}
+
+/** Undoトースト(webapp一覧のpriority変更) */
+export function priorityChangedUndoNotice(from: string, to: string): string {
+	return `優先度を変更しました: ${from} → ${to}`;
 }
 
 /** Undoトースト: Archive完了通知(タイトル埋め込みのためt()とは別関数とする) */
