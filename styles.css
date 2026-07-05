@@ -1814,9 +1814,9 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		column-gap: var(--size-4-3);
+		column-gap: var(--size-4-2);
 		row-gap: var(--size-2-2);
-		padding: var(--size-4-3) var(--size-4-2);
+		padding: var(--size-4-2);
 		border-bottom: 1px solid var(--background-modifier-border);
 	}
 
@@ -1824,11 +1824,18 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 		display: block;
 		border-bottom: none;
 		padding: 0;
+		min-height: 0; /* デスクトップ表のmin-height:40pxを打ち消す(カードの縦間延び防止) */
+	}
+
+	/* 値が未設定のセル(priority/due/parent等)はカードでは行ごと非表示(「(未設定)」を出さない) */
+	.pos-manage-table td.pos-cell-empty {
+		display: none;
 	}
 
 	/* D&D並び替えはタッチ環境では扱いにくいため、カードモードではドラッグハンドル列を隠す。
-	   代替導線としてRowMenuの「上へ移動」「下へ移動」が常に使える(design-reorder-and-notes.md A-5) */
-	.pos-manage-cell-drag {
+	   代替導線としてRowMenuの「上へ移動」「下へ移動」が常に使える(design-reorder-and-notes.md A-5)
+	   セレクタに.pos-manage-tableを含めるのは詳細度で`... td { display: block }`に勝つため(過去バグ) */
+	.pos-manage-table .pos-manage-cell-drag {
 		display: none;
 	}
 
@@ -1887,9 +1894,9 @@ body.is-mobile .pos-manage-table tr {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	column-gap: var(--size-4-3);
+	column-gap: var(--size-4-2);
 	row-gap: var(--size-2-2);
-	padding: var(--size-4-3) var(--size-4-2);
+	padding: var(--size-4-2);
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
@@ -1897,9 +1904,16 @@ body.is-mobile .pos-manage-table td {
 	display: block;
 	border-bottom: none;
 	padding: 0;
+	min-height: 0; /* デスクトップ表のmin-height:40pxを打ち消す(カードの縦間延び防止) */
 }
 
-body.is-mobile .pos-manage-cell-drag {
+/* 値が未設定のセルはカードでは行ごと非表示(「(未設定)」を出さない) */
+body.is-mobile .pos-manage-table td.pos-cell-empty {
+	display: none;
+}
+
+/* セレクタに.pos-manage-tableを含めるのは詳細度で`... td { display: block }`に勝つため(過去バグ) */
+body.is-mobile .pos-manage-table .pos-manage-cell-drag {
 	display: none;
 }
 
