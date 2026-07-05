@@ -2,6 +2,7 @@ import { MarkdownView, Notice, Platform, Plugin, TFile, type FileSystemAdapter, 
 import type { EntityType } from "./domain/entity";
 import type { Todo } from "./domain/todo";
 import { today } from "./domain/date";
+import { computeGoalLabelMigration } from "./domain/migrateGoals";
 import { DEFAULT_SETTINGS, type POSSettings } from "./settings/settings";
 import { POSSettingsTab } from "./settings/SettingsTab";
 import { POSEventBus } from "./infra/EventBus";
@@ -35,7 +36,7 @@ import { TimelineView, VIEW_TYPE_TIMELINE } from "./ui/timeline/TimelineView";
 import { ManageView, VIEW_TYPE_MANAGE } from "./ui/manage/ManageView";
 import { makeGoalDetailScreen, makeProjectDetailScreen, makeTicketDetailScreen, type ManageScreen } from "./ui/manage/manageNav";
 import { EntitySwitcherModal } from "./ui/modals/EntitySwitcherModal";
-import { statusBarTodoTitle, serverStartedNotice, serverStartFailedNotice, t } from "./i18n/ja";
+import { statusBarTodoTitle, serverStartedNotice, serverStartFailedNotice, migrateGoalsToLabelsNotice, t } from "./i18n/ja";
 import { TokenStore } from "./server/TokenStore";
 import { AuthGuard } from "./server/AuthGuard";
 import { HttpServer } from "./server/HttpServer";
@@ -213,11 +214,6 @@ export default class PersonalOSPlugin extends Plugin {
 
 	private registerCommands(): void {
 		this.addCommand({
-			id: "create-goal",
-			name: t("command.createGoal"),
-			callback: () => this.openCreateModal("goal"),
-		});
-		this.addCommand({
 			id: "create-project",
 			name: t("command.createProject"),
 			callback: () => this.openCreateModal("project"),
@@ -325,6 +321,60 @@ export default class PersonalOSPlugin extends Plugin {
 			name: t("command.exportAiSummary"),
 			callback: () => void this.exportService.exportAiSummary(),
 		});
+		this.addCommand({
+			id: "migrate-goals-to-labels",
+			name: t("command.migrateGoalsToLabels"),
+			callback: () => void this.migrateGoalsToLabels(),
+		});
+	}
+
+	/**
+	 * Goal概念廃止(design-remove-goal.md G1)の移行コマンド。
+	 * ① 全project(archived含む)のgoalをlabelsへ変換しgoalキーを削除
+	 * ② 全goalノートをstatus: archivedにしてArchive/へ移動
+	 * 冪等: ①は移行済み(goalキーが既に無い)projectは対象に入らない。②は既にArchive/配下かつstatus: archivedのgoalをスキップする
+	 */
+	private async migrateGoalsToLabels(): Promise<void> {
+		let migratedProjects = 0;
+		let archivedGoals = 0;
+
+		for (const project of this.store.listByType("project")) {
+			if (!project.goal) continue;
+			try {
+				const result = computeGoalLabelMigration(
+					{ path: project.path, labels: project.labels, goalRaw: project.goal },
+					(path) => this.store.get(path)?.title
+				);
+				await this.repo.updateFrontmatter(project.path, (fm) => {
+					fm.labels = result.labels;
+					delete fm.goal;
+				});
+				migratedProjects++;
+			} catch (err) {
+				console.error(`Personal OS: goal→labels移行に失敗(project): ${project.path}`, err);
+			}
+		}
+
+		const archiveFolderPrefix = `${this.settings.rootDirectory}/${this.settings.folders.archive}/`;
+		for (const goal of this.store.listByType("goal")) {
+			try {
+				const alreadyInArchive = goal.path.startsWith(archiveFolderPrefix);
+				if (goal.status === "archived" && alreadyInArchive) continue;
+				if (goal.status !== "archived") {
+					await this.entityService.archive(goal.path);
+				} else {
+					await this.repo.moveToArchive(goal.path);
+				}
+				archivedGoals++;
+			} catch (err) {
+				console.error(`Personal OS: Goalのアーカイブに失敗: ${goal.path}`, err);
+			}
+		}
+
+		if (this.activityLogService) {
+			await this.activityLogService.log("update", migrateGoalsToLabelsNotice(migratedProjects, archivedGoals));
+		}
+		new Notice(migrateGoalsToLabelsNotice(migratedProjects, archivedGoals));
 	}
 
 	private activeEntity() {

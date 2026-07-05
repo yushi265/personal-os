@@ -19,6 +19,7 @@ const MESSAGES = {
 	"ribbon.openDashboard": "Open Personal OS Dashboard",
 
 	"command.createGoal": "Create Goal",
+	"command.migrateGoalsToLabels": "Migrate goals to labels",
 	"command.createProject": "Create Project",
 	"command.createTicket": "Create Ticket",
 	"command.createTodo": "Create Todo",
@@ -416,6 +417,11 @@ export function entityCreatedNotice(title: string): string {
 /** AI Export成功時のNotice文言(文字数埋め込みのためt()とは別関数とする) */
 export function aiContextCopiedNotice(charCount: number): string {
 	return `AIコンテキストをコピーしました(${charCount}文字)`;
+}
+
+/** goal→labels移行コマンド完了時のNotice文言(件数埋め込みのためt()とは別関数とする) */
+export function migrateGoalsToLabelsNotice(migratedProjects: number, archivedGoals: number): string {
+	return `${migratedProjects}件のプロジェクトを移行し、${archivedGoals}件のGoalをアーカイブしました`;
 }
 
 /** AI Summary成功時のNotice文言 */
