@@ -97,4 +97,6 @@ Presentation(Svelte / React) → Services → Domain(純粋関数) → Infrastru
 
 ## License
 
-TBD(公開準備中)
+[MIT](LICENSE)
+
+同梱の Geist / Geist Mono フォントは [Vercel](https://vercel.com/font) による [SIL Open Font License 1.1](webapp/public/fonts/geist/LICENSE.txt) です。
