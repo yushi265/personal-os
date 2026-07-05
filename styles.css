@@ -1782,7 +1782,14 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 	opacity: 1;
 }
 
-/* ==== Obsidian UI V3: モバイル対応(狭幅でテーブル→カードレイアウト) ==== */
+/* ==== Obsidian UI V3 → Mobile Brushup: モバイル対応(狭幅/is-mobileでテーブル→カードレイアウト) ====
+   container-type: inline-sizeによる@containerクエリ(デスクトップの狭幅ペイン向け)を主としつつ、
+   @containerを解釈できない古いWebView(iOSの旧Safariエンジン等)でも確実にカードレイアウトを発動できるよう、
+   body.is-mobileセレクタでも同内容を二重発動する(実機で@containerが効かない可能性への保険)。
+   カード内の各セルはgrid-template-areasではなくflexbox+orderで並べる。セル数がプラン(Goal/Project列の有無)で
+   変わってもflexは自動的に再フローするため、grid版で必要だった`.pos-manage-table-no-parent`用の
+   grid-template-areas別バージョンが不要になった。
+   ふたつのブロックは意図的に同内容 — 片方を変更したらもう片方も追随すること。 */
 
 .pos-manage {
 	container-type: inline-size;
@@ -1804,29 +1811,13 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 	}
 
 	.pos-manage-table tr {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		grid-template-areas:
-			"title title"
-			"parent status"
-			"priority due"
-			"progress progress"
-			"labels labels"
-			"actions nav";
-		gap: var(--size-2-2) var(--size-4-3);
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		column-gap: var(--size-4-3);
+		row-gap: var(--size-2-2);
 		padding: var(--size-4-3) var(--size-4-2);
 		border-bottom: 1px solid var(--background-modifier-border);
-	}
-
-	/* Goal/Project列(ParentCell)を省略した表(ManageTable showParentColumn=false)では、statusが単独で1行を占める */
-	.pos-manage-table-no-parent tr {
-		grid-template-areas:
-			"title title"
-			"status status"
-			"priority due"
-			"progress progress"
-			"labels labels"
-			"actions nav";
 	}
 
 	.pos-manage-table td {
@@ -1835,34 +1826,35 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 		padding: 0;
 	}
 
+	/* D&D並び替えはタッチ環境では扱いにくいため、カードモードではドラッグハンドル列を隠す。
+	   代替導線としてRowMenuの「上へ移動」「下へ移動」が常に使える(design-reorder-and-notes.md A-5) */
+	.pos-manage-cell-drag {
+		display: none;
+	}
+
 	.pos-manage-cell-title {
-		grid-area: title;
+		order: 1;
+		flex: 1 1 100%;
 		font-size: var(--font-ui-medium);
 	}
 
-	.pos-manage-cell-parent {
-		grid-area: parent;
-	}
-
-	.pos-manage-cell-status {
-		grid-area: status;
-	}
-
-	.pos-manage-cell-priority {
-		grid-area: priority;
-	}
-
+	/* status/priority/due/(project)は1つのバッジ行としてflex-wrapで自然に並べる */
+	.pos-manage-cell-parent,
+	.pos-manage-cell-status,
+	.pos-manage-cell-priority,
 	.pos-manage-cell-due {
-		grid-area: due;
-		text-align: right;
+		order: 2;
+		flex: 0 0 auto;
 	}
 
 	.pos-manage-cell-progress {
-		grid-area: progress;
+		order: 3;
+		flex: 1 1 100%;
 	}
 
 	.pos-manage-cell-labels {
-		grid-area: labels;
+		order: 4;
+		flex: 1 1 100%;
 	}
 
 	.pos-manage-cell-labels:empty {
@@ -1870,14 +1862,84 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 	}
 
 	.pos-manage-cell-actions {
-		grid-area: actions;
+		order: 5;
+		margin-left: auto;
 	}
 
 	.pos-manage-cell-nav {
-		grid-area: nav;
+		order: 6;
 		width: auto;
 		text-align: right;
 	}
+}
+
+body.is-mobile .pos-manage-table thead {
+	display: none;
+}
+
+body.is-mobile .pos-manage-table,
+body.is-mobile .pos-manage-table tbody {
+	display: block;
+	width: 100%;
+}
+
+body.is-mobile .pos-manage-table tr {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	column-gap: var(--size-4-3);
+	row-gap: var(--size-2-2);
+	padding: var(--size-4-3) var(--size-4-2);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+body.is-mobile .pos-manage-table td {
+	display: block;
+	border-bottom: none;
+	padding: 0;
+}
+
+body.is-mobile .pos-manage-cell-drag {
+	display: none;
+}
+
+body.is-mobile .pos-manage-cell-title {
+	order: 1;
+	flex: 1 1 100%;
+	font-size: var(--font-ui-medium);
+}
+
+body.is-mobile .pos-manage-cell-parent,
+body.is-mobile .pos-manage-cell-status,
+body.is-mobile .pos-manage-cell-priority,
+body.is-mobile .pos-manage-cell-due {
+	order: 2;
+	flex: 0 0 auto;
+}
+
+body.is-mobile .pos-manage-cell-progress {
+	order: 3;
+	flex: 1 1 100%;
+}
+
+body.is-mobile .pos-manage-cell-labels {
+	order: 4;
+	flex: 1 1 100%;
+}
+
+body.is-mobile .pos-manage-cell-labels:empty {
+	display: none;
+}
+
+body.is-mobile .pos-manage-cell-actions {
+	order: 5;
+	margin-left: auto;
+}
+
+body.is-mobile .pos-manage-cell-nav {
+	order: 6;
+	width: auto;
+	text-align: right;
 }
 
 @container (max-width: 480px) {
@@ -1892,4 +1954,208 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 	.pos-preview-fields dt:first-child {
 		margin-top: 0;
 	}
+}
+
+body.is-mobile .pos-preview-fields {
+	grid-template-columns: 1fr;
+}
+
+body.is-mobile .pos-preview-fields dt {
+	margin-top: var(--size-4-2);
+}
+
+body.is-mobile .pos-preview-fields dt:first-child {
+	margin-top: 0;
+}
+
+body.is-mobile .pos-preview-fields dd {
+	width: 100%;
+}
+
+/* 詳細画面ヘッダのプロパティ行(status/priority/due等): モバイルでは各コントロールをフルワイズに */
+body.is-mobile .pos-preview-fields .pos-cell-select,
+body.is-mobile .pos-preview-fields .pos-cell-date-input,
+body.is-mobile .pos-preview-fields .pos-cell-text-input {
+	width: 100%;
+	max-width: none;
+	box-sizing: border-box;
+}
+
+/* ==== モバイルブラッシュアップ: タップ領域44px化(Apple HIG最低基準) ====
+   アイコン専用ボタン(⋮/✎/›/戻る/×)は44×44pxの正方形を確保する。デスクトップは既存の40px(V3)のまま。 */
+
+body.is-mobile .pos-kanban-card-menu,
+body.is-mobile .pos-manage-row-menu-btn,
+body.is-mobile .pos-manage-nav-chevron,
+body.is-mobile .pos-manage-back-btn,
+body.is-mobile .pos-dashboard-refresh,
+body.is-mobile .pos-manage-entity-switcher-btn,
+body.is-mobile .pos-title-edit-btn,
+body.is-mobile .pos-tagchips-remove {
+	min-width: 44px;
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* pos-title-edit-btnはデスクトップではホバー時のみ表示するプログレッシブエンハンスメントだが、
+   モバイルにはホバー概念が無いため常時表示に切り替える */
+body.is-mobile .pos-title-edit-btn {
+	opacity: 1;
+}
+
+/* テキストボタン/チップ類は正方形化まではせず、タップしやすい高さ(44px)だけ確保する */
+body.is-mobile .pos-manage-chip,
+body.is-mobile .pos-manage-summary-chip,
+body.is-mobile .pos-manage-filter-toggle-btn,
+body.is-mobile .pos-manage-savedview-btn,
+body.is-mobile .pos-manage-breadcrumb-item,
+body.is-mobile .pos-manage-tab-btn,
+body.is-mobile .pos-kanban-toggle-btn,
+body.is-mobile .pos-manage-onboarding-action,
+body.is-mobile .pos-blockerlist-add-btn,
+body.is-mobile .pos-comment-action,
+body.is-mobile .pos-manage-inline-create-row,
+body.is-mobile .pos-preview-todo-action {
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+}
+
+/* チェックボックスは見た目まで44pxにはしないが、視認性・誤タップ防止のため一回り大きくする */
+body.is-mobile input[type="checkbox"] {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+}
+
+/* ボタン間のgapを誤タップ防止のため広げる */
+body.is-mobile .pos-manage-chip-group,
+body.is-mobile .pos-manage-filter-summary,
+body.is-mobile .pos-manage-tabs,
+body.is-mobile .pos-kanban-toggle,
+body.is-mobile .pos-manage-todo-controls,
+body.is-mobile .pos-blockerlist-add,
+body.is-mobile .pos-comment-item-actions {
+	gap: var(--size-4-2);
+}
+
+/* ==== モバイルブラッシュアップ: 入力欄フォントサイズ16px(iOS WebViewの自動ズーム防止) ====
+   iOSのWebViewはinput/textarea/selectのfont-sizeが16px未満だとフォーカス時に自動ズームする。 */
+
+body.is-mobile .pos-dashboard input,
+body.is-mobile .pos-dashboard select,
+body.is-mobile .pos-dashboard textarea,
+body.is-mobile .pos-manage input,
+body.is-mobile .pos-manage select,
+body.is-mobile .pos-manage textarea,
+body.is-mobile .pos-kanban input,
+body.is-mobile .pos-kanban select,
+body.is-mobile .pos-kanban textarea,
+body.is-mobile .pos-search input,
+body.is-mobile .pos-search select,
+body.is-mobile .pos-search textarea,
+body.is-mobile .pos-timeline input,
+body.is-mobile .pos-timeline select,
+body.is-mobile .pos-timeline textarea,
+body.is-mobile .pos-preview input,
+body.is-mobile .pos-preview select,
+body.is-mobile .pos-preview textarea,
+body.is-mobile .modal-container .modal input,
+body.is-mobile .modal-container .modal select,
+body.is-mobile .modal-container .modal textarea {
+	font-size: 16px;
+}
+
+/* ==== モバイルブラッシュアップ: TodoListの行を2段構成に ====
+   上段=チェックボックス+本文、下段=メタ(親バッジ/優先度/期限)、さらに下段=操作ボタン群。
+   display:contentsによりデスクトップでは3つのdivが消え、子要素がliの直下フラットフレックス項目として
+   扱われるため、既存のデスクトップ横並びレイアウトはそのまま維持される。 */
+
+.pos-todo-row-top,
+.pos-todo-row-meta,
+.pos-todo-row-actions {
+	display: contents;
+}
+
+body.is-mobile .pos-preview-todo-row {
+	flex-direction: column;
+	align-items: stretch;
+	row-gap: var(--size-2-2);
+}
+
+body.is-mobile .pos-todo-row-top,
+body.is-mobile .pos-todo-row-meta,
+body.is-mobile .pos-todo-row-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	column-gap: var(--size-4-2);
+	row-gap: var(--size-2-2);
+}
+
+body.is-mobile .pos-todo-row-top {
+	width: 100%;
+}
+
+body.is-mobile .pos-preview-todo-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	white-space: normal;
+}
+
+body.is-mobile .pos-todo-row-meta {
+	color: var(--text-muted);
+}
+
+/* D&Dが効かない環境が多いため、モバイルではドラッグハンドルを隠し▲▼のみ表示する(design-reorder-and-notes.md A-5) */
+body.is-mobile .pos-preview-todo-drag {
+	display: none;
+}
+
+body.is-mobile .pos-todo-row-actions {
+	justify-content: flex-end;
+	column-gap: var(--size-4-3);
+}
+
+/* ==== モバイルブラッシュアップ: CommentSection/BlockerList/TagChipsの入力行 ==== */
+
+body.is-mobile .pos-comment-add {
+	flex-wrap: wrap;
+}
+
+body.is-mobile .pos-comment-add-text {
+	flex: 1 1 100%;
+}
+
+body.is-mobile .pos-blockerlist-add,
+body.is-mobile .pos-tagchips {
+	row-gap: var(--size-4-2);
+}
+
+/* ==== モバイルブラッシュアップ: Dashboard ==== */
+
+body.is-mobile .pos-dashboard-grid {
+	grid-template-columns: 1fr;
+}
+
+body.is-mobile .pos-dashboard-stats {
+	grid-template-columns: repeat(2, 1fr);
+}
+
+body.is-mobile .pos-widget-item,
+body.is-mobile .pos-widget-item-row {
+	flex-wrap: wrap;
+	row-gap: var(--size-2-2);
+}
+
+/* ==== モバイルブラッシュアップ: Kanban列を横スワイプでスナップさせる(軽微対応) ==== */
+
+body.is-mobile .pos-kanban-columns {
+	scroll-snap-type: x mandatory;
+}
+
+body.is-mobile .pos-kanban-column {
+	scroll-snap-align: start;
 }

@@ -136,61 +136,70 @@
 				ondragover={(e) => e.preventDefault()}
 				ondrop={(e) => handleDrop(e, todo)}
 			>
-				<!-- svelte-ignore a11y_no_static_element_interactions -- ドラッグハンドル(design-reorder-and-notes.md A-4)。上下移動ボタンを別途用意しているため代替操作は確保済み -->
-				<span
-					class="pos-preview-todo-drag"
-					draggable="true"
-					ondragstart={(e) => handleDragStart(e, todo)}
-					title={t("preview.todo.dragHandle")}
-					aria-label={t("preview.todo.dragHandle")}
-				>
-					⠿
-				</span>
-				<input type="checkbox" checked={todo.done} onchange={() => toggleTodo(todo)} />
-				<span class="pos-preview-todo-text">
-					<TitleCell value={todo.text} onCommit={(next) => commitTodoText(todo, next)} />
-				</span>
-				{#if showParentBadge}
-					{#if todo.parentType === "ticket"}
-						<span
-							class="pos-todolist-parent-badge pos-todolist-parent-clickable"
-							role="link"
-							tabindex="0"
-							onclick={() => onParentClick?.(todo.parentPath)}
-							onkeydown={(e) => e.key === "Enter" && onParentClick?.(todo.parentPath)}
-						>
-							{parentTitle(todo)}
-						</span>
-					{:else}
-						<span class="pos-todolist-parent-badge">{parentTitle(todo)}</span>
+				<!-- 上段(モバイル): チェックボックス+本文。display:contentsによりデスクトップでは従来通りliの直下フラットフレックス項目として扱われる -->
+				<div class="pos-todo-row-top">
+					<!-- svelte-ignore a11y_no_static_element_interactions -- ドラッグハンドル(design-reorder-and-notes.md A-4)。上下移動ボタンを別途用意しているため代替操作は確保済み -->
+					<span
+						class="pos-preview-todo-drag"
+						draggable="true"
+						ondragstart={(e) => handleDragStart(e, todo)}
+						title={t("preview.todo.dragHandle")}
+						aria-label={t("preview.todo.dragHandle")}
+					>
+						⠿
+					</span>
+					<input type="checkbox" checked={todo.done} onchange={() => toggleTodo(todo)} />
+					<span class="pos-preview-todo-text">
+						<TitleCell value={todo.text} onCommit={(next) => commitTodoText(todo, next)} />
+					</span>
+				</div>
+				<!-- 下段(モバイル): メタ情報(親バッジ/優先度/期限) -->
+				<div class="pos-todo-row-meta">
+					{#if showParentBadge}
+						{#if todo.parentType === "ticket"}
+							<span
+								class="pos-todolist-parent-badge pos-todolist-parent-clickable"
+								role="link"
+								tabindex="0"
+								onclick={() => onParentClick?.(todo.parentPath)}
+								onkeydown={(e) => e.key === "Enter" && onParentClick?.(todo.parentPath)}
+							>
+								{parentTitle(todo)}
+							</span>
+						{:else}
+							<span class="pos-todolist-parent-badge">{parentTitle(todo)}</span>
+						{/if}
 					{/if}
-				{/if}
-				<PriorityCell
-					value={todo.priority ?? ""}
-					options={priorityOptions()}
-					onCommit={(next) => commitTodoPriority(todo, next)}
-				/>
-				<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} relative />
-				<button
-					class="pos-preview-todo-action"
-					disabled={i === 0}
-					onclick={() => moveTodo(todo, { kind: "up" })}
-					aria-label={t("preview.todo.moveUp")}
-				>
-					▲
-				</button>
-				<button
-					class="pos-preview-todo-action"
-					disabled={i === visibleTodos.length - 1}
-					onclick={() => moveTodo(todo, { kind: "down" })}
-					aria-label={t("preview.todo.moveDown")}
-				>
-					▼
-				</button>
-				<button class="pos-preview-todo-action" onclick={() => promoteTodo(todo)}>{t("preview.todo.promote")}</button>
-				<button class="pos-preview-todo-action pos-btn-danger-ghost" onclick={() => deleteTodo(todo)}>
-					{t("preview.todo.delete")}
-				</button>
+					<PriorityCell
+						value={todo.priority ?? ""}
+						options={priorityOptions()}
+						onCommit={(next) => commitTodoPriority(todo, next)}
+					/>
+					<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} relative />
+				</div>
+				<!-- 下段(モバイル): 操作ボタン群 -->
+				<div class="pos-todo-row-actions">
+					<button
+						class="pos-preview-todo-action"
+						disabled={i === 0}
+						onclick={() => moveTodo(todo, { kind: "up" })}
+						aria-label={t("preview.todo.moveUp")}
+					>
+						▲
+					</button>
+					<button
+						class="pos-preview-todo-action"
+						disabled={i === visibleTodos.length - 1}
+						onclick={() => moveTodo(todo, { kind: "down" })}
+						aria-label={t("preview.todo.moveDown")}
+					>
+						▼
+					</button>
+					<button class="pos-preview-todo-action" onclick={() => promoteTodo(todo)}>{t("preview.todo.promote")}</button>
+					<button class="pos-preview-todo-action pos-btn-danger-ghost" onclick={() => deleteTodo(todo)}>
+						{t("preview.todo.delete")}
+					</button>
+				</div>
 			</li>
 		{/each}
 	</ul>
