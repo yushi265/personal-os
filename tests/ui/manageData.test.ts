@@ -14,7 +14,6 @@ import {
 	EMPTY_MANAGE_FILTER,
 	entityProgressFraction,
 	filterToQueryString,
-	groupProjectsByGoal,
 	isManageVaultEmpty,
 	isValidInlineTitle,
 	projectTodoFraction,
@@ -302,76 +301,6 @@ describe("collectKnownTags / collectKnownLabels", () => {
 		store.setTodos("a.md", [makeTodo({ filePath: "a.md", parentPath: "a.md", labels: ["todo-label"] })]);
 
 		expect(collectKnownLabels(store)).toEqual(["entity-label", "todo-label"]);
-	});
-});
-
-describe("groupProjectsByGoal (design-drilldown-nav.md §8.3)", () => {
-	it("G-1: projects without a goal form a trailing '未分類' group", () => {
-		const store = new IndexStore();
-		store.upsertEntity(makeEntity({ path: "goal-a.md", type: "goal", title: "Goal A", status: "active" }));
-		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", goal: "goal-a.md" }));
-		store.upsertEntity(makeEntity({ path: "p2.md", type: "project", title: "p2", goal: undefined }));
-		const plugin = makePlugin(store);
-
-		const groups = groupProjectsByGoal(plugin, { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
-
-		expect(groups).toHaveLength(2);
-		expect(groups[groups.length - 1].goal).toBeNull();
-		expect(groups[groups.length - 1].projects.map((p) => p.title)).toEqual(["p2"]);
-	});
-
-	it("G-2: goal groups are ordered active -> paused -> done -> archived", () => {
-		const store = new IndexStore();
-		store.upsertEntity(makeEntity({ path: "g-done.md", type: "goal", title: "Done Goal", status: "done" }));
-		store.upsertEntity(makeEntity({ path: "g-active.md", type: "goal", title: "Active Goal", status: "active" }));
-		store.upsertEntity(makeEntity({ path: "g-paused.md", type: "goal", title: "Paused Goal", status: "paused" }));
-		store.upsertEntity(makeEntity({ path: "p-done.md", type: "project", title: "p-done", goal: "g-done.md" }));
-		store.upsertEntity(makeEntity({ path: "p-active.md", type: "project", title: "p-active", goal: "g-active.md" }));
-		store.upsertEntity(makeEntity({ path: "p-paused.md", type: "project", title: "p-paused", goal: "g-paused.md" }));
-		const plugin = makePlugin(store);
-
-		const groups = groupProjectsByGoal(plugin, { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
-
-		expect(groups.map((g) => g.goal?.status)).toEqual(["active", "paused", "done"]);
-	});
-
-	it("G-3: goals sharing the same status are ordered by title ascending", () => {
-		const store = new IndexStore();
-		store.upsertEntity(makeEntity({ path: "g-z.md", type: "goal", title: "Zeta", status: "active" }));
-		store.upsertEntity(makeEntity({ path: "g-a.md", type: "goal", title: "Alpha", status: "active" }));
-		store.upsertEntity(makeEntity({ path: "p-z.md", type: "project", title: "p-z", goal: "g-z.md" }));
-		store.upsertEntity(makeEntity({ path: "p-a.md", type: "project", title: "p-a", goal: "g-a.md" }));
-		const plugin = makePlugin(store);
-
-		const groups = groupProjectsByGoal(plugin, { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
-
-		expect(groups.map((g) => g.goal?.title)).toEqual(["Alpha", "Zeta"]);
-	});
-
-	it("G-4: a project pointing at a nonexistent goal falls back to '未分類' without crashing", () => {
-		const store = new IndexStore();
-		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", goal: "goal-does-not-exist.md" }));
-		const plugin = makePlugin(store);
-
-		const groups = groupProjectsByGoal(plugin, { ...EMPTY_MANAGE_FILTER }, DEFAULT_ENTITY_SORT);
-
-		expect(groups).toHaveLength(1);
-		expect(groups[0].goal).toBeNull();
-		expect(groups[0].projects.map((p) => p.title)).toEqual(["p1"]);
-	});
-
-	it("G-5: a goal group with zero matching projects after filtering is still present, empty", () => {
-		const store = new IndexStore();
-		store.upsertEntity(makeEntity({ path: "goal-a.md", type: "goal", title: "Goal A", status: "active" }));
-		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", goal: "goal-a.md", priority: "low" }));
-		const plugin = makePlugin(store);
-		const filter: ManageFilter = { ...EMPTY_MANAGE_FILTER, priorities: ["high"] };
-
-		const groups = groupProjectsByGoal(plugin, filter, DEFAULT_ENTITY_SORT);
-
-		expect(groups).toHaveLength(1);
-		expect(groups[0].goal?.title).toBe("Goal A");
-		expect(groups[0].projects).toEqual([]);
 	});
 });
 

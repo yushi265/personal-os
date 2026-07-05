@@ -19,7 +19,6 @@ import { TitleEditable } from "@/components/EditableCell/TitleEditable";
 import { StatusSelect } from "@/components/EditableCell/StatusSelect";
 import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DateEdit } from "@/components/EditableCell/DateEdit";
-import { ParentSelect } from "@/components/EditableCell/ParentSelect";
 import { ProgressBar } from "@/components/ProgressBar";
 import { DueLabel } from "@/components/DueLabel";
 import { TodoListPanel } from "@/components/TodoListPanel";
@@ -108,10 +107,6 @@ export function ProjectDetail() {
           <div className="flex items-center gap-1">
             <span className="text-muted-foreground">{t("preview.field.due")}</span>
             <DateEdit value={entity.due} today={now} onCommit={(due) => updateField.mutate({ key: "due", value: due })} />
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground">{t("preview.field.goal")}</span>
-            <ParentSelect type="goal" value={entity.goal} onCommit={(goal) => updateField.mutate({ key: "goal", value: goal })} />
           </div>
           <ProgressBar value={entity.progress} />
         </div>

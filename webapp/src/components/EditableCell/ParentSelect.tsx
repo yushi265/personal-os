@@ -5,12 +5,12 @@ import { t } from "@i18n/ja";
 const NONE = "__none__";
 
 interface ParentSelectProps {
-  type: "goal" | "project";
+  type: "project";
   value?: string;
   onCommit: (next: string | undefined) => void;
 }
 
-// goal/project候補は/api/entities(useEntities)から取得する(design §5.1: 対象特定はpath)。
+// project候補は/api/entities(useEntities)から取得する(design §5.1: 対象特定はpath)。
 export function ParentSelect({ type, value, onCommit }: ParentSelectProps) {
   const { data: candidates } = useEntities(type);
   const current = candidates?.find((c) => c.path === value);

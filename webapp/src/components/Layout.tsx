@@ -10,7 +10,8 @@ import { useEntity } from "@/hooks/useEntity";
 import { useSseSync } from "@/hooks/useSseSync";
 import { t } from "@i18n/ja";
 
-// パンくず(design-browser-ui.md §6.2)。詳細画面は 一覧 > Goal名(project) / Project名(ticket) > 自身の名前 とする(P4)。
+// パンくず(design-browser-ui.md §6.2)。詳細画面は 一覧 > Project名(ticket) > 自身の名前 とする(P4)。
+// Goal概念の廃止(design-remove-goal.md G3)によりprojectは一覧直下のフラット階層となり、中間の親breadcrumbは持たない。
 function useBreadcrumbItems(): { label: string; to?: string }[] {
   const location = useLocation();
   const params = useParams();
@@ -19,14 +20,13 @@ function useBreadcrumbItems(): { label: string; to?: string }[] {
   const isTicket = location.pathname.startsWith("/tickets/");
 
   const { data: entity } = useEntity(isProject || isTicket ? path : undefined);
-  const { data: parent } = useEntity(entity?.goal ?? entity?.project);
+  const { data: parent } = useEntity(isTicket ? entity?.project : undefined);
 
   if (location.pathname === "/") return [{ label: t("webapp.home.title") }];
   if (location.pathname === "/projects") return [{ label: t("webapp.projects.title") }];
   if (isProject) {
     return [
       { label: t("webapp.projects.title"), to: "/projects" },
-      ...(parent ? [{ label: parent.title }] : []),
       { label: entity?.title ?? path ?? "" },
     ];
   }

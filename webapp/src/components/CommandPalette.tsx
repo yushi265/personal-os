@@ -10,7 +10,6 @@ import { t } from "@i18n/ja";
 /**
  * Cmd+K コマンドパレット(design-browser-ui.md §6.4、design P6-D14)。
  * プロジェクト/チケットのあいまい検索によるジャンプ + テーマ切替などのアクションを1画面に集約する。
- * Goalは詳細画面を持たないため一覧側の対象外(entityDetailPathの仕様に合わせる)。
  */
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);

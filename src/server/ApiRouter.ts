@@ -12,7 +12,6 @@ import {
 	collectProjectTodos,
 	DEFAULT_ENTITY_SORT,
 	EMPTY_MANAGE_FILTER,
-	groupProjectsByGoal,
 	type ManageDataPlugin,
 } from "../ui/manage/manageData";
 import { t } from "../i18n/ja";
@@ -83,7 +82,7 @@ function handleMeta(deps: ApiDeps): ApiResult {
 function handleSummary(deps: ApiDeps): ApiResult {
 	const now = today();
 	const capability = deps.getCapability();
-	const entities = [...deps.store.listByType("goal"), ...deps.store.listByType("project"), ...deps.store.listByType("ticket")];
+	const entities = [...deps.store.listByType("project"), ...deps.store.listByType("ticket")];
 
 	return ok({
 		todayTodos: capability.todoFeatures ? deps.todoService.list({ done: false, dueOn: now }) : [],
@@ -103,10 +102,6 @@ function asManageDataPlugin(deps: ApiDeps): ManageDataPlugin {
 
 function handleListEntities(query: Record<string, string>, deps: ApiDeps): ApiResult {
 	const plugin = asManageDataPlugin(deps);
-
-	if (query.group === "goal") {
-		return ok({ groups: groupProjectsByGoal(plugin, EMPTY_MANAGE_FILTER, DEFAULT_ENTITY_SORT) });
-	}
 
 	const type = query.type;
 	if (!type) return badRequest("type is required");

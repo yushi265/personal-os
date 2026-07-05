@@ -1,7 +1,7 @@
 import type { Entity } from "@domain/entity";
 import type { Todo } from "@domain/todo";
 
-/** ホームサマリカードからの詳細ジャンプ用(design §9 P4行「5. ホームからの詳細ジャンプ」)。goal等はProjects一覧止まりとする */
+/** ホームサマリカードからの詳細ジャンプ用(design §9 P4行「5. ホームからの詳細ジャンプ」)。project/ticket以外は詳細画面を持たない */
 export function entityDetailPath(entity: Entity): string | undefined {
   if (entity.type === "project") return `/projects/${encodeURIComponent(entity.path)}`;
   if (entity.type === "ticket") return `/tickets/${encodeURIComponent(entity.path)}`;

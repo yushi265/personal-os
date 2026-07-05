@@ -2,7 +2,7 @@ import type { Entity, EntityType } from "@domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "@domain/todo";
 import type { Comment } from "@domain/comment";
 import { apiClient } from "./client";
-import type { CreateEntityInput, EntityFieldKey, EntityFieldValue, GoalGroup, HomeSummaryResponse, MetaResponse, PromoteOptions } from "./types";
+import type { CreateEntityInput, EntityFieldKey, EntityFieldValue, HomeSummaryResponse, MetaResponse, PromoteOptions } from "./types";
 
 export function getMeta(): Promise<MetaResponse> {
   return apiClient.get<MetaResponse>("/api/meta");
@@ -14,10 +14,6 @@ export function getSummary(): Promise<HomeSummaryResponse> {
 
 export function getEntitiesByType(type: EntityType): Promise<Entity[]> {
   return apiClient.get<{ entities: Entity[] }>(`/api/entities?type=${type}`).then((r) => r.entities);
-}
-
-export function getProjectsGroupedByGoal(): Promise<GoalGroup[]> {
-  return apiClient.get<{ groups: GoalGroup[] }>("/api/entities?group=goal").then((r) => r.groups);
 }
 
 export function getEntity(path: string): Promise<Entity> {

@@ -1,13 +1,12 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, FolderKanban } from "lucide-react";
+import { ChevronRight, FolderKanban } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { PROJECT_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
-import { useProjectsGroupedByGoal } from "@/hooks/useEntities";
+import { useEntities } from "@/hooks/useEntities";
 import { useCreateEntity } from "@/hooks/useEntityMutations";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,17 +29,15 @@ function matchesFilter(project: Entity, keyword: string, statuses: Set<string>):
   return project.title.toLowerCase().includes(keyword.trim().toLowerCase());
 }
 
-// プロジェクト一覧(design-browser-ui.md §6.2・§6.4)。Goalグルーピング+Collapsible+Table。
+// プロジェクト一覧(design-browser-ui.md §6.2・§6.4)。Goal概念廃止(design-remove-goal.md G3)によりフラットなTable 1枚とする。
 // フィルタは簡易(キーワード+statusチップ、design §9 P3行の指定通り)。
 export function Projects() {
-  const { data: groups, isLoading, isError } = useProjectsGroupedByGoal();
+  const { data: projects, isLoading, isError } = useEntities("project");
   const navigate = useNavigate();
   const createProject = useCreateEntity();
   const [keyword, setKeyword] = React.useState("");
   const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
-  const [collapsed, setCollapsed] = React.useState<Set<string>>(new Set());
-  const [newProjectTitles, setNewProjectTitles] = React.useState<Record<string, string>>({});
-  const [newGoalTitle, setNewGoalTitle] = React.useState("");
+  const [newProjectTitle, setNewProjectTitle] = React.useState("");
   const now = today();
   const reduced = useReducedMotion();
 
@@ -56,7 +53,7 @@ export function Projects() {
     );
   }
   if (isError) return <p className="text-destructive">{t("webapp.loadError")}</p>;
-  if ((groups ?? []).length === 0) {
+  if ((projects ?? []).length === 0) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold">{t("webapp.projects.title")}</h1>
@@ -78,13 +75,18 @@ export function Projects() {
     });
   };
 
-  const toggleCollapsed = (key: string) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+  const visibleProjects = (projects ?? []).filter((p) => matchesFilter(p, keyword, statuses));
+
+  const submitNewProject = () => {
+    const title = newProjectTitle.trim();
+    if (!title) return;
+    createProject.mutate(
+      { type: "project", title },
+      {
+        onSuccess: () => setNewProjectTitle(""),
+        onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+      }
+    );
   };
 
   return (
@@ -118,124 +120,59 @@ export function Projects() {
         </Popover>
       </div>
 
-      {(groups ?? []).map((group) => {
-        const key = group.goal?.path ?? "__unclassified__";
-        const isOpen = !collapsed.has(key);
-        const visibleProjects = group.projects.filter((p) => matchesFilter(p, keyword, statuses));
-        if (keyword.trim() || statuses.size > 0) {
-          if (visibleProjects.length === 0) return null;
-        }
-
-        return (
-          <Collapsible key={key} open={isOpen} onOpenChange={() => toggleCollapsed(key)}>
-            <div className="flex w-full items-center gap-2 rounded-md py-2 font-medium">
-              {/* 折りたたみ専用の独立したクリック領域(design: タイトル遷移とのクリック競合回避) */}
-              <CollapsibleTrigger asChild>
-                <button
-                  className="rounded-md p-1 hover:bg-accent"
-                  aria-label={isOpen ? t("webapp.projects.collapseGoal") : t("webapp.projects.expandGoal")}
-                >
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "" : "-rotate-90"}`} />
-                </button>
-              </CollapsibleTrigger>
-              {group.goal ? (
-                <button
-                  className="rounded-md text-left hover:underline"
-                  onClick={() => navigate(`/goals/${encodeURIComponent(group.goal!.path)}`)}
-                >
-                  {group.goal.title}
-                </button>
-              ) : (
-                <span>{t("webapp.projects.unclassified")}</span>
-              )}
-              <span className="text-sm font-normal text-muted-foreground">({visibleProjects.length})</span>
-            </div>
-            <CollapsibleContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Progress</TableHead>
-                    <TableHead>Due</TableHead>
-                    <TableHead className="w-6" />
-                  </TableRow>
-                </TableHeader>
-                <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
-                  {visibleProjects.map((project) => (
-                    <MotionTableRow
-                      key={project.path}
-                      variants={staggerItem}
-                      transition={listTransition(!!reduced)}
-                      className="group cursor-pointer"
-                      onClick={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}
-                    >
-                      <TableCell className="font-medium">{project.title}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={project.status} />
-                      </TableCell>
-                      <TableCell>
-                        <PriorityBadge priority={project.priority} />
-                      </TableCell>
-                      <TableCell>
-                        <ProgressBar value={project.progress} />
-                      </TableCell>
-                      <TableCell>
-                        <DueLabel due={project.due} today={now} />
-                      </TableCell>
-                      <TableCell>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
-                      </TableCell>
-                    </MotionTableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <Input
-                        value={newProjectTitles[key] ?? ""}
-                        onChange={(e) => setNewProjectTitles((prev) => ({ ...prev, [key]: e.target.value }))}
-                        onKeyDown={(e) => {
-                          if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
-                          const title = (newProjectTitles[key] ?? "").trim();
-                          if (!title) return;
-                          createProject.mutate(
-                            { type: "project", title, goal: group.goal?.path },
-                            {
-                              onSuccess: () => setNewProjectTitles((prev) => ({ ...prev, [key]: "" })),
-                              onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
-                            }
-                          );
-                        }}
-                        placeholder={t("webapp.detail.addProjectPlaceholder")}
-                        className="h-8 border-none bg-transparent shadow-none focus-visible:ring-0"
-                      />
-                    </TableCell>
-                  </TableRow>
-                </motion.tbody>
-              </Table>
-            </CollapsibleContent>
-          </Collapsible>
-        );
-      })}
-
-      <Input
-        value={newGoalTitle}
-        onChange={(e) => setNewGoalTitle(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
-          const title = newGoalTitle.trim();
-          if (!title) return;
-          createProject.mutate(
-            { type: "goal", title },
-            {
-              onSuccess: () => setNewGoalTitle(""),
-              onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
-            }
-          );
-        }}
-        placeholder={t("webapp.projects.addGoalPlaceholder")}
-        className="h-8 max-w-xs border-dashed"
-      />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Progress</TableHead>
+            <TableHead>Due</TableHead>
+            <TableHead className="w-6" />
+          </TableRow>
+        </TableHeader>
+        <motion.tbody variants={staggerContainer} initial="initial" animate="animate">
+          {visibleProjects.map((project) => (
+            <MotionTableRow
+              key={project.path}
+              variants={staggerItem}
+              transition={listTransition(!!reduced)}
+              className="group cursor-pointer"
+              onClick={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}
+            >
+              <TableCell className="font-medium">{project.title}</TableCell>
+              <TableCell>
+                <StatusBadge status={project.status} />
+              </TableCell>
+              <TableCell>
+                <PriorityBadge priority={project.priority} />
+              </TableCell>
+              <TableCell>
+                <ProgressBar value={project.progress} />
+              </TableCell>
+              <TableCell>
+                <DueLabel due={project.due} today={now} />
+              </TableCell>
+              <TableCell>
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5" />
+              </TableCell>
+            </MotionTableRow>
+          ))}
+          <TableRow>
+            <TableCell colSpan={6}>
+              <Input
+                value={newProjectTitle}
+                onChange={(e) => setNewProjectTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) submitNewProject();
+                }}
+                placeholder={t("webapp.detail.addProjectPlaceholder")}
+                className="h-8 border-none bg-transparent shadow-none focus-visible:ring-0"
+              />
+            </TableCell>
+          </TableRow>
+        </motion.tbody>
+      </Table>
     </div>
   );
 }

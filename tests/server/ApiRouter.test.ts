@@ -164,15 +164,6 @@ describe("ApiRouter.handle: GET /api/entities", () => {
 		expect((res.body as { entities: Entity[] }).entities.map((e) => e.path)).toEqual(["p1"]);
 	});
 
-	it("returns Goal-grouped shape when group=goal", async () => {
-		const { deps, store } = makeMocks();
-		store.upsertEntity(makeEntity({ path: "g1", type: "goal", title: "goal-a", status: "active" }));
-		store.upsertEntity(makeEntity({ path: "p1", type: "project", title: "project-a", goal: "g1" }));
-		const res = await ApiRouter.handle("GET", "/api/entities", { group: "goal" }, undefined, deps);
-		expect(res.status).toBe(200);
-		expect((res.body as { groups: unknown[] }).groups).toHaveLength(1);
-	});
-
 	it("returns 400 when type is missing", async () => {
 		const { deps } = makeMocks();
 		const res = await ApiRouter.handle("GET", "/api/entities", {}, undefined, deps);
