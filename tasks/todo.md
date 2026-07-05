@@ -1,5 +1,12 @@
 # Personal OS 実装 TODO
 
+## ブラウザUI Geistデザイン化(2026-07-05、Claude Designからインポート)
+
+- [x] デザイン取り込み: design-refs/geist-final.dc.html(トークン+構造仕様)→ commit `a07ff31`
+- [x] W-G1: トークン/Geistフォント同梱/左サイドバーシェル/Projects一覧 → commit `0229135`
+- [x] W-G2: 詳細2画面(monoラベル・2カラムTodo/Memo)/ホーム白黒基調/仕上げ → commit `0a8a3fe`
+- 適合判断: Goal・Blockers欄はデザインにあるが現行モデルにないため省略 / IBM Plex Sans JPは同梱せずシステムJPフォールバック / 「Obsidianで開く」はヘッダに一本化
+
 ## Blockers概念の廃止(2026-07-05 ユーザー確定)
 
 - 方針: 読み取り・UI・判定を撤去。既存データは未知プロパティとしてextra保持(ファイル無変更・移行不要)。「待ちの理由」はstatus waiting+コメントで代替
