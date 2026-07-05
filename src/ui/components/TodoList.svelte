@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Menu, Notice, Platform } from "obsidian";
+	import { Notice, Platform } from "obsidian";
 	import type { Priority } from "../../domain/entity";
 	import { PRIORITIES } from "../../domain/entity";
 	import type { Todo } from "../../domain/todo";
@@ -9,6 +9,8 @@
 	import { t, todoDeletedUndoNotice } from "../../i18n/ja";
 	import { showUndoNotice } from "../undoNotice";
 	import { PromoteTodoModal } from "../modals/PromoteModal";
+	import { DueDateModal } from "../modals/DueDateModal";
+	import { buildTodoMenu } from "./todoMenuBuilder";
 	import { longpress } from "../longpress";
 	import TitleCell from "./TitleCell.svelte";
 	import PriorityCell from "./PriorityCell.svelte";
@@ -108,25 +110,33 @@
 		editTodoTokens[key] = (editTodoTokens[key] ?? 0) + 1;
 	}
 
+	// 長押しメニュー「優先度: ...」: 現在値を候補から除く(ManageRow.svelte changePriorityOptionsと同じ発想)
+	function changeTodoPriorityOptions(todo: Todo): { value: string; label: string }[] {
+		const current = todo.priority ?? "";
+		return priorityOptions().filter((o) => o.value !== current);
+	}
+
+	// Obsidianのcontext menuには日付入力欄を置けないため、専用のDueDateModalを開く
+	function openDueDateModal(todo: Todo): void {
+		new DueDateModal(plugin.app, {
+			initialValue: todo.dueDate,
+			onSubmit: (next) => commitTodoDue(todo, next),
+		}).open();
+	}
+
 	function openTodoMenu(todo: Todo, index: number, x: number, y: number): void {
-		const menu = new Menu();
-		menu.addItem((item) => item.setTitle(t("preview.todo.editText")).onClick(() => requestEditTodoText(todo)));
-		menu.addItem((item) =>
-			item
-				.setTitle(t("preview.todo.moveUp"))
-				.setDisabled(index === 0)
-				.onClick(() => void moveTodo(todo, { kind: "up" })),
-		);
-		menu.addItem((item) =>
-			item
-				.setTitle(t("preview.todo.moveDown"))
-				.setDisabled(index === visibleTodos.length - 1)
-				.onClick(() => void moveTodo(todo, { kind: "down" })),
-		);
-		menu.addItem((item) => item.setTitle(t("preview.todo.promote")).onClick(() => promoteTodo(todo)));
-		menu.addSeparator();
-		menu.addItem((item) => item.setTitle(t("preview.todo.delete")).onClick(() => void deleteTodo(todo)));
-		menu.showAtPosition({ x, y });
+		buildTodoMenu({
+			priorityOptions: changeTodoPriorityOptions(todo),
+			onChangePriority: (next) => void commitTodoPriority(todo, next),
+			onSetDueDate: () => openDueDateModal(todo),
+			onEditText: () => requestEditTodoText(todo),
+			moveUpDisabled: index === 0,
+			onMoveUp: () => void moveTodo(todo, { kind: "up" }),
+			moveDownDisabled: index === visibleTodos.length - 1,
+			onMoveDown: () => void moveTodo(todo, { kind: "down" }),
+			onPromote: () => promoteTodo(todo),
+			onDelete: () => void deleteTodo(todo),
+		}).showAtPosition({ x, y });
 	}
 
 	// フッタ「+ Todoを追加」フォーム(design-ui-first.md §4.4、失敗時は入力内容を保持する)。addTarget未指定時は表示しない
@@ -205,12 +215,16 @@
 							<span class="pos-todolist-parent-badge">{parentTitle(todo)}</span>
 						{/if}
 					{/if}
-					<PriorityCell
-						value={todo.priority ?? ""}
-						options={priorityOptions()}
-						onCommit={(next) => commitTodoPriority(todo, next)}
-					/>
-					<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} relative />
+					<span class="pos-todolist-priority-cell" class:pos-todolist-cell-empty={!todo.priority}>
+						<PriorityCell
+							value={todo.priority ?? ""}
+							options={priorityOptions()}
+							onCommit={(next) => commitTodoPriority(todo, next)}
+						/>
+					</span>
+					<span class="pos-todolist-due-cell" class:pos-todolist-cell-empty={!todo.dueDate}>
+						<DateCell value={todo.dueDate} onCommit={(next) => commitTodoDue(todo, next)} relative />
+					</span>
 				</div>
 				<!-- 下段(モバイル): 操作ボタン群 -->
 				<div class="pos-todo-row-actions">

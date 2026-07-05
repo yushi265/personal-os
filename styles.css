@@ -2156,6 +2156,20 @@ body.is-mobile .pos-todo-row-meta {
 	color: var(--text-muted);
 }
 
+/* モバイルでは値が未設定の優先度/期限バッジを表示しない(「(未設定)」を出さない。
+   ManageRowのpos-cell-empty(styles.css内の別ブロック)と同じ発想) */
+body.is-mobile .pos-todo-row-meta .pos-todolist-cell-empty {
+	display: none;
+}
+
+/* モバイルの優先度/期限バッジは表示専用にする(単押しで編集を開かない — 変更は長押しメニューから)。
+   pointer-events: none でタップはli(行)へ素通しされ、長押しメニューの起動を妨げない。
+   デスクトップは対象外なので従来通りクリックで編集可能 */
+body.is-mobile .pos-todo-row-meta .pos-todolist-priority-cell,
+body.is-mobile .pos-todo-row-meta .pos-todolist-due-cell {
+	pointer-events: none;
+}
+
 /* D&Dが効かない環境が多いため、モバイルではドラッグハンドルを隠し▲▼のみ表示する(design-reorder-and-notes.md A-5) */
 body.is-mobile .pos-preview-todo-drag {
 	display: none;

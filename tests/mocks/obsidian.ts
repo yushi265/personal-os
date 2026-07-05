@@ -43,17 +43,23 @@ export interface MenuItemLike {
 	setTitle(title: string): MenuItemLike;
 	setChecked(checked: boolean): MenuItemLike;
 	setIcon(icon: string): MenuItemLike;
+	setDisabled(disabled: boolean): MenuItemLike;
 	onClick(callback: () => void): MenuItemLike;
 }
 
-export type MenuEntry = { type: "item"; title: string; onClick?: () => void } | { type: "separator" };
+export type MenuEntry =
+	| { type: "item"; title: string; disabled?: boolean; onClick?: () => void }
+	| { type: "separator" };
 
 /** buildRowMenu()等、Obsidian Menuを組み立てる純粋関数をテストするための最小mock */
 export class Menu {
 	items: MenuEntry[] = [];
 
 	addItem(configure: (item: MenuItemLike) => void): this {
-		const entry: { type: "item"; title: string; onClick?: () => void } = { type: "item", title: "" };
+		const entry: { type: "item"; title: string; disabled?: boolean; onClick?: () => void } = {
+			type: "item",
+			title: "",
+		};
 		const item: MenuItemLike = {
 			setTitle(title: string) {
 				entry.title = title;
@@ -63,6 +69,10 @@ export class Menu {
 				return item;
 			},
 			setIcon(_icon: string) {
+				return item;
+			},
+			setDisabled(disabled: boolean) {
+				entry.disabled = disabled;
 				return item;
 			},
 			onClick(callback: () => void) {

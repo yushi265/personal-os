@@ -91,6 +91,7 @@ const MESSAGES = {
 	"preview.blockerList.add": "追加",
 	"preview.blockerList.remove": "削除",
 	"preview.todoDisabledNotice": "Tasks / Dataviewプラグインが必要です。Todoセクションは無効化されています。",
+	"preview.todo.setDueDate": "期限を設定…",
 	"preview.todo.editText": "テキストを編集",
 	"preview.todo.promote": "昇格",
 	"preview.todo.delete": "削除",
@@ -258,6 +259,11 @@ const MESSAGES = {
 	"modal.review.submitted": "レビューを記録しました",
 
 	"modal.cancel": "キャンセル",
+
+	"modal.dueDate.title": "期限を設定",
+	"modal.dueDate.label": "期限",
+	"modal.dueDate.clear": "クリア",
+	"modal.dueDate.save": "設定",
 
 	"command.openReview": "Open Review",
 	"command.openSearch": "Open Search",
