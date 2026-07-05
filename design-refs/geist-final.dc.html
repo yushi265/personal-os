@@ -1,0 +1,41 @@
+<!-- Claude Designプロジェクト「UIのモダン化デザイン案」の「Geist案 最終.dc.html」(2026-07-05取得) -->
+<!-- 注意: このデザインは7/4時点のデータモデル(Goal/Blockersあり)で描かれている。実装時は現行モデル(フラット一覧・Goal/Blockersなし)に適合させること -->
+<!-- ============ デザイントークン ============
+light: --bg:#ffffff --surface:#fafafa --border:#eaeaea --hairline:#f2f2f2 --fg:#171717 --muted:#666666 --faint:#999999 --ghost:#cccccc --accent:#0070f3
+dark:  --bg:#000000 --surface:#0a0a0a --border:#262626 --hairline:#1a1a1a --fg:#ededed --muted:#888888 --faint:#666666 --ghost:#444444 --accent:#0070f3
+font: 'Geist','IBM Plex Sans JP',sans-serif / mono: 'Geist Mono',monospace
+============ -->
+<!-- ============ 構造仕様(デザインHTMLからの抽出) ============
+
+【全体】height:100vh flex横並び。サイドバー+メイン。font Geist/IBM Plex Sans JP。テーマ遷移 0.2s ease
+
+【サイドバー】(折りたたみ可: 開224px/閉56px、width 0.2s ease、border-right border、bg surface)
+- ヘッダ56px: ロゴ(20px三角形 clip-path:polygon(50% 0,100% 100%,0 100%) bg:fg)+「Projects」14px/600(開時のみ)+折りたたみトグル(«/»アイコン26px)
+- 検索ボックス(開時のみ): h32 border radius6 bg:bg、「検索…」12px faint+虫眼鏡12px、右に⌘Kバッジ(10px mono border radius4)→クリックでコマンドパレット起動
+- ナビ項目(h32 radius6 13px gap10、閉時はアイコンのみ中央寄せ): ホーム(家アイコン muted)/プロジェクト一覧(グリッドアイコン、アクティブ時bg:hairline fg/500)
+- フッタ(margin-top:auto p14): Connectedドット(7px accent丸+11px muted文字)+テーマ切替ボタン(26px border radius6、light時=月アイコン/dark時=太陽)
+
+【メインヘッダ】h56 padding 0 32px border-bottom
+- パンくず: 「プロジェクト一覧」(現在地は500、それ以外muted+hover:fg)、区切りは「/」(border色 18px/300)
+- 右側: 詳細ルート時のみ「Obsidianで開く ↗」(h32 border radius6 13px hover:surface)+⌘Kバッジ(10px mono border radius6 padding 2px 7px)
+
+【一覧画面】padding 40px 40px 64px、gap24
+- h1「Projects」28px/600 letter-spacing:-0.03em
+- 右上: キーワード検索input(h36 w280 border radius6 bg:surface 13px+虫眼鏡)+Statusフィルタボタン(h36 border radius6 bg:surface 13px+▼)
+- テーブルカード: border radius8 overflow:hidden
+  - (デザインではGoal別ヘッダ行だが現行はフラット1テーブル: ヘッダ行は省略 or 「PROJECTS — N」1本にする)
+  - 行: h52 padding 0 20px gap24 border-bottom hairline、hover:bg surface。列: タイトル(w300 14px/500)/statusピル/priorityピル/progress(3pxバー w160+mono12px %)/期限(mono 12px相対表記、なければ「—」faint)/›シェブロン(ghost)
+  - statusピル: h22 radius9999 border padding 0 10px 11px mono。backlog等=border+muted文字。active/doing=border+fg文字+6px accentドット付き
+  - priorityピル: high=bg:fg文字:bg(反転塗り)/medium=border:fg文字:fg/low・なし=「—」faint mono
+  - 最下行: 「+ プロジェクトを追加…」h40 13px faint cursor:text(インライン作成)
+【プロジェクト詳細】padding同、gap32
+- ヘッダブロック(border-bottom padding-bottom28 gap20): h1 28px/600 -0.03em+プロパティ行(flex gap48 align-end wrap)
+  - 各プロパティ: 11px mono大文字 letter-spacing:0.06em faintラベル+値。Status/Priority=ピル+▼(クリックで変更)、期限=13px(なければ—)、Progress=「PROGRESS — N%」ラベル+3pxバー(max-w260 flex1)
+  - (デザインのGoal欄は現行モデルでは出さない)
+  - 右端: Archive(border 13px)/削除(border+文字#e5484d)ボタン h32 radius6
+- Ticketsセクション: 「TICKETS — N」11px monoラベル+テーブルカード(行h48: タイトルflex1/statusピルw110/priority mono w90/progress w200(3pxバー140+%)/›)+「+ チケットを追加…」行
+- Todo/Memoの2カラム(flex gap32、各flex1):
+  - Todo: ラベル+直下/すべてセグメント(border radius6 mono 11px、選択中=bg:fg文字:bg)+「完了済みを表示」チェック(13px)/空状態=dashed border radius8 padding18 12px faint中央/追加行=input(h34 flex1 border radius6)+期日ボタン+優先度ボタン+追加ボタン(bg:fg文字:bg h34 radius6 13px/500)
+  - Memo: ラベル+テキストエリア風(border radius8 padding12 min-h56 13px)+下に説明12px faint+追加ボタン(h28 border radius6 12px)
+【チケット詳細】プロジェクト詳細と同構造。プロパティ: Status/Priority/期限/Project(accent色リンク→親へ)。(デザインのBlockers欄は現行モデルでは出さない)。ボタン: 昇格(bg:fg反転塗り)/Archive/削除。Ticketsセクションなし、Todo/Memo2カラムのみ
+============ -->
