@@ -1972,6 +1972,13 @@ body.is-mobile .pos-manage-table .pos-manage-cell-nav {
 	display: none;
 }
 
+/* モバイルカードのステータスバッジは表示専用(単押しで編集を開かない — 変更は長押しメニューから)。
+   pointer-events: none でタップは行(tr)へ素通しされ、カード遷移として扱われる。
+   詳細画面ヘッダのStatusCellはこのセレクタの対象外なので従来通り編集可能 */
+body.is-mobile .pos-manage-table .pos-manage-cell-status {
+	pointer-events: none;
+}
+
 @container (max-width: 480px) {
 	.pos-preview-fields {
 		grid-template-columns: 1fr;
