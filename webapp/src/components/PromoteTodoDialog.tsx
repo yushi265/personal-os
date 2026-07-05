@@ -1,9 +1,10 @@
 import * as React from "react";
 import { toast } from "sonner";
 import type { Todo } from "@domain/todo";
-import { stripMetadata } from "@domain/todo";
+import { defaultProjectForTodo, stripMetadata } from "@domain/todo";
 import type { SourceTodoAction } from "@/api/types";
 import { useEntities } from "@/hooks/useEntities";
+import { useEntity } from "@/hooks/useEntity";
 import { usePromoteTodoMutation } from "@/hooks/useTodoMutations";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -22,18 +23,21 @@ interface PromoteTodoDialogProps {
 // フィールド: 新タイトル(prefill: stripMetadata)/所属Project/元Todoの扱い(delete/complete/link)。
 export function PromoteTodoDialog({ todo, onOpenChange }: PromoteTodoDialogProps) {
   const { data: projects } = useEntities("project");
+  // parentType === "ticket" の場合のみ、その親ticketを取得してproject初期値を導出する(defaultProjectForTodo)
+  const parentTicketPath = todo?.parentType === "ticket" ? todo.parentPath : undefined;
+  const { data: parentTicket } = useEntity(parentTicketPath);
   const promote = usePromoteTodoMutation();
   const [newTitle, setNewTitle] = React.useState("");
   const [projectPath, setProjectPath] = React.useState<string | undefined>(undefined);
-  const [sourceAction, setSourceAction] = React.useState<SourceTodoAction>("link");
+  const [sourceAction, setSourceAction] = React.useState<SourceTodoAction>("delete");
 
   React.useEffect(() => {
     if (todo) {
       setNewTitle(stripMetadata(todo.text));
-      setProjectPath(todo.parentType === "project" ? todo.parentPath : undefined);
-      setSourceAction("link");
+      setProjectPath(defaultProjectForTodo(todo, (path) => (path === parentTicketPath ? parentTicket : undefined)));
+      setSourceAction("delete");
     }
-  }, [todo]);
+  }, [todo, parentTicketPath, parentTicket]);
 
   const submit = () => {
     if (!todo) return;

@@ -1,4 +1,4 @@
-import type { Priority } from "./entity";
+import type { Entity, Priority } from "./entity";
 
 /**
  * Todoの内部表現(design.md §3.2)。
@@ -20,6 +20,18 @@ export interface Todo {
 	labels: string[];
 	parentType: "ticket" | "project" | "inbox";
 	parentPath: string;
+}
+
+/**
+ * Todo→Ticket昇格モーダルの「所属project」初期値(design要望)。
+ * - parentType === "project" → その親project自身
+ * - parentType === "ticket" → 親ticketの project(getEntity経由で解決)
+ * - inbox / 解決不能 → undefined(未選択)
+ */
+export function defaultProjectForTodo(todo: Todo, getEntity: (path: string) => Entity | undefined): string | undefined {
+	if (todo.parentType === "project") return todo.parentPath;
+	if (todo.parentType === "ticket") return getEntity(todo.parentPath)?.project;
+	return undefined;
 }
 
 const EMOJI_DATE_PATTERN = /(📅|🛫|✅)\s*(\d{4}-\d{2}-\d{2})/gu;

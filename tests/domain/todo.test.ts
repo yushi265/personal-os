@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	appendTodoToSection,
 	buildTodoLine,
+	defaultProjectForTodo,
 	extractEmojiDate,
 	extractInline,
 	extractInlineList,
@@ -13,6 +14,7 @@ import {
 	updateTodoLine,
 	type Todo,
 } from "../../src/domain/todo";
+import type { Entity } from "../../src/domain/entity";
 
 describe("toggleTodoLine", () => {
 	it("T-1: marks an open todo done and appends the done-emoji date", () => {
@@ -35,6 +37,57 @@ describe("toggleTodoLine", () => {
 		const toggled = toggleTodoLine(original, "2026-07-04");
 		const restored = toggleTodoLine(toggled, "2026-07-05");
 		expect(restored).toBe(original);
+	});
+});
+
+function makeTodo(overrides: Partial<Todo> = {}): Todo {
+	return {
+		filePath: "a.md",
+		line: 0,
+		text: "SBI銀行へ電話する",
+		done: false,
+		labels: [],
+		parentType: "ticket",
+		parentPath: "a.md",
+		...overrides,
+	};
+}
+
+function makeEntity(overrides: Partial<Entity> = {}): Entity {
+	return {
+		path: "PersonalOS/Tickets/ticket-a.md",
+		type: "ticket",
+		title: "銀行比較",
+		status: "doing",
+		tags: [],
+		labels: [],
+		extra: {},
+		...overrides,
+	};
+}
+
+describe("defaultProjectForTodo", () => {
+	it("returns the parent project path when parentType is project", () => {
+		const todo = makeTodo({ parentType: "project", parentPath: "PersonalOS/Projects/project-a.md" });
+		expect(defaultProjectForTodo(todo, () => undefined)).toBe("PersonalOS/Projects/project-a.md");
+	});
+
+	it("returns the parent ticket's project when parentType is ticket", () => {
+		const todo = makeTodo({ parentType: "ticket", parentPath: "PersonalOS/Tickets/ticket-a.md" });
+		const ticket = makeEntity({ path: "PersonalOS/Tickets/ticket-a.md", project: "PersonalOS/Projects/project-a.md" });
+		const getEntity = (path: string) => (path === ticket.path ? ticket : undefined);
+		expect(defaultProjectForTodo(todo, getEntity)).toBe("PersonalOS/Projects/project-a.md");
+	});
+
+	it("returns undefined when the parent ticket has no project", () => {
+		const todo = makeTodo({ parentType: "ticket", parentPath: "PersonalOS/Tickets/ticket-a.md" });
+		const ticket = makeEntity({ path: "PersonalOS/Tickets/ticket-a.md" });
+		expect(defaultProjectForTodo(todo, () => ticket)).toBeUndefined();
+	});
+
+	it("returns undefined for inbox todos", () => {
+		const todo = makeTodo({ parentType: "inbox", parentPath: "00_Inbox/note.md" });
+		expect(defaultProjectForTodo(todo, () => undefined)).toBeUndefined();
 	});
 });
 

@@ -1,7 +1,7 @@
 import { AbstractInputSuggest, Modal, Notice, Setting, type App } from "obsidian";
 import type { Entity } from "../../domain/entity";
 import type { Todo } from "../../domain/todo";
-import { stripMetadata } from "../../domain/todo";
+import { defaultProjectForTodo, stripMetadata } from "../../domain/todo";
 import type { IndexStore } from "../../infra/IndexStore";
 import type { PromoteService, SourceTodoAction } from "../../services/PromoteService";
 import { t } from "../../i18n/ja";
@@ -45,7 +45,7 @@ export interface PromoteTodoModalOptions {
 export class PromoteTodoModal extends Modal {
 	private newTitle: string;
 	private projectPath: string | undefined;
-	private sourceAction: SourceTodoAction = "link";
+	private sourceAction: SourceTodoAction = "delete";
 
 	constructor(
 		app: App,
@@ -53,6 +53,7 @@ export class PromoteTodoModal extends Modal {
 	) {
 		super(app);
 		this.newTitle = stripMetadata(opts.todo.text);
+		this.projectPath = defaultProjectForTodo(opts.todo, (path) => opts.store.get(path));
 	}
 
 	onOpen(): void {
@@ -88,6 +89,8 @@ export class PromoteTodoModal extends Modal {
 		if (titleInputEl) bindEnterSubmit(titleInputEl, () => void this.submit());
 
 		new Setting(contentEl).setName(t("modal.promoteTodo.project")).addText((text) => {
+			const defaultProject = this.projectPath ? this.opts.store.get(this.projectPath) : undefined;
+			if (defaultProject) text.setValue(defaultProject.title);
 			new ProjectSuggest(
 				this.app,
 				text.inputEl,
