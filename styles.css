@@ -1979,6 +1979,12 @@ body.is-mobile .pos-manage-table .pos-manage-cell-status {
 	pointer-events: none;
 }
 
+/* モバイルカードの優先度バッジも同様に表示専用にする(design: 優先度も長押しのみに)。
+   変更は長押しメニューの「優先度: ...」から。詳細画面のPriorityCellはこのセレクタの対象外なので従来通り編集可能 */
+body.is-mobile .pos-manage-table .pos-manage-cell-priority {
+	pointer-events: none;
+}
+
 @container (max-width: 480px) {
 	.pos-preview-fields {
 		grid-template-columns: 1fr;

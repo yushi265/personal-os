@@ -72,3 +72,63 @@ describe("buildRowMenu status section", () => {
 		expect(menuItems(menu).at(-1)).toMatchObject({ type: "item", title: "削除" });
 	});
 });
+
+describe("buildRowMenu priority section", () => {
+	it("does not render a priority section when priorityOptions/onChangePriority are absent", () => {
+		const menu = buildRowMenu(baseActions());
+		expect(menuItems(menu).every((entry) => entry.type !== "item" || !entry.title.startsWith("優先度:"))).toBe(true);
+	});
+
+	it("does not render a priority section when priorityOptions is empty", () => {
+		const menu = buildRowMenu(baseActions({ priorityOptions: [], onChangePriority: vi.fn() }));
+		expect(menuItems(menu).every((entry) => entry.type !== "item" || !entry.title.startsWith("優先度:"))).toBe(true);
+	});
+
+	it("renders priority candidates prefixed with 優先度:, following the status section", () => {
+		const onChangeStatus = vi.fn();
+		const onChangePriority = vi.fn();
+		const menu = buildRowMenu(
+			baseActions({
+				statusOptions: [{ value: "doing", label: "進行中" }],
+				onChangeStatus,
+				priorityOptions: [
+					{ value: "high", label: "high" },
+					{ value: "", label: "(未設定)" },
+				],
+				onChangePriority,
+			})
+		);
+
+		expect(menuItems(menu)[0]).toMatchObject({ type: "item", title: "▸ 進行中" });
+		expect(menuItems(menu)[1]).toEqual({ type: "separator" });
+		expect(menuItems(menu)[2]).toMatchObject({ type: "item", title: "優先度: high" });
+		expect(menuItems(menu)[3]).toMatchObject({ type: "item", title: "優先度: (未設定)" });
+		expect(menuItems(menu)[4]).toEqual({ type: "separator" });
+		expect(menuItems(menu)[5]).toMatchObject({ type: "item", title: "ノートを開く" });
+	});
+
+	it("invokes onChangePriority with the option's value when a priority item is clicked", () => {
+		const onChangePriority = vi.fn();
+		const menu = buildRowMenu(
+			baseActions({
+				priorityOptions: [{ value: "low", label: "low" }],
+				onChangePriority,
+			})
+		);
+
+		const priorityItem = menuItems(menu).find((entry) => entry.type === "item" && entry.title === "優先度: low");
+		expect(priorityItem?.type).toBe("item");
+		(priorityItem as { onClick?: () => void }).onClick?.();
+		expect(onChangePriority).toHaveBeenCalledWith("low");
+	});
+
+	it("still renders delete as the last item regardless of the priority section", () => {
+		const menu = buildRowMenu(
+			baseActions({
+				priorityOptions: [{ value: "high", label: "high" }],
+				onChangePriority: vi.fn(),
+			})
+		);
+		expect(menuItems(menu).at(-1)).toMatchObject({ type: "item", title: "削除" });
+	});
+});

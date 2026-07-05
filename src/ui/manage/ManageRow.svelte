@@ -82,6 +82,12 @@
 		return [{ value: "", label: t("manage.field.unset") }, ...PRIORITIES.map((p) => ({ value: p, label: p }))];
 	}
 
+	// RowMenu「優先度: ...」: 現在値(選んでも無意味)を候補から除く。statusと違いarchived相当の除外対象は無い
+	function changePriorityOptions(entity: Entity): { value: string; label: string }[] {
+		const current = entity.priority ?? "";
+		return priorityOptions().filter((o) => o.value !== current);
+	}
+
 	// Goal概念の廃止(design-remove-goal.md G2)によりProjectには親が無くなったため、親選択肢はticketタブ(親=project)のみが対象
 	function parentOptions(): { value: string; label: string }[] {
 		return plugin.store.listByType("project").map((e) => ({ value: e.path, label: e.title }));
@@ -103,6 +109,15 @@
 	}
 	function commitPriority(entity: Entity, next: string): Promise<void> {
 		return plugin.entityFieldService.updateField(entity.path, "priority", next);
+	}
+
+	// RowMenu「優先度: ...」からの変更: StatusCellの変更と同様、失敗時はNoticeのみ出す(store側の再indexで表示が戻る)
+	async function changePriorityFromMenu(entity: Entity, next: string): Promise<void> {
+		try {
+			await commitPriority(entity, next);
+		} catch {
+			new Notice(t("manage.updateFailed"));
+		}
 	}
 	function commitDue(entity: Entity, next: string | undefined): Promise<void> {
 		return plugin.entityFieldService.updateField(entity.path, "due", next);
@@ -175,6 +190,8 @@
 			onShowPreview: () => showPreview(entity.path),
 			statusOptions: changeStatusOptions(entity),
 			onChangeStatus: (next) => void changeStatusFromMenu(entity, next),
+			priorityOptions: changePriorityOptions(entity),
+			onChangePriority: (next) => void changePriorityFromMenu(entity, next),
 			onRename: onNavigate ? requestRenameTitle : undefined,
 			onPromote: tab === "ticket" ? () => promoteEntity(entity) : undefined,
 			onChangeParent: tab === "ticket" ? () => changeParent(entity) : undefined,

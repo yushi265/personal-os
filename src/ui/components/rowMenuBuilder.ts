@@ -29,6 +29,12 @@ export interface RowMenuActions {
 	 */
 	statusOptions?: { value: string; label: string }[];
 	onChangeStatus?: (next: string) => void;
+	/**
+	 * 優先度変更(長押し/⋮メニューへの優先度変更追加): 現在値を除いた候補一覧。ステータス項目(「▸ ラベル」)と
+	 * 視覚的に区別するため「優先度: ラベル」プレフィックスにする。空配列またはundefinedならセクション自体を出さない。
+	 */
+	priorityOptions?: { value: string; label: string }[];
+	onChangePriority?: (next: string) => void;
 }
 
 export function buildRowMenu(actions: RowMenuActions): Menu {
@@ -37,6 +43,14 @@ export function buildRowMenu(actions: RowMenuActions): Menu {
 		for (const option of actions.statusOptions) {
 			menu.addItem((item) =>
 				item.setTitle(`▸ ${option.label}`).onClick(() => actions.onChangeStatus!(option.value))
+			);
+		}
+		menu.addSeparator();
+	}
+	if (actions.onChangePriority && actions.priorityOptions && actions.priorityOptions.length > 0) {
+		for (const option of actions.priorityOptions) {
+			menu.addItem((item) =>
+				item.setTitle(`優先度: ${option.label}`).onClick(() => actions.onChangePriority!(option.value))
 			);
 		}
 		menu.addSeparator();
