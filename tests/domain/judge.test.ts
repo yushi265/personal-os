@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isBlocked, isOverdue, isReviewNeeded, isTodoOverdue } from "../../src/domain/judge";
+import { isOverdue, isReviewNeeded, isTodoOverdue } from "../../src/domain/judge";
 import type { Entity } from "../../src/domain/entity";
 import type { Todo } from "../../src/domain/todo";
 
@@ -11,7 +11,6 @@ function makeEntity(overrides: Partial<Entity>): Entity {
 		status: "doing",
 		tags: [],
 		labels: [],
-		blockers: [],
 		extra: {},
 		...overrides,
 	};
@@ -84,23 +83,5 @@ describe("isReviewNeeded", () => {
 
 	it("returns false when no review_cycle is set", () => {
 		expect(isReviewNeeded(makeEntity({}), "2026-07-04")).toBe(false);
-	});
-});
-
-describe("isBlocked", () => {
-	it("returns true when blockers exist and status is open", () => {
-		expect(isBlocked(makeEntity({ blockers: ["waiting"], status: "waiting" }))).toBe(true);
-	});
-
-	it("J-7: blockers exist but status=archived -> false", () => {
-		expect(isBlocked(makeEntity({ blockers: ["waiting"], status: "archived" }))).toBe(false);
-	});
-
-	it("returns false when there are no blockers", () => {
-		expect(isBlocked(makeEntity({ blockers: [] }))).toBe(false);
-	});
-
-	it("returns false for entity types other than project/ticket", () => {
-		expect(isBlocked(makeEntity({ type: "goal", status: "active", blockers: ["x"] }))).toBe(false);
 	});
 });

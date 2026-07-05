@@ -31,7 +31,6 @@ function makeProjectEntity(overrides: Partial<Entity> = {}): Entity {
 		goal: "PersonalOS/Goals/goal-a.md",
 		tags: [],
 		labels: [],
-		blockers: [],
 		extra: {},
 		...overrides,
 	};
@@ -179,7 +178,6 @@ describe("PromoteService.promoteTicketToProject", () => {
 			project: "PersonalOS/Projects/proj-a.md",
 			tags: [],
 			labels: [],
-			blockers: [],
 			extra: {},
 		});
 		const repo = makeRepo();

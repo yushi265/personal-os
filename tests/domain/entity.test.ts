@@ -57,17 +57,26 @@ describe("parseEntity", () => {
 		if (result.ok) expect(result.entity.extra.custom_field).toBe("keep-me");
 	});
 
-	it("normalizes single-string tags/labels/blockers into arrays", () => {
+	it("normalizes single-string tags/labels into arrays", () => {
 		const result = parseEntity(
 			file,
-			{ type: "ticket", status: "doing", tags: "solo", labels: "solo-label", blockers: "waiting" },
+			{ type: "ticket", status: "doing", tags: "solo", labels: "solo-label" },
 			resolveLink
 		);
 		expect(result.ok).toBe(true);
 		if (result.ok) {
 			expect(result.entity.tags).toEqual(["solo"]);
 			expect(result.entity.labels).toEqual(["solo-label"]);
-			expect(result.entity.blockers).toEqual(["waiting"]);
+		}
+	});
+
+	// Blockers概念廃止(既存Vaultにblockers付きノートがあってもパースエラーにならず、非破壊でextraへ落ちることを担保する)
+	it("no longer reads frontmatter blockers as a known field; it falls through to extra", () => {
+		const result = parseEntity(file, { type: "ticket", status: "doing", blockers: ["waiting"] }, resolveLink);
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.entity).not.toHaveProperty("blockers");
+			expect(result.entity.extra.blockers).toEqual(["waiting"]);
 		}
 	});
 

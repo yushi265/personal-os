@@ -1,5 +1,5 @@
 import type { Entity } from "../../domain/entity";
-import { isBlocked, isOverdue, isReviewNeeded, isTodoOverdue } from "../../domain/judge";
+import { isOverdue, isReviewNeeded, isTodoOverdue } from "../../domain/judge";
 import { today } from "../../domain/date";
 import type { Todo } from "../../domain/todo";
 import type PersonalOSPlugin from "../../main";
@@ -31,7 +31,6 @@ export interface DashboardData {
 	activeProjects: Entity[];
 	activeTickets: Entity[];
 	reviewNeeded: Entity[];
-	blocked: Entity[];
 	recentUpdates: Entity[];
 	activityLogLines: string[];
 	parseErrors: { path: string; reason: string }[];
@@ -92,7 +91,6 @@ export async function buildDashboardData(plugin: PersonalOSPlugin): Promise<Dash
 		activeProjects: plugin.store.listByType("project").filter((e) => e.status === "active"),
 		activeTickets: plugin.store.listByType("ticket").filter((e) => e.status === "doing"),
 		reviewNeeded: entities.filter((e) => isReviewNeeded(e, now)),
-		blocked: entities.filter((e) => isBlocked(e)),
 		recentUpdates: computeRecentUpdates(plugin),
 		activityLogLines: await computeActivityLogTail(plugin),
 		parseErrors: plugin.store.getParseErrors(),

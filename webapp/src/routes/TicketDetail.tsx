@@ -11,7 +11,6 @@ import { StatusSelect } from "@/components/EditableCell/StatusSelect";
 import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DateEdit } from "@/components/EditableCell/DateEdit";
 import { ParentSelect } from "@/components/EditableCell/ParentSelect";
-import { BlockerListEdit } from "@/components/BlockerListEdit";
 import { TodoListPanel } from "@/components/TodoListPanel";
 import { NotePanel } from "@/components/NotePanel";
 import { CommentPanel } from "@/components/CommentPanel";
@@ -85,10 +84,6 @@ export function TicketDetail() {
             <span className="text-muted-foreground">{t("preview.field.project")}</span>
             <ParentSelect type="project" value={entity.project} onCommit={(project) => updateField.mutate({ key: "project", value: project })} />
           </div>
-        </div>
-        <div className="space-y-1">
-          <span className="text-sm text-muted-foreground">{t("preview.section.blockers")}</span>
-          <BlockerListEdit values={entity.blockers} onCommit={(next) => updateField.mutate({ key: "blockers", value: next })} />
         </div>
         <div className="flex gap-2 pt-1">
           <Button variant="outline" size="sm" onClick={() => setConfirmAction("promote")}>

@@ -8,7 +8,6 @@
 	import DateCell from "../components/DateCell.svelte";
 	import ParentCell from "../components/ParentCell.svelte";
 	import TitleCell from "../components/TitleCell.svelte";
-	import BlockerList from "../components/BlockerList.svelte";
 	import TodoList from "../components/TodoList.svelte";
 	import NotePanel from "../components/NotePanel.svelte";
 	import CommentSection from "../components/CommentSection.svelte";
@@ -17,7 +16,7 @@
 
 	/**
 	 * チケット詳細画面(design-drilldown-nav.md §3.3)。
-	 * ProjectDetailScreen.svelteのヘッダ構成を踏襲しつつ、Blockersセクションを追加する。
+	 * ProjectDetailScreen.svelteのヘッダ構成を踏襲する。
 	 * showDoneTodosのみこのスタックフレーム固有の状態(§2.3)であり、onScreenChangeを通じて
 	 * 呼び出し元(Manage.svelte)のstack[末尾]を置き換える形で更新する。
 	 */
@@ -77,10 +76,6 @@
 	function commitProject(next: string | undefined): Promise<void> {
 		return plugin.entityFieldService.updateField(screen.path, "project", next);
 	}
-	function commitBlockers(next: string[]): Promise<void> {
-		return plugin.entityFieldService.updateField(screen.path, "blockers", next);
-	}
-
 	function toggleShowDoneTodos(next: boolean): void {
 		onScreenChange({ ...screen, showDoneTodos: next });
 	}
@@ -117,11 +112,6 @@
 			</div>
 		</dd>
 	</dl>
-
-	<section class="pos-manage-detail-section">
-		<h3>{t("preview.section.blockers")}</h3>
-		<BlockerList blockers={entity.blockers} onCommit={commitBlockers} />
-	</section>
 
 	{#if plugin.capability.todoFeatures}
 		<section class="pos-manage-detail-section">

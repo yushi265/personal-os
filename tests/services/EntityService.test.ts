@@ -15,7 +15,6 @@ function makeEntity(overrides: Partial<Entity> = {}): Entity {
 		status: "active",
 		tags: [],
 		labels: [],
-		blockers: [],
 		extra: {},
 		...overrides,
 	};

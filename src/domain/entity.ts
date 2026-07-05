@@ -45,7 +45,6 @@ export interface Entity {
 	archivedAt?: string;
 	tags: string[];
 	labels: string[];
-	blockers: string[];
 	extra: Record<string, unknown>;
 }
 
@@ -66,7 +65,6 @@ const KNOWN_FRONTMATTER_KEYS = new Set([
 	"review_cycle",
 	"tags",
 	"labels",
-	"blockers",
 ]);
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -196,7 +194,6 @@ export function parseEntity(
 
 	const tags = toStringArray(fm.tags);
 	const labels = toStringArray(fm.labels);
-	const blockers = toStringArray(fm.blockers);
 
 	const extra: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(fm)) {
@@ -222,7 +219,6 @@ export function parseEntity(
 		archivedAt,
 		tags,
 		labels,
-		blockers,
 		extra,
 	};
 

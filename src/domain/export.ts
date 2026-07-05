@@ -43,18 +43,12 @@ export interface ReviewNeededItem {
 	lastReviewed?: string;
 }
 
-export interface BlockedItem {
-	title: string;
-	blockers: string[];
-}
-
 export interface ExportSnapshot {
 	today: string;
 	goals: ExportGoalNode[];
 	unlinked: UnlinkedEntity[];
 	overdue: OverdueItem[];
 	reviewNeeded: ReviewNeededItem[];
-	blocked: BlockedItem[];
 }
 
 export interface SummarySnapshot {
@@ -64,7 +58,6 @@ export interface SummarySnapshot {
 	openTodoCount: number;
 	overdue: OverdueItem[];
 	reviewNeeded: ReviewNeededItem[];
-	blocked: BlockedItem[];
 }
 
 function fmtPriority(priority: Entity["priority"]): string {
@@ -77,10 +70,6 @@ function fmtDue(due: string | undefined): string {
 
 function fmtProgress(progress: number | undefined): string {
 	return String(progress ?? 0);
-}
-
-function fmtBlockers(blockers: string[]): string {
-	return blockers.length > 0 ? blockers.join(", ") : "なし";
 }
 
 function fmtTodoLine(todo: Todo): string {
@@ -104,7 +93,6 @@ function buildProjectSection(node: ExportProjectNode): string[] {
 	const lines: string[] = [];
 	const { project } = node;
 	lines.push(`#### ${project.title} (${project.status}, progress: ${fmtProgress(project.progress)}%, due: ${fmtDue(project.due)})`);
-	lines.push(`- Blockers: ${fmtBlockers(project.blockers)}`);
 	const ticketSummary =
 		node.tickets.length > 0
 			? node.tickets.map((t) => `${t.ticket.title} (${t.ticket.status}, ${fmtProgress(t.ticket.progress)}%)`).join(", ")
@@ -182,16 +170,6 @@ export function buildAiExport(snapshot: ExportSnapshot): string {
 			lines.push(`- ${item.title} (${item.cycle}, last: ${item.lastReviewed ?? "未実施"})`);
 		}
 	}
-	lines.push("");
-
-	lines.push("## Blockers");
-	if (snapshot.blocked.length === 0) {
-		lines.push("(該当なし)");
-	} else {
-		for (const item of snapshot.blocked) {
-			lines.push(`- ${item.title}: ${item.blockers.join(", ")}`);
-		}
-	}
 
 	return lines.join("\n").trimEnd() + "\n";
 }
@@ -213,9 +191,6 @@ export function buildAiSummary(snapshot: SummarySnapshot): string {
 			? snapshot.reviewNeeded.map((i) => `${i.title}: ${i.cycle}, last ${i.lastReviewed ?? "未実施"}`).join(", ")
 			: "なし";
 	lines.push(`- 🔍 Review Needed: ${snapshot.reviewNeeded.length}件(${reviewDigest})`);
-
-	const blockedDigest = snapshot.blocked.length > 0 ? snapshot.blocked.map((i) => i.title).join(", ") : "なし";
-	lines.push(`- ⛔ Blocked: ${snapshot.blocked.length}件(${blockedDigest})`);
 
 	return lines.join("\n") + "\n";
 }

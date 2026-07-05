@@ -22,8 +22,6 @@ export function useHomeSummary() {
     overdueEntities: data?.overdueEntities ?? [],
     reviewNeededCount: data?.reviewNeededEntities.length ?? 0,
     reviewNeededEntities: data?.reviewNeededEntities ?? [],
-    blockedCount: data?.blockedEntities.length ?? 0,
-    blockedEntities: data?.blockedEntities ?? [],
     activeProjectCount: data?.activeProjectCount ?? 0,
   };
 }

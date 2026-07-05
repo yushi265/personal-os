@@ -9,7 +9,6 @@
 	import OverdueWidget from "./widgets/OverdueWidget.svelte";
 	import ActiveEntitiesWidget from "./widgets/ActiveEntitiesWidget.svelte";
 	import ReviewNeededWidget from "./widgets/ReviewNeededWidget.svelte";
-	import BlockedWidget from "./widgets/BlockedWidget.svelte";
 	import RecentUpdatesWidget from "./widgets/RecentUpdatesWidget.svelte";
 	import ActivityLogWidget from "./widgets/ActivityLogWidget.svelte";
 	import ParseErrorWidget from "./widgets/ParseErrorWidget.svelte";
@@ -136,8 +135,6 @@
 				/>
 			{:else if w.id === "review-needed"}
 				<ReviewNeededWidget {plugin} entities={$data.reviewNeeded} onNavigate={handleNavigate} onViewAll={viewAll} />
-			{:else if w.id === "blocked"}
-				<BlockedWidget {plugin} entities={$data.blocked} onNavigate={handleNavigate} onViewAll={viewAll} />
 			{:else if w.id === "recent-updates"}
 				<RecentUpdatesWidget entities={$data.recentUpdates} onOpen={(path) => navigateOrOpen(path, false)} onViewAll={viewAll} />
 			{:else if w.id === "activity-log"}

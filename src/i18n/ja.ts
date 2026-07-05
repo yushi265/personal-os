@@ -44,7 +44,6 @@ const MESSAGES = {
 	"dashboard.widget.activeProjects": "Active Projects",
 	"dashboard.widget.activeTickets": "Active Tickets",
 	"dashboard.widget.reviewNeeded": "Review Needed",
-	"dashboard.widget.blocked": "Blocked",
 	"dashboard.widget.recentUpdates": "Recent Updates",
 	"dashboard.widget.activityLog": "Activity Log",
 	"dashboard.widget.parseError": "解析エラー",
@@ -52,7 +51,6 @@ const MESSAGES = {
 	"dashboard.empty.overdue": "期限超過の項目はありません。",
 	"dashboard.empty.active": "該当する項目はありません。",
 	"dashboard.empty.reviewNeeded": "レビューが必要な項目はありません。",
-	"dashboard.empty.blocked": "ブロック中の項目はありません。",
 	"dashboard.empty.recentUpdates": "更新履歴はありません。",
 	"dashboard.empty.activityLog": "ログがありません。",
 	"dashboard.todoDisabledNotice": "Tasks / Dataviewプラグインが必要です。",
@@ -60,7 +58,6 @@ const MESSAGES = {
 	"preview.title": "Preview",
 	"preview.empty": "Entityノートを開いてください。",
 	"preview.section.detail": "詳細",
-	"preview.section.blockers": "Blockers",
 	"preview.section.children": "配下",
 	"preview.section.todos": "Todo",
 	"preview.field.status": "ステータス",
@@ -87,9 +84,6 @@ const MESSAGES = {
 	"preview.body.openNote": "ノートで開く",
 	"preview.tagChips.placeholder": "追加してEnter...",
 	"preview.tagChips.remove": "削除",
-	"preview.blockerList.placeholder": "Blockerを追加...",
-	"preview.blockerList.add": "追加",
-	"preview.blockerList.remove": "削除",
 	"preview.todoDisabledNotice": "Tasks / Dataviewプラグインが必要です。Todoセクションは無効化されています。",
 	"preview.todo.setDueDate": "期限を設定…",
 	"preview.todo.editText": "テキストを編集",
@@ -182,7 +176,6 @@ const MESSAGES = {
 	"webapp.home.todayTodo": "今日のTodo",
 	"webapp.home.overdue": "Overdue",
 	"webapp.home.reviewNeeded": "Review Needed",
-	"webapp.home.blocked": "Blocked",
 	"webapp.home.activeProjects": "Active Projects",
 	"webapp.projects.title": "プロジェクト一覧",
 	"webapp.projects.filterKeyword": "キーワードで絞り込み",
@@ -454,11 +447,6 @@ export function commentDeletedUndoNotice(text: string): string {
 	const firstLine = text.split("\n")[0];
 	const summary = firstLine.length > 40 ? `${firstLine.slice(0, 40)}...` : firstLine;
 	return `コメント「${summary}」を削除しました`;
-}
-
-/** 行バッジ(ManageRow)のホバーtitle: Blocker件数 */
-export function rowBadgeBlockerTitle(count: number): string {
-	return `Blocker ${count}件`;
 }
 
 /** 行バッジ(ManageRow)のホバーtitle: コメント件数 */

@@ -561,7 +561,7 @@
 	overflow-y: auto;
 }
 
-/* ---- TagChips / BlockerList (ui/components/, shared Preview widgets) ---- */
+/* ---- TagChips (ui/components/, shared Preview widgets) ---- */
 
 .pos-tagchips {
 	display: flex;
@@ -593,23 +593,6 @@
 .pos-tagchips-input {
 	flex: 1;
 	min-width: 120px;
-}
-
-.pos-blockerlist-item {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--size-4-2);
-}
-
-.pos-blockerlist-add {
-	display: flex;
-	gap: var(--size-4-2);
-	margin-top: var(--size-4-2);
-}
-
-.pos-blockerlist-add-btn {
-	cursor: pointer;
 }
 
 /* ---- Search ---- */
@@ -1518,11 +1501,6 @@
 	white-space: nowrap;
 }
 
-.pos-row-badge-blocker {
-	background: color-mix(in srgb, var(--color-red) 16%, transparent);
-	color: var(--color-red);
-}
-
 /* ---- undo toast (undoNotice.ts) ---- */
 
 .pos-undo-toast-btn {
@@ -2059,7 +2037,6 @@ body.is-mobile .pos-manage-breadcrumb-item,
 body.is-mobile .pos-manage-tab-btn,
 body.is-mobile .pos-kanban-toggle-btn,
 body.is-mobile .pos-manage-onboarding-action,
-body.is-mobile .pos-blockerlist-add-btn,
 body.is-mobile .pos-manage-inline-create-row,
 body.is-mobile .pos-preview-todo-action {
 	min-height: 44px;
@@ -2079,8 +2056,7 @@ body.is-mobile .pos-manage-chip-group,
 body.is-mobile .pos-manage-filter-summary,
 body.is-mobile .pos-manage-tabs,
 body.is-mobile .pos-kanban-toggle,
-body.is-mobile .pos-manage-todo-controls,
-body.is-mobile .pos-blockerlist-add {
+body.is-mobile .pos-manage-todo-controls {
 	gap: var(--size-4-2);
 }
 
@@ -2181,7 +2157,7 @@ body.is-mobile .pos-todo-row-actions {
 	display: none;
 }
 
-/* ==== モバイルブラッシュアップ: CommentSection/BlockerList/TagChipsの入力行 ==== */
+/* ==== モバイルブラッシュアップ: CommentSection/TagChipsの入力行 ==== */
 
 body.is-mobile .pos-comment-add {
 	flex-wrap: wrap;
@@ -2191,7 +2167,6 @@ body.is-mobile .pos-comment-add-text {
 	flex: 1 1 100%;
 }
 
-body.is-mobile .pos-blockerlist-add,
 body.is-mobile .pos-tagchips {
 	row-gap: var(--size-4-2);
 }

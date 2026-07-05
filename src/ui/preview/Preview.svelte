@@ -16,7 +16,6 @@
 	import ParentCell from "../components/ParentCell.svelte";
 	import TitleCell from "../components/TitleCell.svelte";
 	import TagChips from "../components/TagChips.svelte";
-	import BlockerList from "../components/BlockerList.svelte";
 	import TodoList from "../components/TodoList.svelte";
 	import NotePanel from "../components/NotePanel.svelte";
 	import CommentSection from "../components/CommentSection.svelte";
@@ -93,9 +92,6 @@
 	}
 	function commitLabels(entity: Entity, next: string[]): Promise<void> {
 		return plugin.entityFieldService.updateField(entity.path, "labels", next);
-	}
-	function commitBlockers(entity: Entity, next: string[]): Promise<void> {
-		return plugin.entityFieldService.updateField(entity.path, "blockers", next);
 	}
 	function commitChildStatus(child: Entity, next: string): Promise<void> {
 		return plugin.entityService.changeStatus(child.path, next);
@@ -224,11 +220,6 @@
 		<details class="pos-preview-section" open={entity.labels.length > 0}>
 			<summary>{t("preview.section.labels")}</summary>
 			<TagChips values={entity.labels} suggestions={collectKnownLabels(plugin.store)} onCommit={(next) => commitLabels(entity, next)} />
-		</details>
-
-		<details class="pos-preview-section" open={entity.blockers.length > 0}>
-			<summary>{t("preview.section.blockers")}</summary>
-			<BlockerList blockers={entity.blockers} onCommit={(next) => commitBlockers(entity, next)} />
 		</details>
 
 		{#if plugin.capability.todoFeatures}

@@ -19,7 +19,7 @@ export function useCreateEntity() {
   });
 }
 
-/** インライン編集(title/status以外/priority/due/親/tags/labels/blockers)。statusのみ別途useChangeEntityStatusを使う(EntityFieldService §注釈) */
+/** インライン編集(title/status以外/priority/due/親/tags/labels)。statusのみ別途useChangeEntityStatusを使う(EntityFieldService §注釈) */
 export function useUpdateEntityField(entity: Entity | undefined) {
   const queryClient = useQueryClient();
 

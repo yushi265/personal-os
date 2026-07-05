@@ -20,7 +20,6 @@ const EMPTY_DATA: DashboardData = {
 	activeProjects: [],
 	activeTickets: [],
 	reviewNeeded: [],
-	blocked: [],
 	recentUpdates: [],
 	activityLogLines: [],
 	parseErrors: [],

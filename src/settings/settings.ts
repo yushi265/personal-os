@@ -9,7 +9,6 @@ export type WidgetId =
 	| "active-projects"
 	| "active-tickets"
 	| "review-needed"
-	| "blocked"
 	| "recent-updates"
 	| "activity-log"
 	| "parse-error";
@@ -80,7 +79,6 @@ export const DEFAULT_SETTINGS: POSSettings = {
 			{ id: "active-projects", visible: true },
 			{ id: "active-tickets", visible: true },
 			{ id: "review-needed", visible: true },
-			{ id: "blocked", visible: true },
 			{ id: "recent-updates", visible: true },
 			{ id: "activity-log", visible: true },
 			{ id: "parse-error", visible: true },

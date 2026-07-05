@@ -8,11 +8,11 @@ interface ChipListEditorProps {
   onCommit: (next: string[]) => void;
   placeholder: string;
   removeLabel: string;
-  /** true: tags同様カンマ区切り複数追加+重複除去(TagChips.svelte互換)。false: Blocker同様1件ずつ追加(BlockerList.svelte互換) */
+  /** true: tags同様カンマ区切り複数追加+重複除去(TagChips.svelte互換)。false: 1件ずつ追加 */
   commaSeparated?: boolean;
 }
 
-// TagChips.svelte / BlockerList.svelte のオンライン編集動作を移植した共通実装(design §9 P4行)。
+// TagChips.svelte のオンライン編集動作を移植した共通実装(design §9 P4行)。
 // 送信は都度onCommit(次の配列全体)経由でPATCH /api/entity/fieldに直結する。
 export function ChipListEditor({ values, onCommit, placeholder, removeLabel, commaSeparated }: ChipListEditorProps) {
   const [draft, setDraft] = React.useState("");

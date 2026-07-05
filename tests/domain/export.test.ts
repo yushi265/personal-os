@@ -11,7 +11,6 @@ function makeEntity(overrides: Partial<Entity>): Entity {
 		status: "doing",
 		tags: [],
 		labels: [],
-		blockers: [],
 		extra: {},
 		...overrides,
 	};
@@ -37,7 +36,6 @@ function emptySnapshot(overrides: Partial<ExportSnapshot> = {}): ExportSnapshot 
 		unlinked: [],
 		overdue: [],
 		reviewNeeded: [],
-		blocked: [],
 		...overrides,
 	};
 }
@@ -62,7 +60,6 @@ describe("buildAiExport", () => {
 			title: "住宅購入",
 			status: "active",
 			progress: 40,
-			blockers: [],
 		});
 		const ticket = makeEntity({
 			path: "t",
@@ -108,14 +105,13 @@ describe("buildAiExport", () => {
 		expect(output).toContain("- [project] 孤立プロジェクト (backlog)");
 	});
 
-	it("extracts Overdue / Review Needed / Blockers sections", () => {
+	it("extracts Overdue / Review Needed sections", () => {
 		const snapshot = emptySnapshot({
 			overdue: [
 				{ title: "SBI銀行へ電話する", due: "2026-07-01", kind: "todo", parentTitle: "住宅ローン比較" },
 				{ title: "住宅購入", due: "2026-06-30", kind: "entity" },
 			],
 			reviewNeeded: [{ title: "住宅購入", cycle: "weekly", lastReviewed: "2026-06-20" }],
-			blocked: [{ title: "引っ越し準備", blockers: ["契約待ち"] }],
 		});
 		const output = buildAiExport(snapshot);
 		expect(output).toContain("## Overdue");
@@ -123,8 +119,6 @@ describe("buildAiExport", () => {
 		expect(output).toContain("- 住宅購入 📅 2026-06-30");
 		expect(output).toContain("## Review Needed");
 		expect(output).toContain("- 住宅購入 (weekly, last: 2026-06-20)");
-		expect(output).toContain("## Blockers");
-		expect(output).toContain("- 引っ越し準備: 契約待ち");
 	});
 });
 
@@ -137,7 +131,6 @@ describe("buildAiSummary", () => {
 			openTodoCount: 0,
 			overdue: [],
 			reviewNeeded: [],
-			blocked: [],
 			...overrides,
 		};
 	}
@@ -150,23 +143,20 @@ describe("buildAiSummary", () => {
 		expect(output).toContain("- Active Projects: 3 / Tickets(doing): 5 / 未完了Todo: 24");
 	});
 
-	it("formats the Overdue / Review Needed / Blocked digest lines with counts", () => {
+	it("formats the Overdue / Review Needed digest lines with counts", () => {
 		const output = buildAiSummary(
 			emptySummary({
 				overdue: [{ title: "比較表を作る", due: "2026-07-01", kind: "todo" }],
 				reviewNeeded: [{ title: "住宅購入", cycle: "weekly", lastReviewed: "2026-06-20" }],
-				blocked: [{ title: "引っ越し準備", blockers: ["契約待ち"] }],
 			})
 		);
 		expect(output).toContain("- ⚠ Overdue: 1件(比較表を作る 📅2026-07-01)");
 		expect(output).toContain("- 🔍 Review Needed: 1件(住宅購入: weekly, last 2026-06-20)");
-		expect(output).toContain("- ⛔ Blocked: 1件(引っ越し準備)");
 	});
 
 	it("renders zero counts without breaking", () => {
 		const output = buildAiSummary(emptySummary());
 		expect(output).toContain("- ⚠ Overdue: 0件(なし)");
 		expect(output).toContain("- 🔍 Review Needed: 0件(なし)");
-		expect(output).toContain("- ⛔ Blocked: 0件(なし)");
 	});
 });

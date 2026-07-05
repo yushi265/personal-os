@@ -13,7 +13,6 @@ function makeEntity(overrides: Partial<Entity> = {}): Entity {
 		status: "doing",
 		tags: [],
 		labels: [],
-		blockers: [],
 		extra: {},
 		...overrides,
 	};
@@ -178,7 +177,6 @@ describe("EntityFieldService.reorderAndReassignGoal", () => {
 			status: "active",
 			tags: [],
 			labels: [],
-			blockers: [],
 			extra: {},
 		});
 		const repo = makeRepo();
@@ -227,7 +225,6 @@ describe("EntityFieldService — unambiguous parent links on basename collision"
 			status: "active",
 			tags: [],
 			labels: [],
-			blockers: [],
 			extra: {},
 		});
 		const repo = makeRepo({ hasBasenameCollision: vi.fn().mockReturnValue(false) });
@@ -253,7 +250,6 @@ describe("EntityFieldService — unambiguous parent links on basename collision"
 			status: "active",
 			tags: [],
 			labels: [],
-			blockers: [],
 			extra: {},
 		});
 		const hasBasenameCollision = vi.fn().mockReturnValue(true);
@@ -281,7 +277,6 @@ describe("EntityFieldService — unambiguous parent links on basename collision"
 			status: "active",
 			tags: [],
 			labels: [],
-			blockers: [],
 			extra: {},
 		});
 		const hasBasenameCollision = vi.fn().mockReturnValue(true);

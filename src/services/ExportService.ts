@@ -4,7 +4,6 @@ import { today } from "../domain/date";
 import {
 	buildAiExport,
 	buildAiSummary,
-	type BlockedItem,
 	type ExportGoalNode,
 	type ExportProjectNode,
 	type ExportSnapshot,
@@ -14,7 +13,7 @@ import {
 	type SummarySnapshot,
 	type UnlinkedEntity,
 } from "../domain/export";
-import { isBlocked, isOverdue, isReviewNeeded, isTodoOverdue } from "../domain/judge";
+import { isOverdue, isReviewNeeded, isTodoOverdue } from "../domain/judge";
 import type { Todo } from "../domain/todo";
 import type { IndexStore } from "../infra/IndexStore";
 import { aiContextCopiedNotice, aiSummaryCopiedNotice, t } from "../i18n/ja";
@@ -79,10 +78,6 @@ function buildReviewNeededItems(entities: Entity[], now: string): ReviewNeededIt
 		.map((e) => ({ title: e.title, cycle: e.reviewCycle!, lastReviewed: e.lastReviewed }));
 }
 
-function buildBlockedItems(entities: Entity[]): BlockedItem[] {
-	return entities.filter((e) => isBlocked(e)).map((e) => ({ title: e.title, blockers: e.blockers }));
-}
-
 function countOpenTodos(todos: Todo[]): number {
 	return todos.filter((t) => !t.done).length;
 }
@@ -107,7 +102,6 @@ export class ExportService {
 			unlinked: findUnlinked(this.store),
 			overdue: buildOverdueItems(this.store, entities, now),
 			reviewNeeded: buildReviewNeededItems(entities, now),
-			blocked: buildBlockedItems(entities),
 		};
 		const text = buildAiExport(snapshot);
 		await this.copyToClipboard(text, (n) => aiContextCopiedNotice(n));
@@ -123,7 +117,6 @@ export class ExportService {
 			openTodoCount: countOpenTodos(this.store.getAllTodos()),
 			overdue: buildOverdueItems(this.store, entities, now),
 			reviewNeeded: buildReviewNeededItems(entities, now),
-			blocked: buildBlockedItems(entities),
 		};
 		const text = buildAiSummary(snapshot);
 		await this.copyToClipboard(text, (n) => aiSummaryCopiedNotice(n));

@@ -16,7 +16,6 @@ export interface HomeSummaryResponse {
   overdueTodos: Todo[];
   overdueEntities: Entity[];
   reviewNeededEntities: Entity[];
-  blockedEntities: Entity[];
   activeProjectCount: number;
 }
 
@@ -34,8 +33,7 @@ export type EntityFieldKey =
   | "project"
   | "title"
   | "tags"
-  | "labels"
-  | "blockers";
+  | "labels";
 
 export type EntityFieldValue = string | string[] | undefined;
 

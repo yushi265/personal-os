@@ -20,7 +20,6 @@ function makeEntity(overrides: Partial<Entity> = {}): Entity {
 		status: "doing",
 		tags: [],
 		labels: [],
-		blockers: [],
 		extra: {},
 		...overrides,
 	};
@@ -118,7 +117,7 @@ describe("ApiRouter.handle: GET /api/summary", () => {
 		const { deps, store, todoService } = makeMocks();
 		todoService.list.mockReturnValue([makeTodo({ text: "today", dueDate: "2026-07-04" })]);
 		store.setTodos("ticket-a.md", [makeTodo({ done: false, dueDate: "2026-07-01" })]); // overdue
-		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", status: "active", blockers: ["x"] }));
+		store.upsertEntity(makeEntity({ path: "p1.md", type: "project", title: "p1", status: "active" }));
 		store.upsertEntity(
 			makeEntity({ path: "p2.md", type: "project", title: "p2", status: "backlog", reviewCycle: "weekly", lastReviewed: undefined })
 		);
@@ -129,14 +128,12 @@ describe("ApiRouter.handle: GET /api/summary", () => {
 		const body = res.body as {
 			todayTodos: unknown[];
 			overdueTodos: unknown[];
-			blockedEntities: { path: string }[];
 			reviewNeededEntities: { path: string }[];
 			activeProjectCount: number;
 		};
 		expect(todoService.list).toHaveBeenCalledWith({ done: false, dueOn: expect.any(String) });
 		expect(body.todayTodos).toHaveLength(1);
 		expect(body.overdueTodos).toHaveLength(1);
-		expect(body.blockedEntities.map((e) => e.path)).toEqual(["p1.md"]);
 		expect(body.reviewNeededEntities.map((e) => e.path)).toEqual(["p2.md"]);
 		expect(body.activeProjectCount).toBe(1);
 	});

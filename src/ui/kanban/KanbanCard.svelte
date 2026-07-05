@@ -74,9 +74,6 @@
 	<div class="pos-kanban-card-meta">
 		<PriorityLabel value={entity.priority ?? ""} label={entity.priority ?? ""} />
 		<DueLabel value={entity.due} />
-		{#if entity.blockers.length > 0}
-			<span class="pos-row-badge pos-row-badge-blocker">⛔ {entity.blockers.length}</span>
-		{/if}
 		{#if commentCount > 0}
 			<span class="pos-row-badge">💬 {commentCount}</span>
 		{/if}

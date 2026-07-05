@@ -1,7 +1,7 @@
 import type * as React from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
-import { AlertTriangle, CircleCheck, Flame, ListTodo, Lock } from "lucide-react";
+import { AlertTriangle, CircleCheck, Flame, ListTodo } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CountUp } from "@/components/CountUp";
@@ -41,8 +41,8 @@ export function Home() {
 
   if (summary.isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-28 rounded-lg" />
         ))}
       </div>
@@ -82,13 +82,6 @@ export function Home() {
       to: singleTarget([{ count: summary.reviewNeededEntities.length, to: summary.reviewNeededEntities[0] && entityDetailPath(summary.reviewNeededEntities[0]) }]),
     },
     {
-      label: t("webapp.home.blocked"),
-      value: summary.blockedCount,
-      icon: Lock,
-      tone: "warning",
-      to: singleTarget([{ count: summary.blockedEntities.length, to: summary.blockedEntities[0] && entityDetailPath(summary.blockedEntities[0]) }]),
-    },
-    {
       label: t("webapp.home.activeProjects"),
       value: summary.activeProjectCount,
       icon: CircleCheck,
@@ -102,7 +95,7 @@ export function Home() {
       variants={staggerContainer}
       initial="initial"
       animate="animate"
-      className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
+      className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
     >
       {cards.map((card) => {
         const Icon = card.icon;

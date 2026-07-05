@@ -2,7 +2,7 @@ import { ENTITY_TYPES, type EntityType } from "../domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "../domain/todo";
 import type { Comment } from "../domain/comment";
 import { today } from "../domain/date";
-import { isBlocked, isOverdue, isReviewNeeded, isTodoOverdue } from "../domain/judge";
+import { isOverdue, isReviewNeeded, isTodoOverdue } from "../domain/judge";
 import type { CreateEntityInput } from "../services/EntityService";
 import type { EntityFieldKey, EntityFieldValue } from "../services/EntityFieldService";
 import type { PromoteOptions } from "../services/PromoteService";
@@ -89,7 +89,6 @@ function handleSummary(deps: ApiDeps): ApiResult {
 		overdueTodos: capability.todoFeatures ? deps.store.getAllTodos().filter((t) => isTodoOverdue(t, now)) : [],
 		overdueEntities: entities.filter((e) => isOverdue(e, now)),
 		reviewNeededEntities: entities.filter((e) => isReviewNeeded(e, now)),
-		blockedEntities: entities.filter((e) => isBlocked(e)),
 		activeProjectCount: deps.store.listByType("project").filter((e) => e.status === "active").length,
 	});
 }

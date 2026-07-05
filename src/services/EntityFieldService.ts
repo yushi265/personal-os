@@ -23,7 +23,6 @@ export type EntityFieldKey =
 	| "title"
 	| "tags"
 	| "labels"
-	| "blockers"
 	| "order";
 
 export type EntityFieldValue = string | string[] | number | undefined;
@@ -150,8 +149,7 @@ export class EntityFieldService {
 				break;
 			}
 			case "tags":
-			case "labels":
-			case "blockers": {
+			case "labels": {
 				if (!Array.isArray(value)) {
 					throw new Error(t("manage.field.invalidArray"));
 				}
@@ -166,7 +164,7 @@ export class EntityFieldService {
 		}
 	}
 
-	// goal/project は wikilink化して書き込む(EntityService.createと同じ変換規則)。tags/labels/blockersは配列を丸ごと置換(空配列可)
+	// goal/project は wikilink化して書き込む(EntityService.createと同じ変換規則)。tags/labelsは配列を丸ごと置換(空配列可)
 	private applyToFrontmatter(fm: Record<string, unknown>, key: EntityFieldKey, value: EntityFieldValue): void {
 		switch (key) {
 			case "status":
@@ -199,7 +197,6 @@ export class EntityFieldService {
 			}
 			case "tags":
 			case "labels":
-			case "blockers":
 				fm[key] = value as string[];
 				break;
 			case "order":
@@ -231,8 +228,6 @@ export class EntityFieldService {
 				return entity.tags;
 			case "labels":
 				return entity.labels;
-			case "blockers":
-				return entity.blockers;
 			case "order":
 				return entity.order;
 			default:

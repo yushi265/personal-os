@@ -31,9 +31,3 @@ export function isReviewNeeded(e: Entity, today: string): boolean {
 	if (!e.lastReviewed) return true; // 一度もレビューしていない
 	return addCycle(e.lastReviewed, e.reviewCycle) <= today;
 }
-
-/** blockersが設定され、かつ未完了statusのProject/Ticketか */
-export function isBlocked(e: Entity): boolean {
-	if (e.type !== "project" && e.type !== "ticket") return false;
-	return e.blockers.length > 0 && OPEN_STATUSES[e.type].has(e.status);
-}
