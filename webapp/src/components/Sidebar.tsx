@@ -1,11 +1,13 @@
 import * as React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { ChevronsLeft, ChevronsRight, Home as HomeIcon, LayoutGrid, Search } from "lucide-react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Home as HomeIcon, LayoutGrid, Search } from "lucide-react";
 import { ConnectionDot } from "@/components/ConnectionDot";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useEntities } from "@/hooks/useEntities";
 import { t } from "@i18n/ja";
 
 const STORAGE_KEY = "pos.sidebar.collapsed";
+const PROJECTS_EXPANDED_KEY = "pos.sidebar.projectsExpanded";
 const OPEN_WIDTH = 224;
 const COLLAPSED_WIDTH = 56;
 
@@ -25,21 +27,34 @@ function useSidebarCollapsed(): [boolean, (next: boolean) => void] {
   return [collapsed, setCollapsed];
 }
 
+function useProjectsExpanded(): [boolean, (next: boolean) => void] {
+  const [expanded, setExpandedState] = React.useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(PROJECTS_EXPANDED_KEY) === "1";
+  });
+
+  const setExpanded = React.useCallback((next: boolean) => {
+    window.localStorage.setItem(PROJECTS_EXPANDED_KEY, next ? "1" : "0");
+    setExpandedState(next);
+  }, []);
+
+  return [expanded, setExpanded];
+}
+
 export function Sidebar({ connected }: { connected: boolean }) {
   const [collapsed, setCollapsed] = useSidebarCollapsed();
+  const [projectsExpanded, setProjectsExpanded] = useProjectsExpanded();
   const location = useLocation();
+  const params = useParams();
+  // プロジェクト詳細画面(/projects/:path)滞在中のみ、サブリストの該当行をアクティブ表示する対象パス。
+  const currentProjectPath = location.pathname.startsWith("/projects/") && params.path ? decodeURIComponent(params.path) : undefined;
+  const { data: projects } = useEntities("project");
 
-  const navItems = [
-    { to: "/", label: t("webapp.home.title"), icon: HomeIcon, active: location.pathname === "/" },
-    {
-      to: "/projects",
-      label: t("webapp.projects.title"),
-      icon: LayoutGrid,
-      // プロジェクト詳細・チケット詳細もこのナビの延長線上にあるため、それらの画面滞在中も
-      // 「プロジェクト一覧」をアクティブ表示にする。
-      active: location.pathname.startsWith("/projects") || location.pathname.startsWith("/tickets"),
-    },
-  ];
+  const homeActive = location.pathname === "/";
+  // プロジェクト詳細・チケット詳細もこのナビの延長線上にあるため、それらの画面滞在中も
+  // 「プロジェクト一覧」をアクティブ表示にする。
+  const projectsActive = location.pathname.startsWith("/projects") || location.pathname.startsWith("/tickets");
+  const showProjectsSublist = !collapsed && projectsExpanded;
 
   return (
     <aside
@@ -77,22 +92,58 @@ export function Sidebar({ connected }: { connected: boolean }) {
         </div>
       )}
 
-      <nav className="flex flex-col gap-0.5 px-2">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
-                collapsed ? "justify-center" : ""
-              } ${item.active ? "bg-hairline font-medium text-fg" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2">
+        <Link
+          to="/"
+          className={`flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+            collapsed ? "justify-center" : ""
+          } ${homeActive ? "bg-hairline font-medium text-fg" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+        >
+          <HomeIcon className="h-4 w-4 shrink-0" />
+          {!collapsed && <span className="truncate">{t("webapp.home.title")}</span>}
+        </Link>
+
+        <div className="flex shrink-0 items-center gap-0.5">
+          <Link
+            to="/projects"
+            className={`flex h-8 flex-1 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+              collapsed ? "justify-center" : ""
+            } ${projectsActive ? "bg-hairline font-medium text-fg" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+          >
+            <LayoutGrid className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="truncate">{t("webapp.projects.title")}</span>}
+          </Link>
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={() => setProjectsExpanded(!projectsExpanded)}
+              aria-label={projectsExpanded ? "プロジェクト一覧を閉じる" : "プロジェクト一覧を展開する"}
+              aria-expanded={projectsExpanded}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-faint transition-colors hover:bg-hairline hover:text-fg"
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
+              {projectsExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+            </button>
+          )}
+        </div>
+
+        {showProjectsSublist && (
+          <div className="flex flex-col gap-0.5 pb-1">
+            {(projects ?? []).map((project) => (
+              <Link
+                key={project.path}
+                to={`/projects/${encodeURIComponent(project.path)}`}
+                title={project.title}
+                className={`flex h-7 items-center truncate rounded-md py-1 pl-8 pr-2 text-[13px] transition-colors ${
+                  currentProjectPath === project.path
+                    ? "bg-hairline font-medium text-fg"
+                    : "text-muted-foreground hover:bg-hairline hover:text-fg"
+                }`}
+              >
+                <span className="truncate">{project.title}</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </nav>
 
       <div

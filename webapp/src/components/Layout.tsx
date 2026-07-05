@@ -96,9 +96,11 @@ export function Layout() {
           </div>
         </header>
         <main className="flex-1 px-10 pb-16 pt-10">
-          <PageTransition>
-            <Outlet />
-          </PageTransition>
+          <div className="mx-auto max-w-[1080px]">
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </div>
         </main>
       </div>
       <CommandPalette />

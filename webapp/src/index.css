@@ -56,7 +56,7 @@
     --muted: #666666;
     --faint: #999999;
     --ghost: #cccccc;
-    --accent: #0070f3;
+    --accent: #0f9d58;
     --destructive: #e5484d;
     --destructive-foreground: #ffffff;
     --radius: 0.5rem;
@@ -71,7 +71,8 @@
     --muted: #888888;
     --faint: #666666;
     --ghost: #444444;
-    --accent: #0070f3;
+    /* light版の#0f9d58は黒背景でコントラスト比5.98と低めのため、視認性確保に明るめの緑を採用(黒背景でコントラスト比8.74) */
+    --accent: #1fbf6e;
     --destructive: #e5484d;
     --destructive-foreground: #ffffff;
   }
