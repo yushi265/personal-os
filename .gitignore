@@ -8,3 +8,6 @@ webapp-dist/
 
 # local test vault (contains copied community plugins)
 test-vault/
+
+# personal work logs (orchestration notes, not part of the plugin)
+tasks/
