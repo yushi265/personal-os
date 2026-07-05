@@ -1963,30 +1963,16 @@ body.is-mobile .pos-manage-table .pos-manage-cell-priority {
 	pointer-events: none;
 }
 
+/* 狭幅でもプロパティは「ラベル+値」の1行を維持する(縦積みはユーザーフィードバック 2026-07-05 で廃止)。
+   ラベル列は内容幅、値列が残り幅を取るためフル幅コントロールもそのまま収まる */
 @container (max-width: 480px) {
 	.pos-preview-fields {
-		grid-template-columns: 1fr;
-	}
-
-	.pos-preview-fields dt {
-		margin-top: var(--size-4-2);
-	}
-
-	.pos-preview-fields dt:first-child {
-		margin-top: 0;
+		column-gap: var(--size-4-3);
 	}
 }
 
 body.is-mobile .pos-preview-fields {
-	grid-template-columns: 1fr;
-}
-
-body.is-mobile .pos-preview-fields dt {
-	margin-top: var(--size-4-2);
-}
-
-body.is-mobile .pos-preview-fields dt:first-child {
-	margin-top: 0;
+	column-gap: var(--size-4-3);
 }
 
 body.is-mobile .pos-preview-fields dd {
