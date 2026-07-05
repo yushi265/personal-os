@@ -1839,6 +1839,11 @@ body:not(.is-mobile) .pos-kanban-card-menu:focus-visible {
 		display: none;
 	}
 
+	/* モバイルカードではプログレスバーは表示しない(ユーザーフィードバック 2026-07-05。詳細画面では見られる) */
+	.pos-manage-table .pos-manage-cell-progress {
+		display: none;
+	}
+
 	.pos-manage-cell-title {
 		order: 1;
 		flex: 1 1 100%;
@@ -1914,6 +1919,11 @@ body.is-mobile .pos-manage-table td.pos-cell-empty {
 
 /* セレクタに.pos-manage-tableを含めるのは詳細度で`... td { display: block }`に勝つため(過去バグ) */
 body.is-mobile .pos-manage-table .pos-manage-cell-drag {
+	display: none;
+}
+
+/* モバイルカードではプログレスバーは表示しない(ユーザーフィードバック 2026-07-05。詳細画面では見られる) */
+body.is-mobile .pos-manage-table .pos-manage-cell-progress {
 	display: none;
 }
 
