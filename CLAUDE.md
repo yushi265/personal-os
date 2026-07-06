@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## AI-DLC ハーネス
+
+このリポジトリには AI-DLC 開発ハーネス（`.claude/` + `docs/`）が導入されている。ハーネスの全体像・使い方は [`.claude/README.md`](./.claude/README.md) を参照。
+
+参照順序（実装着手前）:
+
+1. [`docs/index.md`](./docs/index.md)（ドキュメント目次）
+2. [`docs/architecture.md`](./docs/architecture.md)（全体構成・レイヤー責務・依存方向）／[`docs/ai-dlc/glossary.md`](./docs/ai-dlc/glossary.md)（AI-DLC 用語の正本）
+3. 対象レイヤーの入口ドキュメントと docs
+4. タスクにチケット番号が紐づく場合は `docs/spec/<TICKET>-*/`（薄い実装 spec）
+
+横断ルール（`.claude/rules/` が正・実装着手前に必読）: [`risk-tiers.md`](./.claude/rules/risk-tiers.md) / [`spec-driven.md`](./.claude/rules/spec-driven.md) / [`simplicity.md`](./.claude/rules/simplicity.md) / [`testing.md`](./.claude/rules/testing.md) / [`task-and-pr.md`](./.claude/rules/task-and-pr.md) の 5 本。
+
+機能実装・修正は [`ai-dlc-flow`](./.claude/skills/ai-dlc-flow/SKILL.md) スキルのフロー（要件整理 → design doc → TDD → 静的解析 → セルフレビュー → コミット、人間承認ゲート付き）に従う。
+
+役割分担: AI が調査/設計・実装・テスト・レビュー・PR 作成を担い、人間が Gate 1 / Gate 2 / Gate 3 の承認とレビューを担う。
+
 ## Project Overview
 
 An Obsidian community plugin called **Personal OS** — a life/work/learning management system built entirely on Markdown. All data lives in `.md` files with frontmatter; no custom DB, no binary files. Designed for eventual public release as an Obsidian Community Plugin.

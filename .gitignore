@@ -11,3 +11,14 @@ test-vault/
 
 # personal work logs (orchestration notes, not part of the plugin)
 tasks/
+
+# env / editor
+.env
+.env.local
+.env.*.local
+*.swp
+
+# build output
+build/
+
+# AI-DLC engine のローカル揮発 state は .claude/aidlc/.gitignore で管理

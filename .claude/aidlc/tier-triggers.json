@@ -1,0 +1,31 @@
+{
+  "$comment": "Tier 1（高リスク・事前承認必須）に該当する変更を検出するトリガー（プロジェクトの高リスク要素の glob + 内容パターン）。正本は .claude/rules/risk-tiers.md の Tier 1 対象。正本を変えたらここも同期する（drift guard が対応を検査）。personal-os は DB を持たないため db-schema 例は削除し、次の 3 要素に置き換える: ローカル HTTP サーバーの認証・Origin 検査（セキュリティ境界）/ 全 Vault 書き込みの集約点（VaultRepository・SelfWriteGuard）/ frontmatter エンティティスキーマ。matchGlob はブレース展開非対応のため、vault-write は同一 id を 2 エントリに分けて 2 ファイルをそれぞれ glob 指定する。tier-tripwire sensor が、宣言 tier 2/3 のボルトでこれらに触れたら昇格再宣言を勧告する。",
+  "version": 1,
+  "source": ".claude/rules/risk-tiers.md",
+  "triggers": [
+    {
+      "id": "server-auth",
+      "glob": "src/server/**",
+      "contentPattern": ".+",
+      "$comment": "ローカル HTTP サーバー・トークン認証・Origin 検査(webapp からの唯一の入口・セキュリティ境界)。ファイル全体が保護対象のため、追加行の内容は問わず存在で判定"
+    },
+    {
+      "id": "vault-write",
+      "glob": "src/infra/VaultRepository.ts",
+      "contentPattern": ".+",
+      "$comment": "全 Vault 書き込みの集約点その1。壊すとユーザーの Markdown データを破損する"
+    },
+    {
+      "id": "vault-write",
+      "glob": "src/infra/SelfWriteGuard.ts",
+      "contentPattern": ".+",
+      "$comment": "全 Vault 書き込みの集約点その2(進捗自動書き戻しの無限ループ防止ガード)"
+    },
+    {
+      "id": "entity-schema",
+      "glob": "src/domain/entity.ts",
+      "contentPattern": ".+",
+      "$comment": "frontmatter スキーマ(保存データ形式)の定義箇所"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "$comment": "referee-check のコマンド表。Stage 5 の権威再実行で走らせる検証コマンドを宣言する（ハードコードせず、プロジェクトの各レイヤーと検証コマンドをここで定義する）。cwd は repo root 相対。--layer all で全レイヤー + post を実行し、exit 0 の集合だけが権威 green（コマンド不在の層は unavailable = 総合 green を名乗らない）。personal-os は単一の Vitest スイート（ルート）でレイヤーが分かれていないため、domain/services/infra/ui は同一コマンドを共有する。webapp のみブラウザ UI 向けビルド検証（単体テストは無い）。",
+  "layers": {
+    "domain": {
+      "cwd": ".",
+      "precondition": "node_modules",
+      "command": ["sh", "-c", "npm test && npm run typecheck"],
+      "$comment": "純粋関数ドメイン層。プロジェクト全体の Vitest + tsc/svelte-check を共有実行（レイヤー別に分離されていない）"
+    },
+    "services": {
+      "cwd": ".",
+      "precondition": "node_modules",
+      "command": ["sh", "-c", "npm test && npm run typecheck"],
+      "$comment": "Application/Services 層。domain と同一コマンド（構造上レイヤー別に分かれていない）"
+    },
+    "infra": {
+      "cwd": ".",
+      "precondition": "node_modules",
+      "command": ["sh", "-c", "npm test && npm run typecheck"],
+      "$comment": "Vault I/O・Tasks/Dataview アダプタ層。domain と同一コマンド"
+    },
+    "ui": {
+      "cwd": ".",
+      "precondition": "node_modules",
+      "command": ["sh", "-c", "npm test && npm run typecheck"],
+      "$comment": "Obsidian ItemView + Svelte 表示層。domain と同一コマンド"
+    },
+    "webapp": {
+      "cwd": ".",
+      "precondition": "node_modules",
+      "command": ["npm", "run", "webapp:build"],
+      "$comment": "ブラウザ UI（React、npm workspaces）。単体テストが無いため型チェック込みのビルドで代替"
+    }
+  },
+  "post": {
+    "name": "pre-commit",
+    "cwd": ".",
+    "command": ["npx", "lefthook", "run", "pre-commit"],
+    "$comment": "全レイヤー共通の pre-commit ゲート（conventional-commit・aidlc anti-tamper/retro-surface/drift-check）"
+  }
+}

@@ -23,6 +23,7 @@
 		"builtin-modules": "^4.0.0",
 		"esbuild": "^0.24.2",
 		"esbuild-svelte": "^0.9.5",
+		"lefthook": "^2.1.9",
 		"obsidian": "^1.13.1",
 		"svelte": "^5.56.4",
 		"svelte-check": "^4.7.1",
