@@ -23,7 +23,8 @@ export function SegmentedControl<T extends string>({ value, options, onChange }:
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            "h-full px-2.5 transition-colors",
+            // active:scaleで押した瞬間のスキッシュ(触感)を付ける
+            "h-full px-2.5 transition-[background-color,border-color,color,transform] duration-150 active:scale-95",
             i > 0 && "border-l border-border",
             value === option.value ? "bg-fg text-bg" : "text-muted-foreground hover:bg-hairline"
           )}

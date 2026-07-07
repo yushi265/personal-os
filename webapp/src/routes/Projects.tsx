@@ -55,6 +55,8 @@ function ProjectRow({
     <MotionRow
       variants={staggerItem}
       transition={listTransition(reduced)}
+      // 押し込みの触感。motionがtransformをインラインで持つためCSSのactive:scaleは効かず、whileTapで行う
+      whileTap={reduced ? undefined : { scale: 0.995 }}
       className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       onClick={onNavigate}
       role="link"

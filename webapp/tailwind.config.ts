@@ -81,10 +81,24 @@ export default {
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
       },
+      // 触感系マイクロインタラクション用のオーバーシュートイージング(back-out)。
+      // hover時のアイコン/数値の「ポンッ」とした弾みに使う(押下側は素のtransitionで沈める)。
+      transitionTimingFunction: {
+        bounce: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
       keyframes: {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        // チェックボックスのチェックマークが弾んで入るポップ(Radix Indicatorのマウント時に1回再生)
+        "check-pop": {
+          "0%": { transform: "scale(0.4)", opacity: "0" },
+          "60%": { transform: "scale(1.25)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+      },
+      animation: {
+        "check-pop": "check-pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },

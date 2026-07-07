@@ -72,6 +72,9 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.05), 0 10px 24px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.06), 0 20px 48px rgba(0, 0, 0, 0.12);
+    /* TiltCardのポインタ追従グレア。lightはカード面が#fffで白ハイライトが見えないため、
+       指で紙面を押さえたような極薄の陰(黒アルファ)を「触れている手応え」として使う */
+    --glare: rgba(0, 0, 0, 0.04);
   }
 
   .dark {
@@ -98,6 +101,8 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.07);
+    /* darkはカード面(#111)に白の鏡面ハイライトがそのまま効く */
+    --glare: rgba(255, 255, 255, 0.06);
   }
 }
 
@@ -111,16 +116,21 @@
 }
 
 /* ダークモード切替のスムーズ化(design P6-C13)。色トークンのみをtransition対象にし、
-   transform/opacityを使う他のマイクロインタラクション(ホバー・押下等)とは干渉させない。 */
+   transform/opacityを使う他のマイクロインタラクション(ホバー・押下等)とは干渉させない。
+   注: このルールは@layer baseに置く。無レイヤーだとTailwindのtransitionユーティリティ
+   (同一詳細度・後定義)に常に勝ってしまい、ボタンの押し込みやカードの浮き上がり等の
+   transform/box-shadow遷移をtransition-propertyごと潰すため。 */
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
-body,
-.border-border,
-[class*="bg-"],
-[class*="border-"],
-[class*="text-"] {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
+@layer base {
+  body,
+  .border-border,
+  [class*="bg-"],
+  [class*="border-"],
+  [class*="text-"] {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
+  }
 }
 
 /* sonnerのトースト(main.tsxでToaster配置)はTailwindコンポーネントを経由しないため、

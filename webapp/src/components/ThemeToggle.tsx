@@ -14,7 +14,8 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="テーマ切替"
-      className="flex h-[26px] w-[26px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border text-muted-foreground transition-colors hover:bg-hairline hover:text-fg"
+      // hoverで弾んで膨らみ、押すと縮む(アイコン回転と合わせた触感)
+      className="flex h-[26px] w-[26px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border text-muted-foreground transition-[background-color,border-color,color,transform] duration-200 ease-bounce hover:scale-110 hover:bg-hairline hover:text-fg active:scale-90"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span

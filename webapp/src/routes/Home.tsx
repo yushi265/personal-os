@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { CountUp } from "@/components/CountUp";
 import { StatusBadge } from "@/components/StatusBadge";
+import { TiltCard } from "@/components/TiltCard";
 import { DueLabel } from "@/components/DueLabel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { useHomeSummary } from "@/hooks/useHomeSummary";
@@ -121,7 +122,8 @@ function HomeRow({ row, today: now }: { row: HomeRowDef; today: string }) {
   return (
     <Link
       to={row.to}
-      className={`${rowClass} group transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
+      // active:scaleで行自体を押し込める触感にする(transformもtransition対象へ追加)
+      className={`${rowClass} group transition-[background-color,border-color,color,transform] duration-150 hover:bg-surface active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`}
     >
       {content}
       <ChevronRight
@@ -273,18 +275,26 @@ export function Home() {
           const accented = (card.tone === "danger" || card.tone === "warning") && card.value > 0;
           return (
             <motion.div key={card.label} variants={staggerItem} transition={listTransition(!!reduced)}>
-              <Card className="border-border">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardDescription className="font-mono text-[11px] uppercase tracking-[0.06em]">{card.label}</CardDescription>
-                    <Icon className={`h-4 w-4 text-faint ${accented ? TONE_ACCENT_CLASS[card.tone] : ""}`} />
-                  </div>
-                  <CardTitle className={`font-mono ${accented ? TONE_ACCENT_CLASS[card.tone] : ""}`}>
-                    <CountUp value={card.value} />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent />
-              </Card>
+              {/* 触感演出(TiltCard): チルト+浮き上がりに合わせてカード影をsm→lgへ深め、
+                  アイコンと数値はease-bounceで弾ませる(意味は無い。触って気持ちいいだけの演出) */}
+              <TiltCard>
+                <Card className="group border-border transition-[background-color,border-color,color,box-shadow] duration-300 hover:shadow-lg">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardDescription className="font-mono text-[11px] uppercase tracking-[0.06em]">{card.label}</CardDescription>
+                      <Icon
+                        className={`h-4 w-4 text-faint transition-transform duration-300 ease-bounce group-hover:-rotate-12 group-hover:scale-125 ${accented ? TONE_ACCENT_CLASS[card.tone] : ""}`}
+                      />
+                    </div>
+                    <CardTitle
+                      className={`origin-left font-mono transition-transform duration-300 ease-bounce group-hover:scale-110 ${accented ? TONE_ACCENT_CLASS[card.tone] : ""}`}
+                    >
+                      <CountUp value={card.value} />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent />
+                </Card>
+              </TiltCard>
             </motion.div>
           );
         })}

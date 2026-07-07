@@ -67,6 +67,8 @@ function TicketRow({
     <MotionRow
       variants={staggerItem}
       transition={listTransition(reduced)}
+      // 押し込みの触感(Projects.tsxのProjectRowと同じ)。motionがtransformを持つためwhileTapで行う
+      whileTap={reduced ? undefined : { scale: 0.995 }}
       className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       onClick={onNavigate}
       role="link"

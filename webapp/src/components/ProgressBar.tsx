@@ -19,7 +19,8 @@ export function ProgressBar({ value, showPercent = true, className }: { value?: 
       aria-valuenow={pct}
       className={`flex items-center gap-2 ${showPercent ? "w-40" : "w-full"} ${className ?? ""}`}
     >
-      <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-hairline">
+      {/* 行(groupクラス持ち)のhoverでバーがふくらむ触感。group外(詳細ヘッダ等)では3pxのまま無反応 */}
+      <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-hairline transition-[height,background-color] duration-200 group-hover:h-[5px]">
         <motion.div
           className="h-full rounded-full bg-fg"
           initial={{ width: 0 }}

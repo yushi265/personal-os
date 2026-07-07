@@ -64,8 +64,9 @@ export function Sidebar({ connected }: { connected: boolean }) {
       style={{ width: collapsed ? COLLAPSED_WIDTH : OPEN_WIDTH }}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 px-4">
+        {/* 触感演出: 意味は無いがhoverでクルッと一回転する(ease-bounceで着地が弾む) */}
         <span
-          className="h-5 w-5 shrink-0 bg-fg"
+          className="h-5 w-5 shrink-0 bg-fg transition-[background-color,transform] duration-500 ease-bounce hover:rotate-[360deg]"
           style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
           aria-hidden="true"
         />
@@ -74,7 +75,7 @@ export function Sidebar({ connected }: { connected: boolean }) {
           type="button"
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? "サイドバーを開く" : "サイドバーを閉じる"}
-          className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md text-faint transition-colors hover:bg-hairline hover:text-fg"
+          className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md text-faint transition-[background-color,color,transform] duration-150 hover:bg-hairline hover:text-fg active:scale-90"
         >
           {collapsed ? <ChevronsRight className="h-3.5 w-3.5" /> : <ChevronsLeft className="h-3.5 w-3.5" />}
         </button>
@@ -85,7 +86,7 @@ export function Sidebar({ connected }: { connected: boolean }) {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("pos:open-command-palette"))}
-            className="flex h-8 w-full items-center gap-1.5 rounded-md border border-border bg-bg px-2 text-left text-muted-foreground transition-colors hover:text-fg"
+            className="flex h-8 w-full items-center gap-1.5 rounded-md border border-border bg-bg px-2 text-left text-muted-foreground transition-[background-color,color,border-color,transform,box-shadow] duration-150 hover:-translate-y-px hover:text-fg hover:shadow-sm active:translate-y-0 active:scale-[0.98] active:shadow-none"
           >
             <Search className="h-3 w-3 shrink-0 text-faint" />
             <span className="flex-1 truncate text-xs text-faint">{t("webapp.commandPalette.placeholder")}</span>
@@ -98,22 +99,23 @@ export function Sidebar({ connected }: { connected: boolean }) {
       <nav aria-label={t("webapp.nav.label")} className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2">
         <Link
           to="/"
-          className={`flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+          className={`group flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
             collapsed ? "justify-center" : ""
           } ${homeActive ? "bg-hairline font-medium text-fg" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
         >
-          <HomeIcon className="h-4 w-4 shrink-0" />
+          {/* ナビアイコンはhoverで弾んで膨らむ(触感) */}
+          <HomeIcon className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
           {!collapsed && <span className="truncate">{t("webapp.home.title")}</span>}
         </Link>
 
         <div className="flex shrink-0 items-center gap-0.5">
           <Link
             to="/projects"
-            className={`flex h-8 flex-1 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+            className={`group flex h-8 flex-1 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
               collapsed ? "justify-center" : ""
             } ${projectsActive ? "bg-hairline font-medium text-fg" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
           >
-            <LayoutGrid className="h-4 w-4 shrink-0" />
+            <LayoutGrid className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
             {!collapsed && <span className="truncate">{t("webapp.projects.title")}</span>}
           </Link>
           {!collapsed && (
@@ -122,7 +124,7 @@ export function Sidebar({ connected }: { connected: boolean }) {
               onClick={() => setProjectsExpanded(!projectsExpanded)}
               aria-label={projectsExpanded ? "プロジェクト一覧を閉じる" : "プロジェクト一覧を展開する"}
               aria-expanded={projectsExpanded}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-faint transition-colors hover:bg-hairline hover:text-fg"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-faint transition-[background-color,color,transform] duration-150 hover:bg-hairline hover:text-fg active:scale-90"
             >
               {projectsExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
             </button>
