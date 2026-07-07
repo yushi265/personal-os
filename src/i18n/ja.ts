@@ -173,10 +173,19 @@ const MESSAGES = {
 	"webapp.unauthorized.title": "トークンが無効です",
 	"webapp.unauthorized.body": "設定画面から再度開いてください。",
 	"webapp.home.title": "ホーム",
-	"webapp.home.todayTodo": "今日のTodo",
+	"webapp.home.today": "Today",
 	"webapp.home.overdue": "Overdue",
 	"webapp.home.reviewNeeded": "Review Needed",
 	"webapp.home.activeProjects": "Active Projects",
+	"webapp.home.sectionToday": "今日の期限",
+	"webapp.home.sectionDoing": "進行中のチケット",
+	"webapp.home.sectionAttention": "要対応",
+	"webapp.home.sectionActiveProjects": "アクティブプロジェクト",
+	"webapp.home.emptyToday": "今日が期限のタスクはありません",
+	"webapp.home.emptyDoing": "進行中のチケットはありません",
+	"webapp.home.emptyAttention": "期限切れ・レビュー待ちはありません",
+	"webapp.home.emptyActiveProjects": "アクティブなプロジェクトはありません",
+	"webapp.home.reviewChip": "レビュー待ち",
 	"webapp.projects.title": "プロジェクト一覧",
 	"webapp.projects.filterKeyword": "キーワードで絞り込み",
 	"webapp.projects.filterStatus": "Status",
@@ -429,6 +438,11 @@ export function dueTodayLabel(): string {
 /** 期限N日後ラベル(describeDue用。値埋め込みのためt()とは別関数とする) */
 export function dueInDaysLabel(days: number): string {
 	return `${days}日後`;
+}
+
+/** ホーム画面セクションの表示件数超過ラベル(件数埋め込みのためt()とは別関数とする) */
+export function homeMoreLabel(count: number): string {
+	return `ほか ${count} 件`;
 }
 
 /** Undoトースト(webapp一覧のstatus変更): 変更前後を埋め込むためt()とは別関数とする */
