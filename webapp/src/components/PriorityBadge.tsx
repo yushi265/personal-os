@@ -1,10 +1,10 @@
 import type { Priority } from "@domain/entity";
 
 // priorityピル(design-refs/geist-final.dc.html §一覧画面)。
-// high=bg:fg文字:bg(反転塗り) / medium=border+fg文字 / low・なし="—"のfaint mono表記。
+// high=bg:fg文字:bg(反転塗り) / medium=border+fg文字 / low=faint mono文字(未設定"—"と区別する) / なし="—"。
 export function PriorityBadge({ priority }: { priority?: Priority }) {
   if (!priority || priority === "low") {
-    return <span className="font-mono text-[11px] text-faint">—</span>;
+    return <span className="font-mono text-[11px] text-faint">{priority || "—"}</span>;
   }
   if (priority === "high") {
     return (
