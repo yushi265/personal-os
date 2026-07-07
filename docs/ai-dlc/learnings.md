@@ -47,6 +47,9 @@ pnpm -C .claude/aidlc learnings   # docs/ai-dlc/retro/ を集約 → 未対応 T
 
 ## 学び（採用済み・未昇格）
 
+- [2026-07-07] webapp のロジックを root Vitest でテストする場合は import 文ゼロの純関数（構造的型付け）に寄せる（root tsconfig に paths 無し・vitest alias は obsidian のみ。エイリアス import 混入で root typecheck が壊れる） `[tooling]` → 還流先候補: rules（testing.md 注記）or vitest.config 改修 （出典: POS-1 retro）
+- [2026-07-07] aidlc engine state は state/<チケット番号>.md で作成する（nudge hook の「spec dir 名 = state 名」提案は artifact guard の glob <TICKET>-* と不一致のため従わない） `[tooling]` → 還流先候補: sensor/hook 修正（aidlc-engine-nudge.sh） （出典: POS-1 retro）
+
 > （まだ無し）採用された学びをここに追記する。
 
 > 昇格・剪定したら該当行を除去し、その旨を triage 実施記録（[retro/README.md](./retro/README.md)）に残す。

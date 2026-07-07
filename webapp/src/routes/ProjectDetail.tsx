@@ -19,6 +19,7 @@ import { StatusSelect } from "@/components/EditableCell/StatusSelect";
 import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DateEdit } from "@/components/EditableCell/DateEdit";
 import { PropertyLabel } from "@/components/PropertyLabel";
+import { TagChipsEdit } from "@/components/TagChipsEdit";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { ProgressBar } from "@/components/ProgressBar";
 import { DueLabel } from "@/components/DueLabel";
@@ -166,6 +167,13 @@ export function ProjectDetail() {
               {t("preview.field.progress")} — {progress}%
             </PropertyLabel>
             <ProgressBar value={entity.progress} showPercent={false} className="max-w-[260px]" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <PropertyLabel>{t("preview.section.labels")}</PropertyLabel>
+            <TagChipsEdit
+              values={entity.labels}
+              onCommit={(next) => updateField.mutate({ key: "labels", value: next })}
+            />
           </div>
           <div className="ml-auto flex shrink-0 gap-2">
             <Button variant="outline" size="sm" className="h-8" onClick={() => setConfirmAction("archive")}>

@@ -9,6 +9,7 @@ import { useEntities } from "@/hooks/useEntities";
 import { useChangeEntityStatus, useCreateEntity, useUpdateEntityField } from "@/hooks/useEntityMutations";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusSelect } from "@/components/EditableCell/StatusSelect";
 import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
@@ -18,6 +19,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
 import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
+import { collectLabelOptions, matchesFilter } from "@/lib/entityFilter";
 import { t } from "@i18n/ja";
 
 // ProjectRow/TicketRow(ProjectDetail.tsx)の行セル幅と揃える(SortableColumnHeaderの列位置合わせ)
@@ -68,15 +70,16 @@ function ProjectRow({
       <span className="w-24 shrink-0 font-mono text-xs">
         <DueLabel due={project.due} today={now} />
       </span>
+      <span className="flex w-40 shrink-0 gap-1 overflow-hidden">
+        {project.labels.map((label) => (
+          <Badge key={label} variant="secondary" className="whitespace-nowrap">
+            {label}
+          </Badge>
+        ))}
+      </span>
       <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
     </MotionRow>
   );
-}
-
-function matchesFilter(project: Entity, keyword: string, statuses: Set<string>): boolean {
-  if (statuses.size > 0 && !statuses.has(project.status)) return false;
-  if (!keyword.trim()) return true;
-  return project.title.toLowerCase().includes(keyword.trim().toLowerCase());
 }
 
 // プロジェクト一覧(design-refs/geist-final.dc.html §一覧画面)。
@@ -89,6 +92,7 @@ export function Projects() {
   const createProject = useCreateEntity();
   const [keyword, setKeyword] = React.useState("");
   const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
+  const [labels, setLabels] = React.useState<Set<string>>(new Set());
   const [newProjectTitle, setNewProjectTitle] = React.useState("");
   const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
   const now = today();
@@ -128,8 +132,19 @@ export function Projects() {
     });
   };
 
+  const toggleLabel = (label: string) => {
+    setLabels((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
+  const labelOptions = collectLabelOptions(projects ?? []);
+
   const visibleProjects = sortEntities(
-    (projects ?? []).filter((p) => matchesFilter(p, keyword, statuses)),
+    (projects ?? []).filter((p) => matchesFilter(p, keyword, statuses, labels)),
     sort
   );
 
@@ -181,6 +196,32 @@ export function Projects() {
               </div>
             </PopoverContent>
           </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="flex h-9 items-center gap-1.5 rounded-md border border-border bg-surface px-3 text-[13px] text-fg transition-colors hover:bg-hairline"
+              >
+                {t("webapp.projects.filterLabels")}
+                {labels.size > 0 ? ` (${labels.size})` : ""}
+                <span className="text-[10px] text-faint">▼</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56">
+              {labelOptions.length === 0 ? (
+                <p className="text-sm text-faint">{t("webapp.projects.filterLabelsEmpty")}</p>
+              ) : (
+                <div className="space-y-2">
+                  {labelOptions.map((label) => (
+                    <label key={label} className="flex items-center gap-2 text-sm">
+                      <Checkbox checked={labels.has(label)} onCheckedChange={() => toggleLabel(label)} />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -189,6 +230,7 @@ export function Projects() {
           columns={PROJECT_COLUMNS}
           sort={sort}
           onSort={(key) => setSort((prev) => nextSortState(prev, key))}
+          staticColumns={[{ label: t("manage.column.labels"), className: "w-40 shrink-0 text-left" }]}
         />
         <motion.div variants={staggerContainer} initial="initial" animate="animate">
           {visibleProjects.map((project) => (

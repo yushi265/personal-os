@@ -180,6 +180,8 @@ const MESSAGES = {
 	"webapp.projects.title": "プロジェクト一覧",
 	"webapp.projects.filterKeyword": "キーワードで絞り込み",
 	"webapp.projects.filterStatus": "Status",
+	"webapp.projects.filterLabels": "Labels",
+	"webapp.projects.filterLabelsEmpty": "ラベルはまだありません",
 	"webapp.loading": "読み込み中...",
 	"webapp.loadError": "読み込みに失敗しました。",
 	"webapp.placeholder.comingSoon": "この画面はP4で実装予定です。",

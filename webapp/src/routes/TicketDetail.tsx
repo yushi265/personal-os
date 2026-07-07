@@ -11,6 +11,7 @@ import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DateEdit } from "@/components/EditableCell/DateEdit";
 import { ParentSelect } from "@/components/EditableCell/ParentSelect";
 import { PropertyLabel } from "@/components/PropertyLabel";
+import { TagChipsEdit } from "@/components/TagChipsEdit";
 import { TodoListPanel } from "@/components/TodoListPanel";
 import { NotePanel } from "@/components/NotePanel";
 import { CommentPanel } from "@/components/CommentPanel";
@@ -100,6 +101,13 @@ export function TicketDetail() {
                 variant="icon"
               />
             </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <PropertyLabel>{t("preview.section.labels")}</PropertyLabel>
+            <TagChipsEdit
+              values={entity.labels}
+              onCommit={(next) => updateField.mutate({ key: "labels", value: next })}
+            />
           </div>
           <div className="ml-auto flex shrink-0 gap-2">
             <Button size="sm" className="h-8" onClick={() => setConfirmAction("promote")}>

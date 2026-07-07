@@ -7,6 +7,12 @@ export interface SortableColumn {
   className: string;
 }
 
+/** ソート不可の列(labels等、配列でソート意味論が自明でないもの)。ソート可能列の後ろに非インタラクティブ(span)で描画する */
+export interface StaticColumn {
+  label: string;
+  className: string;
+}
+
 // 一覧テーブルの列ヘッダ行(design-browser-ui.md P3行の拡張): Obsidian側の管理Viewと同じ操作感で
 // クリック→昇順→再クリック→降順→3回目で手動順(デフォルト)に戻る3段トグル。
 // gap-6/px-5はProjectRow/TicketRowの行と揃える(列位置がヘッダとずれないため)。
@@ -14,10 +20,12 @@ export function SortableColumnHeader({
   columns,
   sort,
   onSort,
+  staticColumns,
 }: {
   columns: SortableColumn[];
   sort: SortState;
   onSort: (key: SortKey) => void;
+  staticColumns?: StaticColumn[];
 }) {
   return (
     <div className="flex h-9 items-center gap-6 border-b border-hairline bg-surface px-5">
@@ -35,6 +43,14 @@ export function SortableColumnHeader({
           </button>
         );
       })}
+      {staticColumns?.map((column) => (
+        <span
+          key={column.label}
+          className={`truncate font-mono text-[11px] uppercase tracking-[0.06em] text-faint ${column.className}`}
+        >
+          {column.label}
+        </span>
+      ))}
     </div>
   );
 }
