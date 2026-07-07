@@ -50,6 +50,8 @@ export function ChipListEditor({ values, onCommit, placeholder, removeLabel, com
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commitAdd}
         onKeyDown={(e) => {
+          // IME変換確定のEnterで誤commitしない(確定テキストがdraftへ再挿入され入力欄に残る)
+          if (e.nativeEvent.isComposing) return;
           if (e.key === "Enter" || (commaSeparated && e.key === ",")) {
             e.preventDefault();
             commitAdd();

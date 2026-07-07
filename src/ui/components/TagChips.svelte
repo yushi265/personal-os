@@ -68,6 +68,8 @@
 		bind:value={draft}
 		onblur={addFromDraft}
 		onkeydown={(e) => {
+			// IME変換確定のEnterで誤commitしない(確定テキストがdraftへ再挿入され入力欄に残る)
+			if (e.isComposing) return;
 			if (e.key === "Enter" || e.key === ",") {
 				e.preventDefault();
 				addFromDraft();
