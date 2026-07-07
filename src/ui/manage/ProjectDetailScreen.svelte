@@ -9,6 +9,7 @@
 	import PriorityCell from "../components/PriorityCell.svelte";
 	import DateCell from "../components/DateCell.svelte";
 	import TitleCell from "../components/TitleCell.svelte";
+	import TagChips from "../components/TagChips.svelte";
 	import TodoList from "../components/TodoList.svelte";
 	import NotePanel from "../components/NotePanel.svelte";
 	import CommentSection from "../components/CommentSection.svelte";
@@ -18,6 +19,7 @@
 	import type { ManageScreen } from "./manageNav";
 	import {
 		buildProjectTicketRows,
+		collectKnownLabels,
 		collectProjectTodos,
 		entityProgressFraction,
 		type ManageFilter,
@@ -90,6 +92,9 @@
 	function commitDue(next: string | undefined): Promise<void> {
 		return plugin.entityFieldService.updateField(screen.path, "due", next);
 	}
+	function commitLabels(next: string[]): Promise<void> {
+		return plugin.entityFieldService.updateField(screen.path, "labels", next);
+	}
 
 	function changeTicketFilter(next: ManageFilter): void {
 		onScreenChange({ ...screen, ticketFilter: next });
@@ -150,6 +155,9 @@
 
 		<dt>{t("preview.field.due")}</dt>
 		<dd><DateCell value={entity.due} onCommit={commitDue} relative /></dd>
+
+		<dt>{t("preview.section.labels")}</dt>
+		<dd><TagChips values={entity.labels} suggestions={collectKnownLabels(plugin.store)} onCommit={commitLabels} /></dd>
 
 		<dt>{t("preview.field.progress")}</dt>
 		<dd>

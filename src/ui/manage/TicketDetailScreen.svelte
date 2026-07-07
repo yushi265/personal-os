@@ -8,11 +8,12 @@
 	import DateCell from "../components/DateCell.svelte";
 	import ParentCell from "../components/ParentCell.svelte";
 	import TitleCell from "../components/TitleCell.svelte";
+	import TagChips from "../components/TagChips.svelte";
 	import TodoList from "../components/TodoList.svelte";
 	import NotePanel from "../components/NotePanel.svelte";
 	import CommentSection from "../components/CommentSection.svelte";
 	import type { ManageScreen } from "./manageNav";
-	import { entityProgressFraction } from "./manageData";
+	import { collectKnownLabels, entityProgressFraction } from "./manageData";
 
 	/**
 	 * チケット詳細画面(design-drilldown-nav.md §3.3)。
@@ -76,6 +77,9 @@
 	function commitProject(next: string | undefined): Promise<void> {
 		return plugin.entityFieldService.updateField(screen.path, "project", next);
 	}
+	function commitLabels(next: string[]): Promise<void> {
+		return plugin.entityFieldService.updateField(screen.path, "labels", next);
+	}
 	function toggleShowDoneTodos(next: boolean): void {
 		onScreenChange({ ...screen, showDoneTodos: next });
 	}
@@ -101,6 +105,9 @@
 
 		<dt>{t("preview.field.project")}</dt>
 		<dd><ParentCell value={entity.project} options={projectOptions()} onCommit={commitProject} /></dd>
+
+		<dt>{t("preview.section.labels")}</dt>
+		<dd><TagChips values={entity.labels} suggestions={collectKnownLabels(plugin.store)} onCommit={commitLabels} /></dd>
 
 		<dt>{t("preview.field.progress")}</dt>
 		<dd>
