@@ -92,7 +92,8 @@ export class IndexStore {
 		const paths = this.childrenOf.get(parentPath) ?? new Set<string>();
 		return Array.from(paths)
 			.map((p) => this.entities.get(p))
-			.filter((e): e is Entity => !!e);
+			.filter((e): e is Entity => !!e)
+			.sort(compareByOrderThenTitle); // Set挿入順は再indexで末尾に動くため、listByTypeと同じ決定的順序に揃える
 	}
 
 	getTodos(parentPath: string): Todo[] {

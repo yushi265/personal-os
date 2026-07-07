@@ -132,6 +132,30 @@ describe("IndexStore", () => {
 		expect(store.listByType("ticket").map((e) => e.title)).toEqual(["apple", "banana"]);
 	});
 
+	it("getChildren returns children sorted by order ascending then title", () => {
+		const store = new IndexStore();
+		const project = makeEntity({ path: "PersonalOS/Projects/proj-a.md", type: "project", title: "proj-a" });
+		store.upsertEntity(project);
+		store.upsertEntity(makeEntity({ path: "t1.md", title: "banana", project: project.path }));
+		store.upsertEntity(makeEntity({ path: "t2.md", title: "apple", project: project.path }));
+		store.upsertEntity(makeEntity({ path: "t3.md", title: "zebra", order: 100, project: project.path }));
+
+		expect(store.getChildren(project.path).map((e) => e.title)).toEqual(["zebra", "apple", "banana"]);
+	});
+
+	it("getChildren keeps a child's position stable when it is re-upserted (re-index after field edit)", () => {
+		const store = new IndexStore();
+		const project = makeEntity({ path: "PersonalOS/Projects/proj-a.md", type: "project", title: "proj-a" });
+		const apple = makeEntity({ path: "t1.md", title: "apple", project: project.path });
+		store.upsertEntity(project);
+		store.upsertEntity(apple);
+		store.upsertEntity(makeEntity({ path: "t2.md", title: "banana", project: project.path }));
+
+		store.upsertEntity({ ...apple, priority: "high" });
+
+		expect(store.getChildren(project.path).map((e) => e.title)).toEqual(["apple", "banana"]);
+	});
+
 	it("tracks parse errors and clears them once an entity parses successfully", () => {
 		const store = new IndexStore();
 		store.addParseError("bad.md", "不正なtype");
