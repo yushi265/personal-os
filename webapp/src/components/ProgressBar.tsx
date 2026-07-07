@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from "motion/react";
 import { springTransition } from "@/lib/motion";
+import { t } from "@i18n/ja";
 
 // 進捗バー(design P6-B5、design-refs/geist-final.dc.html §一覧画面: 3pxバー w160+mono12px%)。
 // 値変更(初回含む)にwidthがspringで追従する。
@@ -10,7 +11,14 @@ export function ProgressBar({ value, showPercent = true, className }: { value?: 
   const reduced = useReducedMotion();
 
   return (
-    <div className={`flex items-center gap-2 ${showPercent ? "w-40" : "w-full"} ${className ?? ""}`}>
+    <div
+      role="progressbar"
+      aria-label={t("preview.field.progress")}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      className={`flex items-center gap-2 ${showPercent ? "w-40" : "w-full"} ${className ?? ""}`}
+    >
       <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-hairline">
         <motion.div
           className="h-full rounded-full bg-fg"

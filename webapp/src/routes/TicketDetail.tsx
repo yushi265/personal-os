@@ -4,6 +4,7 @@ import { TICKET_STATUSES } from "@domain/entity";
 import { today } from "@domain/date";
 import { ApiError } from "@/api/client";
 import { useEntity } from "@/hooks/useEntity";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useArchiveEntity, useChangeEntityStatus, useDeleteEntity, usePromoteTicket, useUpdateEntityField } from "@/hooks/useEntityMutations";
 import { TitleEditable } from "@/components/EditableCell/TitleEditable";
 import { StatusSelect } from "@/components/EditableCell/StatusSelect";
@@ -29,6 +30,7 @@ export function TicketDetail() {
   const now = today();
 
   const entityQuery = useEntity(path);
+  usePageTitle(entityQuery.data?.title);
 
   const updateField = useUpdateEntityField(entityQuery.data);
   const changeStatus = useChangeEntityStatus(entityQuery.data);

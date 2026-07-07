@@ -53,19 +53,22 @@ export function PromoteTodoDialog({ todo, onOpenChange }: PromoteTodoDialogProps
 
   return (
     <Dialog open={!!todo} onOpenChange={onOpenChange}>
-      <DialogContent>
+      {/* 説明文を持たないダイアログのため、Radixのaria-describedby警告を明示的に無効化する */}
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{t("modal.promoteTodo.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">{t("modal.promoteTodo.newTitle")}</label>
-            <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} autoFocus />
+            <label htmlFor="promote-todo-title" className="text-sm text-muted-foreground">
+              {t("modal.promoteTodo.newTitle")}
+            </label>
+            <Input id="promote-todo-title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} autoFocus />
           </div>
           <div className="space-y-1">
             <label className="text-sm text-muted-foreground">{t("modal.promoteTodo.project")}</label>
             <Select value={projectPath ?? NONE} onValueChange={(v) => setProjectPath(v === NONE ? undefined : v)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label={t("modal.promoteTodo.project")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -81,7 +84,7 @@ export function PromoteTodoDialog({ todo, onOpenChange }: PromoteTodoDialogProps
           <div className="space-y-1">
             <label className="text-sm text-muted-foreground">{t("modal.promoteTodo.sourceAction")}</label>
             <Select value={sourceAction} onValueChange={(v) => setSourceAction(v as SourceTodoAction)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label={t("modal.promoteTodo.sourceAction")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

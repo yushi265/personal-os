@@ -1,4 +1,5 @@
 import type { SortKey, SortState } from "@/lib/sortEntities";
+import { t } from "@i18n/ja";
 
 export interface SortableColumn {
   key: SortKey;
@@ -39,7 +40,13 @@ export function SortableColumnHeader({
             className={`flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.06em] text-faint transition-colors hover:text-fg ${column.className}`}
           >
             <span className="truncate">{column.label}</span>
-            {active && <span className="shrink-0">{sort.direction === "asc" ? "▲" : "▼"}</span>}
+            {active && (
+              <span className="shrink-0" aria-hidden="true">
+                {sort.direction === "asc" ? "▲" : "▼"}
+              </span>
+            )}
+            {/* ソート状態はSR向けにテキストで通知(▲▼は装飾扱い、WCAG 1.3.1) */}
+            {active && <span className="sr-only">{sort.direction === "asc" ? t("webapp.sort.asc") : t("webapp.sort.desc")}</span>}
           </button>
         );
       })}

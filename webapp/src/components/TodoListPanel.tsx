@@ -94,7 +94,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
         <div className="flex items-center gap-3">
           {scopeControl}
           <label className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-            <Checkbox checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />
+            <Checkbox aria-label={t("manage.filter.showDone")} checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />
             {t("manage.filter.showDone")}
           </label>
         </div>
@@ -133,6 +133,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
               className="flex items-center gap-2 rounded-md px-1 py-1 transition-colors hover:bg-accent/50"
             >
               <Checkbox
+                aria-label={todo.text}
                 checked={todo.done}
                 onCheckedChange={() => toggle.mutate(todo)}
                 className="data-[state=checked]:animate-in data-[state=checked]:zoom-in-50 data-[state=checked]:duration-200"
@@ -172,6 +173,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
             if (e.key === "Enter" && !e.nativeEvent.isComposing) submitAdd();
           }}
           placeholder={t("preview.todoAdd.textPlaceholder")}
+          aria-label={t("preview.todoAdd.textPlaceholder")}
           className="h-8 flex-1"
         />
         <input

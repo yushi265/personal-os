@@ -210,6 +210,9 @@ const MESSAGES = {
 	"webapp.empty.projects.body": "最初のプロジェクトを作成して始めましょう。",
 	"webapp.celebration.allDone": "すべて完了しました",
 	"webapp.undo.reverted": "元に戻しました",
+	"webapp.sort.asc": "昇順",
+	"webapp.sort.desc": "降順",
+	"webapp.nav.label": "メインナビゲーション",
 
 	"settings.section.capability": "依存プラグイン",
 	"settings.capability.dataview": "Dataview",

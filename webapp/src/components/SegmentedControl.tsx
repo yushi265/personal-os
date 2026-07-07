@@ -20,6 +20,7 @@ export function SegmentedControl<T extends string>({ value, options, onChange }:
         <button
           key={option.value}
           type="button"
+          aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
             "h-full px-2.5 transition-colors",

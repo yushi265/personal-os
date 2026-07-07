@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { PROJECT_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { useEntities } from "@/hooks/useEntities";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useChangeEntityStatus, useCreateEntity, useUpdateEntityField } from "@/hooks/useEntityMutations";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -54,8 +55,18 @@ function ProjectRow({
     <MotionRow
       variants={staggerItem}
       transition={listTransition(reduced)}
-      className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
+      className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       onClick={onNavigate}
+      role="link"
+      tabIndex={0}
+      aria-label={project.title}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return; // 行内のセル編集UI(Select等)のキー操作を奪わない
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onNavigate();
+        }
+      }}
     >
       <span className="w-[300px] shrink-0 truncate text-sm font-medium">{project.title}</span>
       <span className="w-24 shrink-0">
@@ -77,7 +88,7 @@ function ProjectRow({
           </Badge>
         ))}
       </span>
-      <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
+      <ChevronRight aria-hidden="true" className="ml-auto h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
     </MotionRow>
   );
 }
@@ -97,6 +108,7 @@ export function Projects() {
   const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
   const now = today();
   const reduced = useReducedMotion();
+  usePageTitle(t("webapp.projects.title"));
 
   if (isLoading) {
     return (
@@ -168,8 +180,9 @@ export function Projects() {
           <div className="flex h-9 w-[280px] items-center gap-1.5 rounded-md border border-border bg-surface px-2.5">
             <Search className="h-3.5 w-3.5 shrink-0 text-faint" />
             <input
-              className="h-full w-full bg-transparent text-[13px] outline-none placeholder:text-faint"
+              className="h-full w-full rounded bg-transparent text-[13px] outline-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-ring"
               placeholder={t("webapp.projects.filterKeyword")}
+              aria-label={t("webapp.projects.filterKeyword")}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
@@ -182,14 +195,16 @@ export function Projects() {
               >
                 {t("webapp.projects.filterStatus")}
                 {statuses.size > 0 ? ` (${statuses.size})` : ""}
-                <span className="text-[10px] text-faint">▼</span>
+                <span className="text-[10px] text-faint" aria-hidden="true">
+                  ▼
+                </span>
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-56">
               <div className="space-y-2">
                 {PROJECT_STATUSES.map((status) => (
                   <label key={status} className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={statuses.has(status)} onCheckedChange={() => toggleStatus(status)} />
+                    <Checkbox aria-label={status} checked={statuses.has(status)} onCheckedChange={() => toggleStatus(status)} />
                     {status}
                   </label>
                 ))}
@@ -204,7 +219,9 @@ export function Projects() {
               >
                 {t("webapp.projects.filterLabels")}
                 {labels.size > 0 ? ` (${labels.size})` : ""}
-                <span className="text-[10px] text-faint">▼</span>
+                <span className="text-[10px] text-faint" aria-hidden="true">
+                  ▼
+                </span>
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-56">
@@ -214,7 +231,7 @@ export function Projects() {
                 <div className="space-y-2">
                   {labelOptions.map((label) => (
                     <label key={label} className="flex items-center gap-2 text-sm">
-                      <Checkbox checked={labels.has(label)} onCheckedChange={() => toggleLabel(label)} />
+                      <Checkbox aria-label={label} checked={labels.has(label)} onCheckedChange={() => toggleLabel(label)} />
                       {label}
                     </label>
                   ))}
@@ -250,7 +267,8 @@ export function Projects() {
                 if (e.key === "Enter" && !e.nativeEvent.isComposing) submitNewProject();
               }}
               placeholder={t("webapp.detail.addProjectPlaceholder")}
-              className="h-full w-full bg-transparent text-[13px] text-faint outline-none placeholder:text-faint"
+              aria-label={t("webapp.detail.addProjectPlaceholder")}
+              className="h-full w-full rounded bg-transparent text-[13px] text-faint outline-none placeholder:text-faint focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>
         </motion.div>

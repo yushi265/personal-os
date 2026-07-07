@@ -7,6 +7,7 @@ import { PROJECT_STATUSES, TICKET_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { ApiError } from "@/api/client";
 import { useEntity, useChildren } from "@/hooks/useEntity";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   useArchiveEntity,
   useChangeEntityStatus,
@@ -66,8 +67,18 @@ function TicketRow({
     <MotionRow
       variants={staggerItem}
       transition={listTransition(reduced)}
-      className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface"
+      className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       onClick={onNavigate}
+      role="link"
+      tabIndex={0}
+      aria-label={ticket.title}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return; // 行内のセル編集UI(Select等)のキー操作を奪わない
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onNavigate();
+        }
+      }}
     >
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{ticket.title}</span>
       <span className="w-[110px] shrink-0">
@@ -82,7 +93,7 @@ function TicketRow({
       <span className="w-20 shrink-0 font-mono text-xs">
         <DueLabel due={ticket.due} today={now} />
       </span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
+      <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-ghost transition-transform duration-150 group-hover:translate-x-0.5" />
     </MotionRow>
   );
 }
@@ -108,6 +119,7 @@ export function ProjectDetail() {
   const [newTicketTitle, setNewTicketTitle] = React.useState("");
   const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
   const reduced = useReducedMotion();
+  usePageTitle(entityQuery.data?.title);
 
   if (entityQuery.isError) {
     if (entityQuery.error instanceof ApiError && entityQuery.error.status === 404) return <NotFoundScreen />;
@@ -215,7 +227,8 @@ export function ProjectDetail() {
                   if (e.key === "Enter" && !e.nativeEvent.isComposing) submitNewTicket();
                 }}
                 placeholder={t("webapp.detail.addTicketPlaceholder")}
-                className="h-full border-none bg-transparent px-0 text-[13px] shadow-none focus-visible:ring-0"
+                aria-label={t("webapp.detail.addTicketPlaceholder")}
+                className="h-full border-none bg-transparent px-0 text-[13px] shadow-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
           </motion.div>

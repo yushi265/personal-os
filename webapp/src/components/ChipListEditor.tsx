@@ -47,6 +47,7 @@ export function ChipListEditor({ values, onCommit, placeholder, removeLabel, com
       ))}
       <Input
         value={draft}
+        aria-label={placeholder}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commitAdd}
         onKeyDown={(e) => {

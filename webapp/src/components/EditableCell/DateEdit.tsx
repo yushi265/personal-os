@@ -24,6 +24,7 @@ export function DateEdit({ value, today, onCommit }: DateEditProps) {
       <PopoverTrigger asChild>
         <button
           type="button"
+          aria-label={t("preview.field.due")}
           className="rounded px-1 py-0.5 text-[13px] hover:bg-accent"
           onClick={(e) => e.stopPropagation()}
         >
@@ -35,6 +36,7 @@ export function DateEdit({ value, today, onCommit }: DateEditProps) {
           <input
             type="date"
             value={draft}
+            aria-label={t("preview.field.due")}
             onChange={(e) => setDraft(e.target.value)}
             className="h-9 rounded-md border border-input bg-background px-2 text-sm"
           />

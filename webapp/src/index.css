@@ -56,11 +56,17 @@
     --hairline: #f2f2f2;
     --fg: #171717;
     --muted: #666666;
-    --faint: #999999;
+    /* WCAG AA(4.5:1): 元の#999999は#fafafa上で2.7:1と不足のため#707070(4.75:1)へ */
+    --faint: #707070;
     --ghost: #cccccc;
-    --accent: #0f9d58;
-    --destructive: #e5484d;
+    /* WCAG AA: 元の#0f9d58はリンク文字として3.5:1と不足のため#0b7a44(5.2:1)へ */
+    --accent: #0b7a44;
+    /* WCAG AA: 元の#e5484dは文字使用で3.9:1と不足のため#dc2626(4.8:1、白文字を乗せても4.8:1)へ */
+    --destructive: #dc2626;
     --destructive-foreground: #ffffff;
+    /* フォーム部品(input/textarea/select/outlineボタン)の輪郭線。UI部品の識別に必要なため
+       装飾用--borderと分離して3:1以上を確保する(WCAG 1.4.11)。#8a8a8a=3.3:1 on #fafafa */
+    --input-border: #8a8a8a;
     --radius: 0.5rem;
     /* 立体感トークン: カード・ポップオーバー・ダイアログ等が参照する多層シャドウ(奥行き用に2〜3枚重ね) */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.05);
@@ -77,12 +83,17 @@
     --hairline: #1a1a1a;
     --fg: #ededed;
     --muted: #888888;
-    --faint: #666666;
+    /* WCAG AA(4.5:1): 元の#666666は--elevated(#111111)上で3.3:1と不足のため#7f7f7f(4.7:1)へ */
+    --faint: #7f7f7f;
     --ghost: #444444;
-    /* light版の#0f9d58は黒背景でコントラスト比5.98と低めのため、視認性確保に明るめの緑を採用(黒背景でコントラスト比8.74) */
+    /* light版より明るい緑を採用(黒背景でコントラスト比8.74、文字使用でもAA充足) */
     --accent: #1fbf6e;
-    --destructive: #e5484d;
-    --destructive-foreground: #ffffff;
+    /* WCAG AA: darkでは「#111上の文字4.5:1」と「白文字を乗せる塗り」を1色で両立できないため、
+       明るめの赤(#111上で5.0:1)+ほぼ黒の前景(#ef4444上で5.6:1)の組にする */
+    --destructive: #ef4444;
+    --destructive-foreground: #0a0a0a;
+    /* フォーム部品の輪郭線(WCAG 1.4.11)。#646464=3.2:1 on #111111 */
+    --input-border: #646464;
     /* dark影は明度差で浮かせるのが主、影は黒背景に沈むための補助(白アルファでうっすら縁取り) */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);

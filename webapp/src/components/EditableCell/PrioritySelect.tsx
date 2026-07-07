@@ -15,6 +15,7 @@ export function PrioritySelect({ priority, onCommit }: PrioritySelectProps) {
   return (
     <Select value={priority ?? NONE} onValueChange={(v) => onCommit(v === NONE ? undefined : (v as Priority))}>
       <SelectTrigger
+        aria-label={t("preview.field.priority")}
         className="h-auto w-auto gap-1 border-none bg-transparent px-0 py-0 shadow-none hover:bg-accent"
         onClick={(e) => e.stopPropagation()}
       >

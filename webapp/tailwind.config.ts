@@ -23,7 +23,8 @@ export default {
       },
       colors: {
         border: "var(--border)",
-        input: "var(--border)",
+        // フォーム部品の輪郭線はUI識別のため3:1以上が必要(WCAG 1.4.11)。装飾用borderと分離
+        input: "var(--input-border)",
         ring: "var(--accent)",
         background: "var(--bg)",
         foreground: "var(--fg)",

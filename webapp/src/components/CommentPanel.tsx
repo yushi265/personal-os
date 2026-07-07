@@ -54,6 +54,7 @@ export function CommentPanel({ path }: CommentPanelProps) {
             }
           }}
           placeholder={t("comment.placeholder")}
+          aria-label={t("preview.section.comment")}
           rows={2}
           className="rounded-lg text-[13px]"
         />

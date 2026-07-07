@@ -27,15 +27,19 @@ export function TitleEditable({ value, onCommit, className, as = "span" }: Title
 
   if (!editing) {
     const Comp = as;
+    // 見出し(h1等)の意味論を保ったままキーボードで編集開始できるよう、内側にbuttonをネストする(WCAG 2.1.1)
     return (
-      <Comp
-        className={cn("cursor-text rounded px-1 py-0.5 hover:bg-accent", className)}
-        onClick={(e) => {
-          e.stopPropagation();
-          setEditing(true);
-        }}
-      >
-        {value}
+      <Comp className={cn(className)}>
+        <button
+          type="button"
+          className="cursor-text rounded px-1 py-0.5 text-left text-inherit [font:inherit] hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditing(true);
+          }}
+        >
+          {value}
+        </button>
       </Comp>
     );
   }

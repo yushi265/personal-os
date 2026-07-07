@@ -61,6 +61,7 @@ export function NotePanel({ path }: NotePanelProps) {
           onChange={(e) => setText(e.target.value)}
           onBlur={handleBlur}
           placeholder={t("note.placeholder")}
+          aria-label={t("preview.section.note")}
           rows={3}
           className="min-h-14 rounded-lg text-[13px]"
         />

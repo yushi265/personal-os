@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { CountUp } from "@/components/CountUp";
 import { useHomeSummary } from "@/hooks/useHomeSummary";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { entityDetailPath, todoDetailPath } from "@/lib/links";
 import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
 import { t } from "@i18n/ja";
@@ -24,7 +25,8 @@ interface SummaryCardDef {
 const TONE_ACCENT_CLASS: Record<SummaryCardDef["tone"], string> = {
   default: "text-muted-foreground",
   danger: "text-destructive",
-  warning: "text-amber-600 dark:text-amber-400",
+  // amber-600はカード地に対して3.0:1とAA下限すれすれのため700で余裕を持たせる(WCAG 1.4.3)
+  warning: "text-amber-700 dark:text-amber-400",
   accent: "text-brand",
 };
 
@@ -33,6 +35,7 @@ const TONE_ACCENT_CLASS: Record<SummaryCardDef["tone"], string> = {
 export function Home() {
   const summary = useHomeSummary();
   const reduced = useReducedMotion();
+  usePageTitle(t("webapp.home.title"));
 
   if (summary.isLoading) {
     return (
@@ -86,12 +89,15 @@ export function Home() {
   ];
 
   return (
-    <motion.div
-      variants={staggerContainer}
-      initial="initial"
-      animate="animate"
-      className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
-    >
+    <>
+      {/* ページ見出し(WCAG 1.3.1): デザイン上は非表示だがSR向けにh1を提供する */}
+      <h1 className="sr-only">{t("webapp.home.title")}</h1>
+      <motion.div
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+      >
       {cards.map((card) => {
         const Icon = card.icon;
         return (
@@ -121,6 +127,7 @@ export function Home() {
           </motion.div>
         );
       })}
-    </motion.div>
+      </motion.div>
+    </>
   );
 }

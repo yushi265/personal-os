@@ -94,7 +94,8 @@ export function Sidebar({ connected }: { connected: boolean }) {
         </div>
       )}
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2">
+      {/* breadcrumb navと区別できるようアクセシブルネームを付ける(WCAG 1.3.1) */}
+      <nav aria-label={t("webapp.nav.label")} className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2">
         <Link
           to="/"
           className={`flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
