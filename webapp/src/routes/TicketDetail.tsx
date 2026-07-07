@@ -102,13 +102,6 @@ export function TicketDetail() {
               />
             </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <PropertyLabel>{t("preview.section.labels")}</PropertyLabel>
-            <TagChipsEdit
-              values={entity.labels}
-              onCommit={(next) => updateField.mutate({ key: "labels", value: next })}
-            />
-          </div>
           <div className="ml-auto flex shrink-0 gap-2">
             <Button size="sm" className="h-8" onClick={() => setConfirmAction("promote")}>
               {t("preview.action.promote")}
@@ -120,6 +113,14 @@ export function TicketDetail() {
               {t("preview.action.delete")}
             </Button>
           </div>
+        </div>
+        {/* labelsはチップ数で幅が伸縮するため、gap-12のフィールド行に入れず専用行で折り返す */}
+        <div className="flex flex-col gap-1.5">
+          <PropertyLabel>{t("preview.section.labels")}</PropertyLabel>
+          <TagChipsEdit
+            values={entity.labels}
+            onCommit={(next) => updateField.mutate({ key: "labels", value: next })}
+          />
         </div>
       </div>
 

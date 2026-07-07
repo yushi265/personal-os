@@ -168,13 +168,6 @@ export function ProjectDetail() {
             </PropertyLabel>
             <ProgressBar value={entity.progress} showPercent={false} className="max-w-[260px]" />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <PropertyLabel>{t("preview.section.labels")}</PropertyLabel>
-            <TagChipsEdit
-              values={entity.labels}
-              onCommit={(next) => updateField.mutate({ key: "labels", value: next })}
-            />
-          </div>
           <div className="ml-auto flex shrink-0 gap-2">
             <Button variant="outline" size="sm" className="h-8" onClick={() => setConfirmAction("archive")}>
               {t("preview.action.archive")}
@@ -183,6 +176,14 @@ export function ProjectDetail() {
               {t("preview.action.delete")}
             </Button>
           </div>
+        </div>
+        {/* labelsはチップ数で幅が伸縮するため、gap-12のフィールド行に入れず専用行で折り返す */}
+        <div className="flex flex-col gap-1.5">
+          <PropertyLabel>{t("preview.section.labels")}</PropertyLabel>
+          <TagChipsEdit
+            values={entity.labels}
+            onCommit={(next) => updateField.mutate({ key: "labels", value: next })}
+          />
         </div>
       </div>
 
