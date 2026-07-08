@@ -48,25 +48,40 @@
    同じ変数を指すよう再マッピングしている。 */
 @layer base {
   :root {
-    /* ページ全体の地(canvas)。カード類は下の--elevatedでこれより明るい面として浮かせる */
-    --bg: #fafafa;
-    --surface: #fafafa;
+    /* ページ全体の地(canvas)。カード類は下の--elevatedでこれより明るい面として浮かせる。
+       無彩色グレーからわずかに青みがかったslate系(#f8fafc)へ変更し色味を豊かにする */
+    --bg: #f8fafc;
+    --surface: #f8fafc;
     --elevated: #ffffff;
-    --border: #eaeaea;
-    --hairline: #f2f2f2;
-    --fg: #171717;
-    --muted: #666666;
-    /* WCAG AA(4.5:1): 元の#999999は#fafafa上で2.7:1と不足のため#707070(4.75:1)へ */
-    --faint: #707070;
-    --ghost: #cccccc;
-    /* WCAG AA: 元の#0f9d58はリンク文字として3.5:1と不足のため#0b7a44(5.2:1)へ */
-    --accent: #0b7a44;
+    /* slate-200相当。装飾用の区切り線でありWCAG対象外(UI部品境界は--input-borderで別途3:1を確保) */
+    --border: #e2e8f0;
+    --hairline: #f1f5f9;
+    /* WCAG AA(4.5:1): slate-900相当。--bg上17.06:1、--elevated上17.85:1 */
+    --fg: #0f172a;
+    /* WCAG AA(4.5:1): slate系。--bg上7.24:1、--elevated上7.58:1 */
+    --muted: #475569;
+    /* WCAG AA(4.5:1): slate-500(#64748b)は--bg上4.55:1とAA下限すれすれのため、
+       余裕を持って#5b6b82(--bg上5.19:1、--elevated上5.43:1)へ */
+    --faint: #5b6b82;
+    /* slate-300相当。装飾用(アイコンの控えめな強調)でWCAG対象外 */
+    --ghost: #cbd5e1;
+    /* プライマリボタンの塗り。白文字(--primary-foreground)を乗せて5.17:1(WCAG AA) */
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    /* WCAG AA: リンク/フォーカスリング/強調色。旧緑(#0b7a44)から青に統一。--bg上4.94:1、--elevated上5.17:1 */
+    --accent: #2563eb;
+    /* 旧--accentの緑をそのまま「成功/接続」の意味色として温存(ConnectionDot等)。--bg上5.17:1、--elevated上5.41:1 */
+    --success: #0b7a44;
+    /* Sidebarのアクティブナビ背景専用トークン。#2563eb(--accent)の5%。Tailwindはvar(...)のhex色に
+       アルファ修飾子(bg-brand/5)を注入できないためrgba直書きで用意する。--surface(=--bg)上に重ねた
+       実効色は#edf2fbで、上に乗るtext-brand(#2563eb)との対比は4.60:1(WCAG AA) */
+    --brand-tint: rgba(37, 99, 235, 0.05);
     /* WCAG AA: 元の#e5484dは文字使用で3.9:1と不足のため#dc2626(4.8:1、白文字を乗せても4.8:1)へ */
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
     /* フォーム部品(input/textarea/select/outlineボタン)の輪郭線。UI部品の識別に必要なため
-       装飾用--borderと分離して3:1以上を確保する(WCAG 1.4.11)。#8a8a8a=3.3:1 on #fafafa */
-    --input-border: #8a8a8a;
+       装飾用--borderと分離して3:1以上を確保する(WCAG 1.4.11)。slate系#7b8aa1、--bg上3.35:1、--elevated上3.51:1 */
+    --input-border: #7b8aa1;
     --radius: 0.5rem;
     /* 立体感トークン: カード・ポップオーバー・ダイアログ等が参照する多層シャドウ(奥行き用に2〜3枚重ね) */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 10px rgba(0, 0, 0, 0.05);
@@ -89,8 +104,18 @@
     /* WCAG AA(4.5:1): 元の#666666は--elevated(#111111)上で3.3:1と不足のため#7f7f7f(4.7:1)へ */
     --faint: #7f7f7f;
     --ghost: #444444;
-    /* light版より明るい緑を採用(黒背景でコントラスト比8.74、文字使用でもAA充足) */
-    --accent: #1fbf6e;
+    /* プライマリボタンの塗り。ほぼ黒の前景(--primary-foreground)を乗せて5.38:1(WCAG AA、
+       darkの--destructiveと同じ「明るい塗り+濃い前景」パターン) */
+    --primary: #3b82f6;
+    --primary-foreground: #0a0a0a;
+    /* WCAG AA: リンク/フォーカスリング/強調色。旧緑(#1fbf6e)から青に統一。--bg(#000000)上8.26:1、--elevated(#111111)上7.43:1 */
+    --accent: #60a5fa;
+    /* 旧--accentの緑をそのまま「成功/接続」の意味色として温存(ConnectionDot等)。黒背景でコントラスト比8.74、文字使用でもAA充足 */
+    --success: #1fbf6e;
+    /* Sidebarのアクティブナビ背景専用トークン。#60a5fa(--accent)の10%(lightより濃くしても
+       AA上まだ余裕がある)。--surface(#0a0a0a)上に重ねた実効色は#131a22で、上に乗るtext-brand
+       (#60a5fa)との対比は6.89:1(WCAG AA) */
+    --brand-tint: rgba(96, 165, 250, 0.1);
     /* WCAG AA: darkでは「#111上の文字4.5:1」と「白文字を乗せる塗り」を1色で両立できないため、
        明るめの赤(#111上で5.0:1)+ほぼ黒の前景(#ef4444上で5.6:1)の組にする */
     --destructive: #ef4444;

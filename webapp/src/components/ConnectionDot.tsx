@@ -10,8 +10,8 @@ export function ConnectionDot({ connected, showLabel = false }: { connected: boo
       title={connected ? t("webapp.sse.connected") : t("webapp.sse.disconnected")}
     >
       <span className="relative flex h-[7px] w-[7px] shrink-0">
-        {connected && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75" />}
-        <span className={`relative inline-flex h-[7px] w-[7px] rounded-full ${connected ? "bg-brand" : "bg-destructive"}`} />
+        {connected && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />}
+        <span className={`relative inline-flex h-[7px] w-[7px] rounded-full ${connected ? "bg-success" : "bg-destructive"}`} />
       </span>
       {showLabel ? (
         <span className="truncate text-[11px] text-muted-foreground">

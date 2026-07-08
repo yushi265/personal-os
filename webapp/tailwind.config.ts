@@ -29,8 +29,8 @@ export default {
         background: "var(--bg)",
         foreground: "var(--fg)",
         primary: {
-          DEFAULT: "var(--fg)",
-          foreground: "var(--bg)",
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
         },
         secondary: {
           DEFAULT: "var(--surface)",
@@ -68,6 +68,11 @@ export default {
         faint: "var(--faint)",
         ghost: "var(--ghost)",
         brand: "var(--accent)",
+        // 「成功/接続OK」の意味色。旧--accent(緑)をbrandの青化後も温存する(ConnectionDot等)
+        success: "var(--success)",
+        // Sidebarのアクティブナビ背景専用。brandはvar(...)にhexを直接入れているためTailwindの
+        // アルファ修飾子(bg-brand/5)を注入できず、rgba直書きのトークンを別キーとして用意する
+        "brand-tint": "var(--brand-tint)",
       },
       borderRadius: {
         lg: "var(--radius)",

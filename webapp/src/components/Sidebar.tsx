@@ -101,7 +101,7 @@ export function Sidebar({ connected }: { connected: boolean }) {
           to="/"
           className={`group flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
             collapsed ? "justify-center" : ""
-          } ${homeActive ? "bg-hairline font-medium text-fg" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+          } ${homeActive ? "bg-brand-tint font-medium text-brand" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
         >
           {/* ナビアイコンはhoverで弾んで膨らむ(触感) */}
           <HomeIcon className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
@@ -113,7 +113,7 @@ export function Sidebar({ connected }: { connected: boolean }) {
             to="/projects"
             className={`group flex h-8 flex-1 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
               collapsed ? "justify-center" : ""
-            } ${projectsActive ? "bg-hairline font-medium text-fg" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+            } ${projectsActive ? "bg-brand-tint font-medium text-brand" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
           >
             <LayoutGrid className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
             {!collapsed && <span className="truncate">{t("webapp.projects.title")}</span>}
@@ -140,7 +140,7 @@ export function Sidebar({ connected }: { connected: boolean }) {
                 title={project.title}
                 className={`flex h-7 items-center truncate rounded-md py-1 pl-8 pr-2 text-[13px] transition-colors ${
                   currentProjectPath === project.path
-                    ? "bg-hairline font-medium text-fg"
+                    ? "bg-brand-tint font-medium text-brand"
                     : "text-muted-foreground hover:bg-hairline hover:text-fg"
                 }`}
               >
