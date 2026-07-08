@@ -38,7 +38,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
   const [showDone, setShowDone] = React.useState(false);
   const [promoting, setPromoting] = React.useState<Todo | null>(null);
   const [draftText, setDraftText] = React.useState("");
-  const [draftDue, setDraftDue] = React.useState("");
+  const [draftDue, setDraftDue] = React.useState(today);
   const [draftPriority, setDraftPriority] = React.useState<Priority | undefined>(undefined);
   const [celebrate, setCelebrate] = React.useState(false);
   const wasAllDone = React.useRef<boolean | null>(null);
@@ -79,7 +79,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
       {
         onSuccess: () => {
           setDraftText("");
-          setDraftDue("");
+          setDraftDue(today);
           setDraftPriority(undefined);
         },
         onError: () => toast.error(t("manage.todoAddFailed")),

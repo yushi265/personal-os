@@ -2,6 +2,7 @@ import * as React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { DueLabel } from "@/components/DueLabel";
+import { initialDateDraft } from "@/lib/dateDraft";
 import { t } from "@i18n/ja";
 
 interface DateEditProps {
@@ -13,11 +14,11 @@ interface DateEditProps {
 // Popover+input type=date、クリア可(design §9 P4行)。表示モードはP3のDueLabelを流用。
 export function DateEdit({ value, today, onCommit }: DateEditProps) {
   const [open, setOpen] = React.useState(false);
-  const [draft, setDraft] = React.useState(value ?? "");
+  const [draft, setDraft] = React.useState(() => initialDateDraft(value, today));
 
   React.useEffect(() => {
-    if (open) setDraft(value ?? "");
-  }, [open, value]);
+    if (open) setDraft(initialDateDraft(value, today));
+  }, [open, value, today]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
