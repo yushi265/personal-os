@@ -44,20 +44,35 @@ export function setUnauthorizedHandler(handler: () => void): void {
   onUnauthorized = handler;
 }
 
+/** サーバー到達不可(fetchのTypeError)時に全画面案内へ遷移させるためのハンドラ(main.tsxで登録) */
+let onServerUnreachable: (() => void) | null = null;
+export function setServerUnreachableHandler(handler: () => void): void {
+  onServerUnreachable = handler;
+}
+
 function authHeaders(): HeadersInit {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      ...authHeaders(),
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
-      ...init?.headers,
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        ...authHeaders(),
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+        ...init?.headers,
+      },
+    });
+  } catch (e) {
+    if (e instanceof TypeError) {
+      onServerUnreachable?.();
+      throw new ApiError(0, "server unreachable");
+    }
+    throw e;
+  }
 
   if (res.status === 401) {
     clearToken();

@@ -69,4 +69,4 @@ AI-DLC（[ai-dlc-flow](../../../.claude/skills/ai-dlc-flow/SKILL.md)）の各ユ
 
 > 新しい retro note を作ったらここに 1 行追記する。
 
-- （まだ無し）
+- [POS-2](./POS-2.md) — ブラウザUIのPWA化（2026-07-08。Tier 1・ティア昇格往復1回・レビュー3体Mustゼロ）

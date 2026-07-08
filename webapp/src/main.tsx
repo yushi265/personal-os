@@ -5,7 +5,9 @@ import { Toaster } from "sonner";
 import { App } from "@/App";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UnauthorizedScreen } from "@/components/UnauthorizedScreen";
-import { setToken, setUnauthorizedHandler } from "@/api/client";
+import { ServerUnreachableScreen } from "@/components/ServerUnreachableScreen";
+import { setToken, setUnauthorizedHandler, setServerUnreachableHandler } from "@/api/client";
+import { registerSW } from "virtual:pwa-register";
 import "@/index.css";
 
 // design-browser-ui.md §6.1: 起動時に ?token= をパースしlocalStorageへ保存後、history.replaceStateで除去する
@@ -21,19 +23,25 @@ function consumeTokenFromUrl(): void {
 
 consumeTokenFromUrl();
 
+// design-pwa.md §4.2: autoUpdate。新SW有効化時はworkbox-windowが自動リロードで新版に切り替える。
+// devサーバーではno-op(vite-plugin-pwaのdevOptions無効デフォルト)。
+registerSW();
+
 const queryClient = new QueryClient();
 
 function Root() {
   const [unauthorized, setUnauthorized] = React.useState(false);
+  const [unreachable, setUnreachable] = React.useState(false);
 
   React.useEffect(() => {
     setUnauthorizedHandler(() => setUnauthorized(true));
+    setServerUnreachableHandler(() => setUnreachable(true));
   }, []);
 
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        {unauthorized ? <UnauthorizedScreen /> : <App />}
+        {unreachable ? <ServerUnreachableScreen /> : unauthorized ? <UnauthorizedScreen /> : <App />}
         <Toaster richColors position="bottom-right" />
       </QueryClientProvider>
     </ThemeProvider>

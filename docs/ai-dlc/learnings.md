@@ -49,6 +49,9 @@ pnpm -C .claude/aidlc learnings   # docs/ai-dlc/retro/ を集約 → 未対応 T
 
 - [2026-07-07] webapp のロジックを root Vitest でテストする場合は import 文ゼロの純関数（構造的型付け）に寄せる（root tsconfig に paths 無し・vitest alias は obsidian のみ。エイリアス import 混入で root typecheck が壊れる） `[tooling]` → 還流先候補: rules（testing.md 注記）or vitest.config 改修 （出典: POS-1 retro）
 - [2026-07-07] aidlc engine state は state/<チケット番号>.md で作成する（nudge hook の「spec dir 名 = state 名」提案は artifact guard の glob <TICKET>-* と不一致のため従わない） `[tooling]` → 還流先候補: sensor/hook 修正（aidlc-engine-nudge.sh） （出典: POS-1 retro）
+- [2026-07-08] ティア判定は risk-tiers.md 定義表の文言だけでなく、変更予定ファイルと .claude/aidlc/tier-triggers.json の glob を突合して判定する（POS-2 で Tier 2→1 の昇格往復 1 回が発生） `[gate]` → 還流先候補: rules（risk-tiers.md 運用節）or ai-dlc-flow Stage 0+1 （出典: POS-2 retro）
+- [2026-07-08] qlmanage は SVG→PNG 変換で透過を白背景に合成する。透過が必要なら Chrome headless（--default-background-color=00000000）で 512px を出力し sips で縮小する（maskable 等の全面ベタ塗りは qlmanage 可） `[tooling]` → 還流先候補: codekb 記録済み（正本昇格は不要見込み・triage で剪定判断） （出典: POS-2 retro）
+- [2026-07-08] Tier 1 トリガー領域に触れる実装案が出たら、まず触れない実装代替を探す（例: .webmanifest の MIME 追加 → manifest.json 命名で src/server 無改修化）。ただし**機能・実装品質が同等の代替に限る**。Tier 1 対象（認証/認可・データ境界・スキーマ・レイヤー間 IF）自体を実質的に軽くする形式的なゲート回避は不可（risk-tiers の安全側原則が優先） `[spec]` → 還流先候補: skills（create-spec 手順4）or rules（spec-driven.md） （出典: POS-2 retro）
 
 > （まだ無し）採用された学びをここに追記する。
 

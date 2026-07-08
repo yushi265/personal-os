@@ -226,6 +226,26 @@ export class POSSettingsTab extends PluginSettingTab {
 				})
 			);
 
+		new Setting(containerEl)
+			.setName(t("settings.server.copyToken"))
+			.setDesc(t("settings.server.copyTokenDesc"))
+			.addButton((btn) =>
+				btn.setButtonText(t("settings.server.copyToken")).onClick(async () => {
+					const token = this.plugin.tokenStore.get();
+					if (!token) {
+						new Notice(t("settings.server.copyTokenEmpty"));
+						return;
+					}
+					try {
+						await navigator.clipboard.writeText(token);
+						new Notice(t("settings.server.copyTokenDone"));
+					} catch (e) {
+						console.error("Personal OS: clipboard write failed", e);
+						new Notice(t("E006"));
+					}
+				})
+			);
+
 		new Setting(containerEl).setName(t("settings.server.notifyOnStart")).addToggle((toggle) =>
 			toggle.setValue(this.plugin.settings.server.notifyOnStart).onChange(async (value) => {
 				this.plugin.settings.server.notifyOnStart = value;

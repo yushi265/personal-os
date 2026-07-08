@@ -18,6 +18,7 @@ function applyTheme(theme: Theme): void {
   const root = window.document.documentElement;
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   root.classList.toggle("dark", isDark);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", isDark ? "#000000" : "#f8fafc");
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

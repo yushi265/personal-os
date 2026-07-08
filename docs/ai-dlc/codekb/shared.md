@@ -7,6 +7,8 @@
 - エンティティ更新（フィールド単位）: `PATCH /api/entity/field` に `{ key: EntityFieldKey, value }`。webapp からは `useUpdateEntityField(entity).mutate({key, value})` 経由（直接 fetch しない）。楽観更新・ロールバック・キャッシュ 3 点パッチ（entity 単体 / entities 一覧 / 親の children）込み（参照: src/server/ApiRouter.ts / webapp/src/hooks/useEntityMutations.ts）
 - `EntityFieldKey` は `title/status/priority/due/start/reviewCycle/goal/project/tags/labels/blockers`。`tags`/`labels` の validate/write は `case "tags": case "labels":` の fallthrough で共有（参照: src/services/EntityFieldService.ts）
 - フィルタクエリ言語（`key:value`）: `src/domain/query.ts` の `parseQuery`/`evaluate`。`tags:`/`labels:` はカンマ区切り OR・大文字小文字区別（参照: src/domain/query.ts）
+- APIクライアントのグローバルハンドラ: `setUnauthorizedHandler`（401時・トークン破棄後）/ `setServerUnreachableHandler`（fetch TypeError時・`ApiError(status=0)` を throw）。main.tsx の Root が登録し全画面切替（unreachable > unauthorized > App の優先順）（参照: webapp/src/api/client.ts / webapp/src/main.tsx）
+- PWA: manifest は `manifest.json` 名（vite-plugin-pwa の `manifestFilename`）で生成 = StaticServer の既存 `.json` MIME マップで配信でき `src/server/` 無改修。SW は generateSW・autoUpdate・precache はビルド成果物のみ・`/api/` は denylist で素通し（参照: webapp/vite.config.ts）
 
 ## 主要データ構造
 
@@ -22,7 +24,10 @@
 
 - webapp のロジックを root Vitest（`tests/**`）でテストするには **import 文ゼロの純関数**にする必要がある。root tsconfig に paths 定義がなく vitest alias も `obsidian` のみのため、`@domain` 等のエイリアス import を含む webapp ファイルをテストから相対 import すると root typecheck が壊れる（既存 `webapp/src/lib/sortEntities.ts` が @domain import のため未テストなのはこれが理由）。出典: docs/ai-dlc/retro/POS-1.md
 - aidlc engine の nudge hook は「spec ディレクトリ名 = state 名」を提案するが、artifact guard は「state 名 = チケット番号のみ」（glob `<name>-*`）を期待し不一致。state は `state/<TICKET>.md`（例: POS-1.md）で作るのが正（guard 側に合致）。nudge の誤発火は無視してよい。出典: docs/ai-dlc/retro/POS-1.md
+- `qlmanage -t` での SVG→PNG 変換は**透過を白背景に合成する**（角丸アイコン等の透過が必要な用途に不適）。透過が要る場合は Chrome headless（`--default-background-color=00000000`）で 512px を出し `sips` で縮小する。全面ベタ塗り（maskable）は qlmanage で可。出典: docs/ai-dlc/retro/POS-2.md
+- vite-plugin-pwa は `virtual:pwa-register` を import しないと `registerSW.js` を index.html へ自動注入する（injectRegister: auto）。virtual module 方式（workbox-window の自動リロード付き）にするなら main.tsx で `registerSW()` を呼ぶ + `vite-env.d.ts` に `/// <reference types="vite-plugin-pwa/client" />`。出典: docs/ai-dlc/retro/POS-2.md
+- Tier 1 トリガー領域（`src/server/**` 等）に触れる前に「触れない実装代替」を探す価値がある（例: `.webmanifest` MIME 追加 → `manifest.json` 命名で回避）。出典: docs/ai-dlc/retro/POS-2.md
 
 ## 最終更新
 
-- POS-1 / 2026-07-07（本ボルトの実装コミットに同梱）
+- POS-2 / 2026-07-08（本ボルトの実装コミットに同梱）
