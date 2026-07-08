@@ -18,7 +18,7 @@ import { DueLabel } from "@/components/DueLabel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { EmptyState } from "@/components/EmptyState";
 import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
-import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
+import { staggerContainer, waveItem, waveTransition } from "@/lib/motion";
 import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
 import { collectLabelOptions, matchesFilter } from "@/lib/entityFilter";
 import { t } from "@i18n/ja";
@@ -39,11 +39,14 @@ const MotionRow = motion.create("div");
 // 直接フックを呼べないため)。
 function ProjectRow({
   project,
+  index,
   today: now,
   reduced,
   onNavigate,
 }: {
   project: Entity;
+  /** 表示時の波エントランスの遅延段数(上から下へ波打つ) */
+  index: number;
   today: string;
   reduced: boolean;
   onNavigate: () => void;
@@ -53,8 +56,8 @@ function ProjectRow({
 
   return (
     <MotionRow
-      variants={staggerItem}
-      transition={listTransition(reduced)}
+      variants={waveItem}
+      transition={waveTransition(reduced, index, 0.02)}
       // 押し込みの触感。motionがtransformをインラインで持つためCSSのactive:scaleは効かず、whileTapで行う
       whileTap={reduced ? undefined : { scale: 0.995 }}
       className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -252,10 +255,11 @@ export function Projects() {
           staticColumns={[{ label: t("manage.column.labels"), className: "w-40 shrink-0 text-left" }]}
         />
         <motion.div variants={staggerContainer} initial="initial" animate="animate">
-          {visibleProjects.map((project) => (
+          {visibleProjects.map((project, i) => (
             <ProjectRow
               key={project.path}
               project={project}
+              index={i}
               today={now}
               reduced={!!reduced}
               onNavigate={() => navigate(`/projects/${encodeURIComponent(project.path)}`)}

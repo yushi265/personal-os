@@ -15,17 +15,36 @@ export const routeFadeVariants: Variants = {
   animate: { opacity: 1 },
 };
 
-// リストのスタッガー表示は撤去済み(ページ遷移が瞬時になった結果、行が刻みで出る方が「待たされ感」になるため)。
-// staggerChildren を持たせず、子要素は listTransition の短いフェードで一斉に表示する。
+// 画面表示時の「ふわっと波打って広がる」エントランス(2026-07-08 ユーザー要望)。
+// 一度スタッガーを撤去した経緯(行が刻みで出ると瞬遷移では「待たされ感」になる)があるため、
+// 再導入にあたり待たされ感を出さない制約を置く:
+//   - 遅延ステップは要素あたり20〜35ms・遅延合計の上限0.25s(waveTransitionでclamp)
+//     (60ms/上限0.45s/柔らかspringのゆっくり版も試したが、比較の結果こちらを採用: 2026-07-08)
+//   - 入場自体は速いspring。軽いアンダーダンピングのオーバーシュートが「波の余韻」を作る
+// staggerChildrenは使わず、呼び出し側がindexを渡して遅延を明示する(子のtransition propと
+// オーケストレーションの競合を避けるため)。
 export const staggerContainer: Variants = {
   initial: {},
   animate: {},
 };
 
-export const staggerItem: Variants = {
-  initial: { opacity: 0, y: 6 },
-  animate: { opacity: 1, y: 0 },
+export const waveItem: Variants = {
+  initial: { opacity: 0, y: 14, scale: 0.98 },
+  animate: { opacity: 1, y: 0, scale: 1 },
 };
+
+const WAVE_MAX_DELAY_S = 0.25;
+
+export function waveTransition(reduced: boolean, index: number, stepS = 0.035): Transition {
+  if (reduced) return { duration: 0 };
+  return {
+    delay: Math.min(index * stepS, WAVE_MAX_DELAY_S),
+    type: "spring",
+    stiffness: 420,
+    damping: 28,
+    mass: 0.9,
+  };
+}
 
 // EmptyState などページ内要素のふわっとした表示用(P6-C11)。ルート遷移には使わない。
 export function pageTransition(reduced: boolean): Transition {

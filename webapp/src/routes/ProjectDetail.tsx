@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
-import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
+import { staggerContainer, waveItem, waveTransition } from "@/lib/motion";
 import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
 import { confirmArchiveMessage, confirmDeleteMessage, t } from "@i18n/ja";
 
@@ -51,11 +51,14 @@ const TICKET_COLUMNS: SortableColumn[] = [
 // チケットテーブル行(Projects.tsxのProjectRowと同様、行ごとのmutationフック呼び出しのため専用コンポーネントに分離)。
 function TicketRow({
   ticket,
+  index,
   today: now,
   reduced,
   onNavigate,
 }: {
   ticket: Entity;
+  /** 表示時の波エントランスの遅延段数(上から下へ波打つ) */
+  index: number;
   today: string;
   reduced: boolean;
   onNavigate: () => void;
@@ -65,8 +68,8 @@ function TicketRow({
 
   return (
     <MotionRow
-      variants={staggerItem}
-      transition={listTransition(reduced)}
+      variants={waveItem}
+      transition={waveTransition(reduced, index, 0.02)}
       // 押し込みの触感(Projects.tsxのProjectRowと同じ)。motionがtransformを持つためwhileTapで行う
       whileTap={reduced ? undefined : { scale: 0.995 }}
       className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -212,10 +215,11 @@ export function ProjectDetail() {
             onSort={(key) => setSort((prev) => nextSortState(prev, key))}
           />
           <motion.div variants={staggerContainer} initial="initial" animate="animate">
-            {tickets.map((ticket) => (
+            {tickets.map((ticket, i) => (
               <TicketRow
                 key={ticket.path}
                 ticket={ticket}
+                index={i}
                 today={now}
                 reduced={!!reduced}
                 onNavigate={() => navigate(`/tickets/${encodeURIComponent(ticket.path)}`)}

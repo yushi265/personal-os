@@ -16,7 +16,7 @@ import { useHomeSummary } from "@/hooks/useHomeSummary";
 import { useEntities } from "@/hooks/useEntities";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { entityDetailPath, todoDetailPath } from "@/lib/links";
-import { listTransition, staggerContainer, staggerItem } from "@/lib/motion";
+import { staggerContainer, waveItem, waveTransition } from "@/lib/motion";
 import { homeMoreLabel, t } from "@i18n/ja";
 
 interface SummaryCardDef {
@@ -270,11 +270,11 @@ export function Home() {
         animate="animate"
         className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
       >
-        {cards.map((card) => {
+        {cards.map((card, i) => {
           const Icon = card.icon;
           const accented = (card.tone === "danger" || card.tone === "warning") && card.value > 0;
           return (
-            <motion.div key={card.label} variants={staggerItem} transition={listTransition(!!reduced)}>
+            <motion.div key={card.label} variants={waveItem} transition={waveTransition(!!reduced, i)}>
               {/* 触感演出(TiltCard): チルト+浮き上がりに合わせてカード影をsm→lgへ深め、
                   アイコンと数値はease-bounceで弾ませる(意味は無い。触って気持ちいいだけの演出) */}
               <TiltCard>
@@ -300,14 +300,15 @@ export function Home() {
         })}
       </motion.div>
 
+      {/* サマリカード(index 0-3)から波が続くよう、セクションはindex 4-7で入場する */}
       <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid gap-6 lg:grid-cols-2">
-        <motion.div variants={staggerItem} transition={listTransition(!!reduced)}>
+        <motion.div variants={waveItem} transition={waveTransition(!!reduced, 4)}>
           <HomeSection label={t("webapp.home.sectionToday")} emptyText={t("webapp.home.emptyToday")} rows={todayRows} today={now} />
         </motion.div>
-        <motion.div variants={staggerItem} transition={listTransition(!!reduced)}>
+        <motion.div variants={waveItem} transition={waveTransition(!!reduced, 5)}>
           <HomeSection label={t("webapp.home.sectionDoing")} emptyText={t("webapp.home.emptyDoing")} rows={doingRows} today={now} />
         </motion.div>
-        <motion.div variants={staggerItem} transition={listTransition(!!reduced)}>
+        <motion.div variants={waveItem} transition={waveTransition(!!reduced, 6)}>
           <HomeSection
             label={t("webapp.home.sectionAttention")}
             emptyText={t("webapp.home.emptyAttention")}
@@ -315,7 +316,7 @@ export function Home() {
             today={now}
           />
         </motion.div>
-        <motion.div variants={staggerItem} transition={listTransition(!!reduced)}>
+        <motion.div variants={waveItem} transition={waveTransition(!!reduced, 7)}>
           <HomeSection
             label={t("webapp.home.sectionActiveProjects")}
             emptyText={t("webapp.home.emptyActiveProjects")}
