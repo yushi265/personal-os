@@ -109,6 +109,7 @@ const MESSAGES = {
 
 	"note.placeholder": "メモを書く...",
 	"note.saved": "保存しました",
+	"note.edit": "編集",
 
 	"modal.createEntity.title": "新規作成",
 	"modal.createEntity.type": "種類",

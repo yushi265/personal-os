@@ -5,6 +5,7 @@ import { useAddComment, useRemoveCommentMutation, useUpdateCommentMutation } fro
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Markdown } from "@/components/Markdown";
 import { t } from "@i18n/ja";
 
 interface CommentPanelProps {
@@ -88,7 +89,7 @@ export function CommentPanel({ path }: CommentPanelProps) {
                   rows={2}
                 />
               ) : (
-                <p className="whitespace-pre-wrap text-sm">{comment.text}</p>
+                <Markdown className="text-sm">{comment.text}</Markdown>
               )}
               <div className="mt-1 flex justify-end gap-2">
                 {isEditing ? (
