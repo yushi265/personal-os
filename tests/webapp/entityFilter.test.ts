@@ -103,4 +103,28 @@ describe("matchesFilter", () => {
 	it("[境界値] keywordが空白のみ→keywordでは絞り込まない(既存trim挙動のリグレッション)", () => {
 		expect(matchesFilter(entity, "   ", new Set(), new Set())).toBe(true);
 	});
+
+	it("[デシジョンテーブル] hideDone=true + status\"done\" → false(完了を隠す)", () => {
+		expect(matchesFilter({ title: "銀行比較", status: "done", labels: [] }, "", new Set(), new Set(), true)).toBe(false);
+	});
+
+	it("[デシジョンテーブル] hideDone=true + status\"active\" → true(未完了は通す)", () => {
+		expect(matchesFilter({ title: "銀行比較", status: "active", labels: [] }, "", new Set(), new Set(), true)).toBe(true);
+	});
+
+	it("[デシジョンテーブル] hideDone=false(既定・省略) + status\"done\" → true(既定挙動のリグレッション)", () => {
+		expect(matchesFilter({ title: "銀行比較", status: "done", labels: [] }, "", new Set(), new Set())).toBe(true);
+	});
+
+	it("[デシジョンテーブル] hideDone=true + 他条件も全一致 + status\"done\" → false(hideDoneが優先)", () => {
+		expect(
+			matchesFilter({ title: "銀行比較", status: "done", labels: ["finance"] }, "銀行", new Set(["done"]), new Set(["finance"]), true)
+		).toBe(false);
+	});
+
+	it("[デシジョンテーブル] hideDone=true + 他条件も全一致 + status\"doing\" → true(hideDoneは非done時に無影響)", () => {
+		expect(
+			matchesFilter({ title: "銀行比較", status: "doing", labels: ["finance"] }, "銀行", new Set(["doing"]), new Set(["finance"]), true)
+		).toBe(true);
+	});
 });

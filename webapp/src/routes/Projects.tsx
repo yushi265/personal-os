@@ -109,6 +109,7 @@ export function Projects() {
   const [keyword, setKeyword] = React.useState("");
   const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
   const [labels, setLabels] = React.useState<Set<string>>(new Set());
+  const [showDone, setShowDone] = React.useState(false);
   const [newProjectTitle, setNewProjectTitle] = React.useState("");
   const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
   const now = today();
@@ -161,7 +162,7 @@ export function Projects() {
   const labelOptions = collectLabelOptions(projects ?? []);
 
   const visibleProjects = sortEntities(
-    (projects ?? []).filter((p) => matchesFilter(p, keyword, statuses, labels)),
+    (projects ?? []).filter((p) => matchesFilter(p, keyword, statuses, labels, !showDone)),
     sort
   );
 
@@ -244,6 +245,10 @@ export function Projects() {
               )}
             </PopoverContent>
           </Popover>
+          <label className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <Checkbox aria-label={t("manage.filter.showDone")} checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />
+            {t("manage.filter.showDone")}
+          </label>
         </div>
       </div>
 

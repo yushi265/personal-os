@@ -28,13 +28,17 @@ export function collectLabelOptions(entities: ReadonlyArray<{ labels: string[] }
 
 /** Projects.tsxの既存ローカル関数matchesFilterを移設しlabels条件をAND追加。
  *  既存意味論は変更しない: keyword = title部分一致・大文字小文字無視・trim(空白のみは全通し)/
- *  statuses = OR(空Setは全通し)。labelsはmatchesLabelsに委譲 */
+ *  statuses = OR(空Setは全通し)。labelsはmatchesLabelsに委譲。
+ *  hideDone(省略時false): trueかつstatus==="done"なら他条件に関わらずfalse
+ *  (TodoList同様、完了済みを既定で隠す挙動。末尾optionalなので4引数の既存呼び出しは不変) */
 export function matchesFilter(
   entity: FilterableEntity,
   keyword: string,
   statuses: ReadonlySet<string>,
-  labels: ReadonlySet<string>
+  labels: ReadonlySet<string>,
+  hideDone = false
 ): boolean {
+  if (hideDone && entity.status === "done") return false;
   if (statuses.size > 0 && !statuses.has(entity.status)) return false;
   if (!matchesLabels(entity.labels, labels)) return false;
   if (!keyword.trim()) return true;

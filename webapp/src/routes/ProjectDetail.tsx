@@ -30,6 +30,7 @@ import { CommentPanel } from "@/components/CommentPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NotFoundScreen } from "@/components/NotFoundScreen";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
@@ -120,6 +121,7 @@ export function ProjectDetail() {
   const createTicket = useCreateEntity();
 
   const [todoScope, setTodoScope] = React.useState<"direct" | "all">("direct");
+  const [showDone, setShowDone] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<"archive" | "delete" | null>(null);
   const [newTicketTitle, setNewTicketTitle] = React.useState("");
   const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
@@ -144,7 +146,7 @@ export function ProjectDetail() {
 
   const entity = entityQuery.data;
   const tickets = sortEntities(
-    (childrenQuery.data ?? []).filter((c) => c.type === "ticket"),
+    (childrenQuery.data ?? []).filter((c) => c.type === "ticket" && (showDone || c.status !== "done")),
     sort
   );
   const progress = entity.progress ?? 0;
@@ -205,9 +207,15 @@ export function ProjectDetail() {
       </div>
 
       <section className="space-y-2">
-        <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-faint">
-          {t("webapp.detail.tickets")} — {tickets.length}
-        </span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-faint">
+            {t("webapp.detail.tickets")} — {tickets.length}
+          </span>
+          <label className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <Checkbox aria-label={t("manage.filter.showDone")} checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />
+            {t("manage.filter.showDone")}
+          </label>
+        </div>
         <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
           <SortableColumnHeader
             columns={TICKET_COLUMNS}
