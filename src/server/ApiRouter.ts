@@ -1,4 +1,4 @@
-import { ENTITY_TYPES, type EntityType } from "../domain/entity";
+import { ENTITY_TYPES, type EntityType, type Priority } from "../domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "../domain/todo";
 import type { Comment } from "../domain/comment";
 import { today } from "../domain/date";
@@ -55,6 +55,7 @@ async function dispatch(method: string, pathname: string, query: Record<string, 
 	if (method === "GET" && pathname === "/api/todos/all") return handleListAllTodos(deps);
 	if (method === "GET" && pathname === "/api/todos") return handleListTodos(query, deps);
 	if (method === "POST" && pathname === "/api/todos") return handleAddTodo(query, body, deps);
+	if (method === "POST" && pathname === "/api/inbox/todo") return handleAddInboxTodo(body, deps);
 	if (method === "PATCH" && pathname === "/api/todos/toggle") return handleToggleTodo(body, deps);
 	if (method === "PATCH" && pathname === "/api/todos") return handleUpdateTodoInline(body, deps);
 	if (method === "DELETE" && pathname === "/api/todos") return handleRemoveTodo(body, deps);
@@ -238,6 +239,18 @@ async function handleAddTodo(query: Record<string, string>, body: unknown, deps:
 	if (!isRecord(body) || typeof body.text !== "string") return badRequest("invalid body");
 
 	await deps.todoService.addToSection(parent, body as unknown as BuildTodoLineInput);
+	return created({ ok: true });
+}
+
+// Inboxクイックキャプチャ: プロジェクトを選ばずにTodoを追加する(タスク#5)。保存先はTodoService側でinboxノートに固定。
+async function handleAddInboxTodo(body: unknown, deps: ApiDeps): Promise<ApiResult> {
+	if (!isRecord(body) || typeof body.text !== "string" || body.text.trim() === "") return badRequest("text is required");
+	await deps.todoService.quickAdd({
+		text: body.text,
+		target: "inbox",
+		dueDate: typeof body.dueDate === "string" ? body.dueDate : undefined,
+		priority: typeof body.priority === "string" ? (body.priority as Priority) : undefined,
+	});
 	return created({ ok: true });
 }
 

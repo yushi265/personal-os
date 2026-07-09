@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, FileText, Home as HomeIcon, LayoutGrid, ListChecks, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, FileText, Home as HomeIcon, Inbox as InboxIcon, LayoutGrid, ListChecks, Search } from "lucide-react";
 import { ConnectionDot } from "@/components/ConnectionDot";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useEntities } from "@/hooks/useEntities";
@@ -51,6 +51,7 @@ export function Sidebar({ connected }: { connected: boolean }) {
   const { data: projects } = useEntities("project");
 
   const homeActive = location.pathname === "/";
+  const inboxActive = location.pathname.startsWith("/inbox");
   // プロジェクト詳細もこのナビの延長線上にあるため滞在中も「プロジェクト一覧」をアクティブにする。
   const projectsActive = location.pathname.startsWith("/projects");
   // チケット一覧・チケット詳細(/tickets/:path)は「チケット」ナビをアクティブにする。
@@ -108,6 +109,16 @@ export function Sidebar({ connected }: { connected: boolean }) {
           {/* ナビアイコンはhoverで弾んで膨らむ(触感) */}
           <HomeIcon className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
           {!collapsed && <span className="truncate">{t("webapp.home.title")}</span>}
+        </Link>
+
+        <Link
+          to="/inbox"
+          className={`group flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+            collapsed ? "justify-center" : ""
+          } ${inboxActive ? "bg-brand-tint font-medium text-brand" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+        >
+          <InboxIcon className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
+          {!collapsed && <span className="truncate">{t("webapp.inbox.title")}</span>}
         </Link>
 
         <div className="flex shrink-0 items-center gap-0.5">

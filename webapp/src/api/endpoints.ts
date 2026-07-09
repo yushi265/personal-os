@@ -1,4 +1,4 @@
-import type { Entity, EntityType } from "@domain/entity";
+import type { Entity, EntityType, Priority } from "@domain/entity";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "@domain/todo";
 import type { Comment } from "@domain/comment";
 import { apiClient } from "./client";
@@ -66,6 +66,10 @@ export function promoteTicket(path: string): Promise<void> {
 
 export function addTodo(parent: string, input: BuildTodoLineInput): Promise<void> {
   return apiClient.post<void>(`/api/todos?parent=${encodeURIComponent(parent)}`, input);
+}
+
+export function addInboxTodo(input: { text: string; dueDate?: string; priority?: Priority }): Promise<void> {
+  return apiClient.post<void>("/api/inbox/todo", input);
 }
 
 export function toggleTodo(todo: Todo): Promise<void> {

@@ -45,6 +45,7 @@ interface Mocks {
 	entityFieldService: { updateField: ReturnType<typeof vi.fn> };
 	todoService: {
 		addToSection: ReturnType<typeof vi.fn>;
+		quickAdd: ReturnType<typeof vi.fn>;
 		toggle: ReturnType<typeof vi.fn>;
 		updateInline: ReturnType<typeof vi.fn>;
 		remove: ReturnType<typeof vi.fn>;
@@ -66,6 +67,7 @@ function makeMocks(): Mocks {
 	const entityFieldService = { updateField: vi.fn().mockResolvedValue(undefined) };
 	const todoService = {
 		addToSection: vi.fn().mockResolvedValue(undefined),
+		quickAdd: vi.fn().mockResolvedValue(undefined),
 		toggle: vi.fn().mockResolvedValue("ok"),
 		updateInline: vi.fn().mockResolvedValue("ok"),
 		remove: vi.fn().mockResolvedValue("ok"),
@@ -387,6 +389,36 @@ describe("ApiRouter.handle: POST /api/todos", () => {
 		const res = await ApiRouter.handle("POST", "/api/todos", { parent: "a.md" }, { text: "new todo" }, deps);
 		expect(todoService.addToSection).toHaveBeenCalledWith("a.md", { text: "new todo" });
 		expect(res.status).toBe(201);
+	});
+});
+
+describe("ApiRouter.handle: POST /api/inbox/todo", () => {
+	it("delegates to todoService.quickAdd with target inbox and returns 201", async () => {
+		const { deps, todoService } = makeMocks();
+		const res = await ApiRouter.handle("POST", "/api/inbox/todo", {}, { text: "capture me", dueDate: "2026-07-10", priority: "high" }, deps);
+		expect(todoService.quickAdd).toHaveBeenCalledWith({ text: "capture me", target: "inbox", dueDate: "2026-07-10", priority: "high" });
+		expect(res.status).toBe(201);
+	});
+
+	it("passes undefined for omitted dueDate/priority", async () => {
+		const { deps, todoService } = makeMocks();
+		const res = await ApiRouter.handle("POST", "/api/inbox/todo", {}, { text: "just text" }, deps);
+		expect(todoService.quickAdd).toHaveBeenCalledWith({ text: "just text", target: "inbox", dueDate: undefined, priority: undefined });
+		expect(res.status).toBe(201);
+	});
+
+	it("returns 400 when text is missing", async () => {
+		const { deps, todoService } = makeMocks();
+		const res = await ApiRouter.handle("POST", "/api/inbox/todo", {}, {}, deps);
+		expect(res.status).toBe(400);
+		expect(todoService.quickAdd).not.toHaveBeenCalled();
+	});
+
+	it("returns 400 when text is empty/whitespace", async () => {
+		const { deps, todoService } = makeMocks();
+		const res = await ApiRouter.handle("POST", "/api/inbox/todo", {}, { text: "   " }, deps);
+		expect(res.status).toBe(400);
+		expect(todoService.quickAdd).not.toHaveBeenCalled();
 	});
 });
 
