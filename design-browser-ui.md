@@ -294,6 +294,8 @@ export class SseHub {
 | PATCH | `/api/todos/toggle` | 完了トグル | `todoService.toggle` | body: `Todo`全体(line番号照合のため) |
 | PATCH | `/api/todos` | インライン編集 | `todoService.updateInline` | body: `{ todo, patch }` |
 | DELETE | `/api/todos` | 削除 | `todoService.remove` | body: `Todo`全体 |
+| GET | `/api/todos/all` | プロジェクト横断のTodo一覧 | `store.getAllTodos` | todoFeatures無効時は空配列(第6次機能追加で追加) |
+| POST | `/api/inbox/todo` | Inboxクイック追加 | `todoService.quickAdd`(target:"inbox"固定) | body: `{ text, dueDate?, priority? }`。text非空必須(400)(第6次機能追加で追加) |
 | GET | `/api/memos?path=` | メモ一覧 | `memoService.list` | |
 | POST | `/api/memos?path=` | メモ追加 | `memoService.add` | body: `{ text }` |
 | PATCH | `/api/memos?path=` | メモ編集 | `memoService.update` | body: `{ expected, newText }`。conflictは409 |
@@ -368,6 +370,9 @@ export async function getEntity(path: string): Promise<Entity> {
 | `/projects` | プロジェクト一覧(Goalグルーピング) | design-drilldown-nav.md §3.1 |
 | `/projects/:path` | プロジェクト詳細 | design-drilldown-nav.md §3.2 |
 | `/tickets/:path` | チケット詳細 | design-drilldown-nav.md §3.2 |
+| `/inbox` | Inboxクイック追加+Inbox Todo一覧(第6次機能追加) | Obsidian内 QuickAddModal 相当 |
+| `/tickets` | プロジェクト横断チケット一覧(第6次機能追加) | 対応なし(ブラウザUI独自) |
+| `/todos` | プロジェクト横断Todo一覧(第6次機能追加) | 対応なし(ブラウザUI独自) |
 
 - `:path`はVaultパスをそのまま`encodeURIComponent`したもの(`/`込み)。React Routerの`useParams()`で取得後`decodeURIComponent`する
 - パンくず: プロジェクト詳細は「プロジェクト一覧 > {Goal名} > {Project名}」、チケット詳細は「プロジェクト一覧 > {Goal名} > {Project名} > {Ticket名}」。`shadcn/ui`の`Breadcrumb`コンポーネントを使用
@@ -379,7 +384,7 @@ export async function getEntity(path: string): Promise<Entity> {
 
 - サーバー状態(Entity/Todo/Memo)のフェッチ・キャッシュ・再検証を一元管理できる。手書きの`useEffect`+`useState`によるフェッチ管理は、SSEプッシュ受信時の「該当キャッシュだけ無効化」(§5.3)のような部分更新をやろうとすると複雑化しやすく、TanStack Queryの`queryClient.invalidateQueries`/`setQueryData`がその用途に直接はまる
 - 楽観的更新(要件§3.3): `useMutation`の`onMutate`でキャッシュを先に書き換え、`onError`で`context`から復元しつつ`sonner`のtoastでエラー表示、`onSettled`で該当queryを再検証する標準パターンをそのまま使う
-- queryKey設計: `["entity", path]` / `["entities", type, group?]` / `["todos", parentPath, scope]` / `["memos", path]`。SSEの`paths`配列から`["entity", path]`と、そのentityの`type`を引いて`["entities", type]`系を無効化する
+- queryKey設計: `["entity", path]` / `["entities", type, group?]` / `["todos", parentPath, scope]` / `["memos", path]`。SSEの`paths`配列から`["entity", path]`と、そのentityの`type`を引いて`["entities", type]`系を無効化する。プロジェクト横断Todo一覧(第6次)は`["todos", "__all__"]`(sentinel文字列。`["todos"]`prefixマッチの無効化に相乗りする)
 
 ### 6.4 shadcnコンポーネント対応表
 
