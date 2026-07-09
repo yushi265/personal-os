@@ -72,9 +72,9 @@
     --accent: #2563eb;
     /* 旧--accentの緑をそのまま「成功/接続」の意味色として温存(ConnectionDot等)。--bg上5.17:1、--elevated上5.41:1 */
     --success: #0b7a44;
-    /* Sidebarのアクティブナビ背景専用トークン。#2563eb(--accent)の5%。Tailwindはvar(...)のhex色に
-       アルファ修飾子(bg-brand/5)を注入できないためrgba直書きで用意する。--surface(=--bg)上に重ねた
-       実効色は#edf2fbで、上に乗るtext-brand(#2563eb)との対比は4.60:1(WCAG AA) */
+    /* Sidebarのアクティブナビ背景と一覧行の進捗フィルで共用するトークン。#2563eb(--accent)の5%。
+       Tailwindはvar(...)のhex色にアルファ修飾子(bg-brand/5)を注入できないためrgba直書きで用意する。
+       --surface(=--bg)上に重ねた実効色は#edf2fbで、上に乗るtext-brand(#2563eb)との対比は4.60:1(WCAG AA) */
     --brand-tint: rgba(37, 99, 235, 0.05);
     /* WCAG AA: 元の#e5484dは文字使用で3.9:1と不足のため#dc2626(4.8:1、白文字を乗せても4.8:1)へ */
     --destructive: #dc2626;
@@ -112,9 +112,9 @@
     --accent: #60a5fa;
     /* 旧--accentの緑をそのまま「成功/接続」の意味色として温存(ConnectionDot等)。黒背景でコントラスト比8.74、文字使用でもAA充足 */
     --success: #1fbf6e;
-    /* Sidebarのアクティブナビ背景専用トークン。#60a5fa(--accent)の10%(lightより濃くしても
-       AA上まだ余裕がある)。--surface(#0a0a0a)上に重ねた実効色は#131a22で、上に乗るtext-brand
-       (#60a5fa)との対比は6.89:1(WCAG AA) */
+    /* Sidebarのアクティブナビ背景と一覧行の進捗フィルで共用するトークン。#60a5fa(--accent)の10%
+       (lightより濃くしてもAA上まだ余裕がある)。--surface(#0a0a0a)上に重ねた実効色は#131a22で、
+       上に乗るtext-brand(#60a5fa)との対比は6.89:1(WCAG AA) */
     --brand-tint: rgba(96, 165, 250, 0.1);
     /* WCAG AA: darkでは「#111上の文字4.5:1」と「白文字を乗せる塗り」を1色で両立できないため、
        明るめの赤(#111上で5.0:1)+ほぼ黒の前景(#ef4444上で5.6:1)の組にする */

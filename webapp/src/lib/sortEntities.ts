@@ -1,12 +1,13 @@
 /**
  * Presentation層(webapp限定): 一覧テーブルの列ソート(Projects.tsx / ProjectDetail.tsxのチケット一覧で共用)。
  * 意味論はObsidian側 manageData.ts の sortEntityRows と揃える(priority: high→medium→low→未設定、
- * status: PROJECT_STATUSES/TICKET_STATUSESのワークフロー順、progress: 数値、due: ISO文字列比較・未設定は末尾、
+ * status: PROJECT_STATUSES/TICKET_STATUSESのワークフロー順、due: ISO文字列比較・未設定は末尾、
  * title: localeCompare)。手動順(デフォルト)はAPIの返却順(order昇順)そのものを使うため、ソートを一切適用しない。
+ * progressキーは進捗列の廃止(行背景フィル化)に伴い削除した。
  */
 import { type Entity, type Priority, validStatusesOf } from "@domain/entity";
 
-export type SortKey = "title" | "status" | "priority" | "progress" | "due";
+export type SortKey = "title" | "status" | "priority" | "due";
 export type SortDirection = "asc" | "desc";
 
 /** direction === undefined は「手動順(デフォルト)」を表す */
@@ -50,8 +51,6 @@ function compareByKey(a: Entity, b: Entity, key: SortKey): number {
       return statusRank(a) - statusRank(b);
     case "priority":
       return priorityRank(a.priority) - priorityRank(b.priority);
-    case "progress":
-      return (a.progress ?? 0) - (b.progress ?? 0);
     case "due": {
       const ad = a.due ?? "9999-99-99";
       const bd = b.due ?? "9999-99-99";

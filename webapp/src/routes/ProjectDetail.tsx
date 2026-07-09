@@ -34,7 +34,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
-import { staggerContainer, waveItem, waveTransition } from "@/lib/motion";
+import { springTransition, staggerContainer, waveItem, waveTransition } from "@/lib/motion";
 import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
 import { confirmArchiveMessage, confirmDeleteMessage, t } from "@i18n/ja";
 
@@ -45,7 +45,6 @@ const TICKET_COLUMNS: SortableColumn[] = [
   { key: "title", label: t("modal.createEntity.titleField"), className: "min-w-0 flex-1 text-left" },
   { key: "status", label: t("preview.field.status"), className: "w-[110px] shrink-0 text-left" },
   { key: "priority", label: t("preview.field.priority"), className: "w-[90px] shrink-0 text-left" },
-  { key: "progress", label: t("preview.field.progress"), className: "w-[200px] shrink-0 text-left" },
   { key: "due", label: t("preview.field.due"), className: "w-20 shrink-0 text-left" },
 ];
 
@@ -66,6 +65,7 @@ function TicketRow({
 }) {
   const changeStatus = useChangeEntityStatus(ticket);
   const updateField = useUpdateEntityField(ticket);
+  const progressPct = Math.max(0, Math.min(100, ticket.progress ?? 0));
 
   return (
     <MotionRow
@@ -73,7 +73,7 @@ function TicketRow({
       transition={waveTransition(reduced, index, 0.02)}
       // 押し込みの触感(Projects.tsxのProjectRowと同じ)。motionがtransformを持つためwhileTapで行う
       whileTap={reduced ? undefined : { scale: 0.995 }}
-      className="group flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="group relative flex h-12 cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       onClick={onNavigate}
       role="link"
       tabIndex={0}
@@ -86,15 +86,25 @@ function TicketRow({
         }
       }}
     >
+      {/* 進捗列の代替(狭幅でタイトルが潰れる対策): 行の左端からprogress%の幅をうっすら塗る背景フィル。
+          色はbrand-tint(ブランド青のrgba直書きトークン、light 5%/dark 10%)。Tailwind v3はvar()定義色に
+          アルファ修飾子(bg-brand/5等)を注入できないため、薄めた青はトークン側で持つ(index.css参照)。
+          描画順ではセル内容の上に重なるが、この薄さなので可読性に影響せず背景と同義
+          (pointer-events-noneでクリックも素通し)。正確な%は詳細画面で見る。ProjectRow(Projects.tsx)の同名フィルと同内容 */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 bg-brand-tint"
+        initial={{ width: 0 }}
+        animate={{ width: `${progressPct}%` }}
+        transition={springTransition(reduced)}
+      />
+      <span className="sr-only">{`${t("preview.field.progress")} ${progressPct}%`}</span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{ticket.title}</span>
       <span className="w-[110px] shrink-0">
         <StatusSelect status={ticket.status} options={TICKET_STATUSES} onCommit={(next) => changeStatus.mutate(next)} />
       </span>
       <span className="w-[90px] shrink-0">
         <PrioritySelect priority={ticket.priority} onCommit={(priority) => updateField.mutate({ key: "priority", value: priority })} />
-      </span>
-      <span className="flex w-[200px] shrink-0 items-center gap-2">
-        <ProgressBar value={ticket.progress} />
       </span>
       <span className="w-20 shrink-0 font-mono text-xs">
         <DueLabel due={ticket.due} today={now} />

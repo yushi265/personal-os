@@ -15,12 +15,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusSelect } from "@/components/EditableCell/StatusSelect";
 import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DueLabel } from "@/components/DueLabel";
-import { ProgressBar } from "@/components/ProgressBar";
 import { EmptyState } from "@/components/EmptyState";
 import { CreateTicketDialog } from "@/components/CreateTicketDialog";
 import { Button } from "@/components/ui/button";
 import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
-import { staggerContainer, waveItem, waveTransition } from "@/lib/motion";
+import { springTransition, staggerContainer, waveItem, waveTransition } from "@/lib/motion";
 import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
 import { collectLabelOptions, matchesFilter } from "@/lib/entityFilter";
 import { t } from "@i18n/ja";
@@ -30,7 +29,6 @@ const PROJECT_COLUMNS: SortableColumn[] = [
   { key: "title", label: t("modal.createEntity.titleField"), className: "w-[300px] shrink-0 text-left" },
   { key: "status", label: t("preview.field.status"), className: "w-24 shrink-0 text-left" },
   { key: "priority", label: t("preview.field.priority"), className: "w-20 shrink-0 text-left" },
-  { key: "progress", label: t("preview.field.progress"), className: "w-40 shrink-0 text-left" },
   { key: "due", label: t("preview.field.due"), className: "w-24 shrink-0 text-left" },
 ];
 
@@ -55,6 +53,7 @@ function ProjectRow({
 }) {
   const changeStatus = useChangeEntityStatus(project);
   const updateField = useUpdateEntityField(project);
+  const progressPct = Math.max(0, Math.min(100, project.progress ?? 0));
 
   return (
     <MotionRow
@@ -62,7 +61,7 @@ function ProjectRow({
       transition={waveTransition(reduced, index, 0.02)}
       // 押し込みの触感。motionがtransformをインラインで持つためCSSのactive:scaleは効かず、whileTapで行う
       whileTap={reduced ? undefined : { scale: 0.995 }}
-      className="group flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="group relative flex h-[52px] cursor-pointer items-center gap-6 border-b border-hairline px-5 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       onClick={onNavigate}
       role="link"
       tabIndex={0}
@@ -75,15 +74,22 @@ function ProjectRow({
         }
       }}
     >
+      {/* 進捗列の代替(狭幅対策): 行の左端からprogress%の幅をうっすら塗る背景フィル。
+          brand-tintを使う理由も含めTicketRow(ProjectDetail.tsx)の同名フィルと同内容 */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 bg-brand-tint"
+        initial={{ width: 0 }}
+        animate={{ width: `${progressPct}%` }}
+        transition={springTransition(reduced)}
+      />
+      <span className="sr-only">{`${t("preview.field.progress")} ${progressPct}%`}</span>
       <span className="w-[300px] shrink-0 truncate text-sm font-medium">{project.title}</span>
       <span className="w-24 shrink-0">
         <StatusSelect status={project.status} options={PROJECT_STATUSES} onCommit={(next) => changeStatus.mutate(next)} />
       </span>
       <span className="w-20 shrink-0">
         <PrioritySelect priority={project.priority} onCommit={(priority) => updateField.mutate({ key: "priority", value: priority })} />
-      </span>
-      <span className="shrink-0">
-        <ProgressBar value={project.progress} />
       </span>
       <span className="w-24 shrink-0 font-mono text-xs">
         <DueLabel due={project.due} today={now} />
