@@ -28,6 +28,10 @@ export function getTodos(parent: string, scope: "direct" | "all" = "direct"): Pr
   return apiClient.get<{ todos: Todo[] }>(`/api/todos?parent=${encodeURIComponent(parent)}&scope=${scope}`).then((r) => r.todos);
 }
 
+export function getAllTodos(): Promise<Todo[]> {
+  return apiClient.get<{ todos: Todo[] }>("/api/todos/all").then((r) => r.todos);
+}
+
 // ---- entity mutations ----
 
 export function createEntity(input: CreateEntityInput): Promise<{ path: string }> {

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Home as HomeIcon, LayoutGrid, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, FileText, Home as HomeIcon, LayoutGrid, ListChecks, Search } from "lucide-react";
 import { ConnectionDot } from "@/components/ConnectionDot";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useEntities } from "@/hooks/useEntities";
@@ -51,9 +51,11 @@ export function Sidebar({ connected }: { connected: boolean }) {
   const { data: projects } = useEntities("project");
 
   const homeActive = location.pathname === "/";
-  // プロジェクト詳細・チケット詳細もこのナビの延長線上にあるため、それらの画面滞在中も
-  // 「プロジェクト一覧」をアクティブ表示にする。
-  const projectsActive = location.pathname.startsWith("/projects") || location.pathname.startsWith("/tickets");
+  // プロジェクト詳細もこのナビの延長線上にあるため滞在中も「プロジェクト一覧」をアクティブにする。
+  const projectsActive = location.pathname.startsWith("/projects");
+  // チケット一覧・チケット詳細(/tickets/:path)は「チケット」ナビをアクティブにする。
+  const ticketsActive = location.pathname.startsWith("/tickets");
+  const todosActive = location.pathname.startsWith("/todos");
   const showProjectsSublist = !collapsed && projectsExpanded;
 
   return (
@@ -149,6 +151,26 @@ export function Sidebar({ connected }: { connected: boolean }) {
             ))}
           </div>
         )}
+
+        <Link
+          to="/tickets"
+          className={`group flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+            collapsed ? "justify-center" : ""
+          } ${ticketsActive ? "bg-brand-tint font-medium text-brand" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+        >
+          <FileText className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
+          {!collapsed && <span className="truncate">{t("webapp.tickets.title")}</span>}
+        </Link>
+
+        <Link
+          to="/todos"
+          className={`group flex h-8 shrink-0 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors ${
+            collapsed ? "justify-center" : ""
+          } ${todosActive ? "bg-brand-tint font-medium text-brand" : "text-muted-foreground hover:bg-hairline hover:text-fg"}`}
+        >
+          <ListChecks className="h-4 w-4 shrink-0 transition-transform duration-200 ease-bounce group-hover:scale-110 group-active:scale-90" />
+          {!collapsed && <span className="truncate">{t("webapp.todos.title")}</span>}
+        </Link>
       </nav>
 
       <div

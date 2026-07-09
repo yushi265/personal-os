@@ -360,6 +360,26 @@ describe("ApiRouter.handle: GET /api/todos", () => {
 	});
 });
 
+describe("ApiRouter.handle: GET /api/todos/all", () => {
+	it("returns all todos across parents from the store", async () => {
+		const { deps, store } = makeMocks();
+		store.setTodos("ticket-a.md", [makeTodo({ text: "a" }), makeTodo({ text: "b", line: 1 })]);
+		store.setTodos("project-a.md", [makeTodo({ text: "c", parentPath: "project-a.md", parentType: "project" })]);
+		const res = await ApiRouter.handle("GET", "/api/todos/all", {}, undefined, deps);
+		expect(res.status).toBe(200);
+		expect((res.body as { todos: Todo[] }).todos).toHaveLength(3);
+	});
+
+	it("returns an empty list when todoFeatures capability is off", async () => {
+		const { deps, store } = makeMocks();
+		deps.getCapability = () => ({ todoFeatures: false });
+		store.setTodos("ticket-a.md", [makeTodo()]);
+		const res = await ApiRouter.handle("GET", "/api/todos/all", {}, undefined, deps);
+		expect(res.status).toBe(200);
+		expect((res.body as { todos: Todo[] }).todos).toEqual([]);
+	});
+});
+
 describe("ApiRouter.handle: POST /api/todos", () => {
 	it("delegates to todoService.addToSection", async () => {
 		const { deps, store, todoService } = makeMocks();

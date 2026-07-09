@@ -52,6 +52,7 @@ async function dispatch(method: string, pathname: string, query: Record<string, 
 	if (method === "DELETE" && pathname === "/api/entity") return handleDeleteEntity(query, deps);
 	if (method === "POST" && pathname === "/api/entity/promote-todo") return handlePromoteTodo(body, deps);
 	if (method === "POST" && pathname === "/api/entity/promote-ticket") return handlePromoteTicket(query, deps);
+	if (method === "GET" && pathname === "/api/todos/all") return handleListAllTodos(deps);
 	if (method === "GET" && pathname === "/api/todos") return handleListTodos(query, deps);
 	if (method === "POST" && pathname === "/api/todos") return handleAddTodo(query, body, deps);
 	if (method === "PATCH" && pathname === "/api/todos/toggle") return handleToggleTodo(body, deps);
@@ -214,6 +215,12 @@ async function handlePromoteTicket(query: Record<string, string>, deps: ApiDeps)
 }
 
 // ---- todos ----
+
+// プロジェクト横断のTodo一覧(全チケット・全プロジェクト直下)。handleSummaryと同じくtodoFeatures無効時は空を返す。
+function handleListAllTodos(deps: ApiDeps): ApiResult {
+	if (!deps.getCapability().todoFeatures) return ok({ todos: [] });
+	return ok({ todos: deps.store.getAllTodos() });
+}
 
 function handleListTodos(query: Record<string, string>, deps: ApiDeps): ApiResult {
 	const parent = query.parent;
