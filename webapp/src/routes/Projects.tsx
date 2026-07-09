@@ -17,6 +17,8 @@ import { PrioritySelect } from "@/components/EditableCell/PrioritySelect";
 import { DueLabel } from "@/components/DueLabel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { EmptyState } from "@/components/EmptyState";
+import { CreateTicketDialog } from "@/components/CreateTicketDialog";
+import { Button } from "@/components/ui/button";
 import { SortableColumnHeader, type SortableColumn } from "@/components/SortableColumnHeader";
 import { staggerContainer, waveItem, waveTransition } from "@/lib/motion";
 import { DEFAULT_SORT_STATE, nextSortState, sortEntities, type SortState } from "@/lib/sortEntities";
@@ -111,6 +113,7 @@ export function Projects() {
   const [labels, setLabels] = React.useState<Set<string>>(new Set());
   const [showDone, setShowDone] = React.useState(false);
   const [newProjectTitle, setNewProjectTitle] = React.useState("");
+  const [createTicketOpen, setCreateTicketOpen] = React.useState(false);
   const [sort, setSort] = React.useState<SortState>(DEFAULT_SORT_STATE);
   const now = today();
   const reduced = useReducedMotion();
@@ -136,7 +139,11 @@ export function Projects() {
           icon={FolderKanban}
           title={t("webapp.empty.projects.title")}
           body={t("webapp.empty.projects.body")}
+          action={
+            <Button onClick={() => setCreateTicketOpen(true)}>{t("webapp.createTicket.action")}</Button>
+          }
         />
+        <CreateTicketDialog open={createTicketOpen} onOpenChange={setCreateTicketOpen} />
       </div>
     );
   }

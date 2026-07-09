@@ -1,9 +1,10 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, FolderKanban, Home, Moon, Sun } from "lucide-react";
+import { FileText, FolderKanban, Home, Moon, Plus, Sun } from "lucide-react";
 import { useEntities } from "@/hooks/useEntities";
 import { useTheme } from "@/components/theme-provider";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { CreateTicketDialog } from "@/components/CreateTicketDialog";
 import { entityDetailPath } from "@/lib/links";
 import { t } from "@i18n/ja";
 
@@ -13,6 +14,7 @@ import { t } from "@i18n/ja";
  */
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
+  const [createTicketOpen, setCreateTicketOpen] = React.useState(false);
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -46,12 +48,24 @@ export function CommandPalette() {
   };
 
   return (
+    <>
+    <CreateTicketDialog open={createTicketOpen} onOpenChange={setCreateTicketOpen} />
     <CommandDialog open={open} onOpenChange={setOpen} title={t("webapp.commandPalette.title")}>
       <Command shouldFilter>
         <CommandInput placeholder={t("webapp.commandPalette.placeholder")} />
         <CommandList>
           <CommandEmpty>{t("webapp.commandPalette.empty")}</CommandEmpty>
           <CommandGroup heading={t("webapp.commandPalette.actions")}>
+            <CommandItem
+              value={t("webapp.createTicket.action")}
+              onSelect={() => {
+                setOpen(false);
+                setCreateTicketOpen(true);
+              }}
+            >
+              <Plus className="opacity-60" />
+              {t("webapp.createTicket.action")}
+            </CommandItem>
             <CommandItem value="home" onSelect={() => go("/")}>
               <Home className="opacity-60" />
               {t("webapp.home.title")}
@@ -94,5 +108,6 @@ export function CommandPalette() {
         </CommandList>
       </Command>
     </CommandDialog>
+    </>
   );
 }

@@ -14,6 +14,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { PriorityBadge } from "@/components/PriorityBadge";
 import { DueLabel } from "@/components/DueLabel";
 import { EmptyState } from "@/components/EmptyState";
+import { CreateTicketDialog } from "@/components/CreateTicketDialog";
+import { Button } from "@/components/ui/button";
 import { staggerContainer, waveItem, waveTransition } from "@/lib/motion";
 import { collectLabelOptions, matchesFilter } from "@/lib/entityFilter";
 import { entityDetailPath } from "@/lib/links";
@@ -28,6 +30,7 @@ export function Tickets() {
   const [statuses, setStatuses] = React.useState<Set<string>>(new Set());
   const [labels, setLabels] = React.useState<Set<string>>(new Set());
   const [showDone, setShowDone] = React.useState(false);
+  const [createTicketOpen, setCreateTicketOpen] = React.useState(false);
   const now = today();
   const reduced = useReducedMotion();
   usePageTitle(t("webapp.tickets.title"));
@@ -47,8 +50,12 @@ export function Tickets() {
   if ((tickets ?? []).length === 0) {
     return (
       <div className="space-y-6">
-        <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.tickets.title")}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.tickets.title")}</h1>
+          <Button onClick={() => setCreateTicketOpen(true)}>{t("webapp.createTicket.action")}</Button>
+        </div>
         <EmptyState icon={FileText} title={t("webapp.empty.tickets.title")} body={t("webapp.empty.tickets.body")} />
+        <CreateTicketDialog open={createTicketOpen} onOpenChange={setCreateTicketOpen} />
       </div>
     );
   }
@@ -76,8 +83,12 @@ export function Tickets() {
 
   return (
     <div className="flex flex-col gap-6">
+      <CreateTicketDialog open={createTicketOpen} onOpenChange={setCreateTicketOpen} />
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.tickets.title")}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.tickets.title")}</h1>
+          <Button onClick={() => setCreateTicketOpen(true)}>{t("webapp.createTicket.action")}</Button>
+        </div>
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-[280px] items-center gap-1.5 rounded-md border border-border bg-surface px-2.5">
             <Search className="h-3.5 w-3.5 shrink-0 text-faint" />
