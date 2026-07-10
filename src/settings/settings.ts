@@ -103,6 +103,7 @@ export const DEFAULT_SETTINGS: POSSettings = {
 			waiting: "Waiting",
 			review: "Review",
 			done: "Done",
+			cancelled: "Cancelled",
 			archived: "Archived",
 		},
 	},
@@ -115,3 +116,20 @@ export const DEFAULT_SETTINGS: POSSettings = {
 		notifyOnStart: true,
 	},
 };
+
+/**
+ * 既存 data.json の kanbanColumnNames にキー追加(cancelled等)が反映されるよう、
+ * defaults にあって saved に無いキーを補完する(POS-3 AC-10)。
+ * saved 側のキーはユーザーのカスタム列名として温存する(defaultsで上書きしない)。
+ * main.ts の loadSettings が Object.assign(浅いマージ)で defaults を丸ごと saved で
+ * 上書きしてしまう問題(=新規追加キーが永遠に補完されない)への対処。
+ */
+export function fillKanbanColumnNames(
+	saved: POSSettings["kanbanColumnNames"],
+	defaults: POSSettings["kanbanColumnNames"]
+): POSSettings["kanbanColumnNames"] {
+	return {
+		project: { ...defaults.project, ...saved?.project },
+		ticket: { ...defaults.ticket, ...saved?.ticket },
+	};
+}

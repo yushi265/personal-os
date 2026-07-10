@@ -1,4 +1,5 @@
 import { ENTITY_TYPES, type EntityType, type Priority } from "../domain/entity";
+import { isCancelledTodo } from "../domain/todo";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "../domain/todo";
 import type { Comment } from "../domain/comment";
 import { today } from "../domain/date";
@@ -57,6 +58,7 @@ async function dispatch(method: string, pathname: string, query: Record<string, 
 	if (method === "POST" && pathname === "/api/todos") return handleAddTodo(query, body, deps);
 	if (method === "POST" && pathname === "/api/inbox/todo") return handleAddInboxTodo(body, deps);
 	if (method === "PATCH" && pathname === "/api/todos/toggle") return handleToggleTodo(body, deps);
+	if (method === "PATCH" && pathname === "/api/todos/cancel") return handleCancelTodo(body, deps);
 	if (method === "PATCH" && pathname === "/api/todos") return handleUpdateTodoInline(body, deps);
 	if (method === "DELETE" && pathname === "/api/todos") return handleRemoveTodo(body, deps);
 	if (method === "GET" && pathname === "/api/memos") return handleListComments(query, deps);
@@ -87,7 +89,11 @@ function handleSummary(deps: ApiDeps): ApiResult {
 	const entities = [...deps.store.listByType("project"), ...deps.store.listByType("ticket")];
 
 	return ok({
-		todayTodos: capability.todoFeatures ? deps.todoService.list({ done: false, dueOn: now }) : [],
+		// POS-3 AC-7: list()はdone/dueOnのみのフィルタでcancelledを意識しないため、ここで明示的に除外する
+		todayTodos: capability.todoFeatures
+			? deps.todoService.list({ done: false, dueOn: now }).filter((t) => !isCancelledTodo(t))
+			: [],
+		// isTodoOverdue自体がcancelledを除外済み(domain層)のため、ここでの追加フィルタは不要
 		overdueTodos: capability.todoFeatures ? deps.store.getAllTodos().filter((t) => isTodoOverdue(t, now)) : [],
 		overdueEntities: entities.filter((e) => isOverdue(e, now)),
 		reviewNeededEntities: entities.filter((e) => isReviewNeeded(e, now)),
@@ -257,6 +263,12 @@ async function handleAddInboxTodo(body: unknown, deps: ApiDeps): Promise<ApiResu
 async function handleToggleTodo(body: unknown, deps: ApiDeps): Promise<ApiResult> {
 	if (!isRecord(body)) return badRequest("invalid body");
 	const result = await deps.todoService.toggle(body as unknown as Todo);
+	return result === "conflict" ? conflict("E003") : ok();
+}
+
+async function handleCancelTodo(body: unknown, deps: ApiDeps): Promise<ApiResult> {
+	if (!isRecord(body) || !isRecord(body.todo) || typeof body.cancelled !== "boolean") return badRequest("invalid body");
+	const result = await deps.todoService.setCancelled(body.todo as unknown as Todo, body.cancelled);
 	return result === "conflict" ? conflict("E003") : ok();
 }
 

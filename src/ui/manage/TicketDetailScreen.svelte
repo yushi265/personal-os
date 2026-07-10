@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, validStatusesOf } from "../../domain/entity";
+	import type { Todo } from "../../domain/todo";
 	import type PersonalOSPlugin from "../../main";
 	import { t } from "../../i18n/ja";
 	import StatusCell from "../components/StatusCell.svelte";
@@ -83,6 +84,10 @@
 	function toggleShowDoneTodos(next: boolean): void {
 		onScreenChange({ ...screen, showDoneTodos: next });
 	}
+
+	function cancelTodo(todo: Todo, cancelled: boolean): void {
+		void plugin.todoService.setCancelled(todo, cancelled);
+	}
 </script>
 
 {#if entity}
@@ -133,7 +138,14 @@
 					{t("manage.filter.showDone")}
 				</label>
 			</div>
-			<TodoList {plugin} {todos} showDone={screen.showDoneTodos} showParentBadge={false} addTarget={screen.path} />
+			<TodoList
+				{plugin}
+				{todos}
+				showDone={screen.showDoneTodos}
+				showParentBadge={false}
+				addTarget={screen.path}
+				onCancel={cancelTodo}
+			/>
 		</section>
 	{:else}
 		<div class="pos-widget pos-widget-banner">

@@ -102,9 +102,11 @@ Hierarchy: `Goal → Project → Ticket → Todo`
 |---|---|
 | Goal | `active` / `paused` / `done` / `archived` |
 | Project | `backlog` / `active` / `waiting` / `review` / `done` / `archived` |
-| Ticket | `backlog` / `ready` / `doing` / `waiting` / `review` / `done` / `archived` |
+| Ticket | `backlog` / `ready` / `doing` / `waiting` / `review` / `done` / `cancelled` / `archived` |
 
-Kanban columns map 1:1 to status values. Column display names are configurable; status values are fixed.
+Kanban columns map 1:1 to status values (ticket board hides `archived` and `cancelled` columns). Column display names are configurable; status values are fixed.
+
+Todo checkbox states: `- [ ]` open / `- [x]` done / `- [-]` cancelled (Tasks-plugin convention). The raw checkbox char is preserved in `Todo.statusChar` and written back verbatim. Cancelled todos are excluded from progress denominators and open-work counts; cancelled tickets are excluded from project progress aggregation. Done and cancelled are both hidden by default in lists behind a single "完了・キャンセルを表示" toggle.
 
 ## Testing
 

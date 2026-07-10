@@ -97,6 +97,31 @@ describe("buildAiExport", () => {
 		expect(todoIdx).toBeGreaterThan(ticketIdx);
 	});
 
+	it("renders a cancelled todo with the [-] checkbox, preserving cancellation info", () => {
+		const goal = makeEntity({ path: "g", type: "goal", title: "家族", status: "active" });
+		const project = makeEntity({ path: "p", type: "project", title: "住宅購入", status: "active" });
+		const ticket = makeEntity({ path: "t", type: "ticket", title: "住宅ローン比較", status: "cancelled" });
+		const todo = makeTodo({ text: "銀行に電話する", statusChar: "-", parentPath: "t" });
+
+		const snapshot = emptySnapshot({
+			goals: [
+				{
+					goal,
+					projects: [
+						{
+							project,
+							tickets: [{ ticket, todos: [todo] }],
+							directTodos: [],
+						},
+					],
+				},
+			],
+		});
+
+		const output = buildAiExport(snapshot);
+		expect(output).toContain("- [-] 銀行に電話する");
+	});
+
 	it("puts orphaned entities into the Unlinked section", () => {
 		const orphanProject = makeEntity({ path: "op", type: "project", title: "孤立プロジェクト", status: "backlog" });
 		const snapshot = emptySnapshot({ unlinked: [{ entity: orphanProject }] });

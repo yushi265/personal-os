@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { PROJECT_STATUSES } from "../../../src/domain/entity";
 import type { Entity } from "../../../src/domain/entity";
-import { sortEntities } from "../../../src/ui/kanban/kanbanData";
+import { IndexStore } from "../../../src/infra/IndexStore";
+import { DEFAULT_SETTINGS } from "../../../src/settings/settings";
+import type PersonalOSPlugin from "../../../src/main";
+import { buildKanbanData, sortEntities } from "../../../src/ui/kanban/kanbanData";
+
+function makePlugin(store: IndexStore): PersonalOSPlugin {
+	return { store, settings: DEFAULT_SETTINGS } as unknown as PersonalOSPlugin;
+}
 
 function makeEntity(overrides: Partial<Entity> = {}): Entity {
 	return {
@@ -43,5 +51,25 @@ describe("sortEntities", () => {
 		const sooner = makeEntity({ path: "b.md", title: "b", due: "2026-07-01" });
 
 		expect(sortEntities([later, sooner]).map((e) => e.title)).toEqual(["b", "a"]);
+	});
+});
+
+describe("buildKanbanData", () => {
+	it("excludes archived and cancelled from the ticket mode columns (POS-3 AC-3)", () => {
+		const plugin = makePlugin(new IndexStore());
+
+		const data = buildKanbanData(plugin, "ticket");
+
+		const statuses = data.columns.map((c) => c.status);
+		expect(statuses).not.toContain("archived");
+		expect(statuses).not.toContain("cancelled");
+	});
+
+	it("keeps the project mode columns unchanged", () => {
+		const plugin = makePlugin(new IndexStore());
+
+		const data = buildKanbanData(plugin, "project");
+
+		expect(data.columns.map((c) => c.status)).toEqual([...PROJECT_STATUSES]);
 	});
 });

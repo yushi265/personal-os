@@ -41,10 +41,11 @@ export function sortEntities(entities: Entity[]): Entity[] {
 	});
 }
 
-/** Project用/Ticket用で列定義を切替。Ticketではarchived列を表示しない(要件§12) */
+/** Project用/Ticket用で列定義を切替。Ticketではarchived/cancelled列を表示しない(要件§12・POS-3 AC-3) */
 export function buildKanbanData(plugin: PersonalOSPlugin, mode: KanbanMode): KanbanData {
 	const type: EntityType = mode;
-	const statuses: readonly string[] = mode === "ticket" ? TICKET_STATUSES.filter((s) => s !== "archived") : PROJECT_STATUSES;
+	const statuses: readonly string[] =
+		mode === "ticket" ? TICKET_STATUSES.filter((s) => s !== "archived" && s !== "cancelled") : PROJECT_STATUSES;
 	const names = plugin.settings.kanbanColumnNames[mode] as Record<string, string>;
 	const entities = plugin.store.listByType(type);
 

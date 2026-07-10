@@ -6,6 +6,7 @@ import type { POSEventBus } from "../../src/infra/EventBus";
 import type { POSSettings } from "../../src/settings/settings";
 import { DEFAULT_SETTINGS } from "../../src/settings/settings";
 import type { Entity } from "../../src/domain/entity";
+import type { ProgressRecalculator } from "../../src/infra/types";
 
 function makeEntity(overrides: Partial<Entity> = {}): Entity {
 	return {
@@ -143,5 +144,75 @@ describe("EntityService.create — writes unambiguous parent links on basename c
 		);
 		// 楽観的upsertも衝突時のパス付きリンクで正しくproject解決できること
 		expect(store.get(file.path)?.project).toBe("PersonalOS/Projects/てすと.md");
+	});
+});
+
+// POS-3 AC-6: cancelled遷移/離脱で親progressを再計算する(集計除外により親の値が変わるため)
+describe("EntityService.changeStatus — progress recalc trigger (POS-3)", () => {
+	function makeProgressService() {
+		return { recalcAncestors: vi.fn().mockResolvedValue(undefined) } as unknown as ProgressRecalculator & {
+			recalcAncestors: ReturnType<typeof vi.fn>;
+		};
+	}
+
+	function makeStatusRepo() {
+		return {
+			updateFrontmatter: vi.fn().mockImplementation(async (_p: string, fn: (fm: Record<string, unknown>) => void) => fn({})),
+		} as unknown as VaultRepository;
+	}
+
+	it("recalculates ancestors when a ticket moves to done (existing behavior)", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "t.md", type: "ticket", status: "doing" }));
+		const progressService = makeProgressService();
+		const service = new EntityService(makeStatusRepo(), store, settings, undefined, progressService);
+
+		await service.changeStatus("t.md", "done");
+
+		expect(progressService.recalcAncestors).toHaveBeenCalledWith("t.md");
+	});
+
+	it("recalculates ancestors when a ticket moves to cancelled", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "t.md", type: "ticket", status: "doing" }));
+		const progressService = makeProgressService();
+		const service = new EntityService(makeStatusRepo(), store, settings, undefined, progressService);
+
+		await service.changeStatus("t.md", "cancelled");
+
+		expect(progressService.recalcAncestors).toHaveBeenCalledWith("t.md");
+	});
+
+	it("recalculates ancestors when a ticket returns from cancelled to another status", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "t.md", type: "ticket", status: "cancelled" }));
+		const progressService = makeProgressService();
+		const service = new EntityService(makeStatusRepo(), store, settings, undefined, progressService);
+
+		await service.changeStatus("t.md", "doing");
+
+		expect(progressService.recalcAncestors).toHaveBeenCalledWith("t.md");
+	});
+
+	it("does not recalculate ancestors for a plain in-progress ticket status change", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "t.md", type: "ticket", status: "backlog" }));
+		const progressService = makeProgressService();
+		const service = new EntityService(makeStatusRepo(), store, settings, undefined, progressService);
+
+		await service.changeStatus("t.md", "doing");
+
+		expect(progressService.recalcAncestors).not.toHaveBeenCalled();
+	});
+
+	it("does not recalculate ancestors for a project status change (recalc trigger is ticket-only)", async () => {
+		const store = new IndexStore();
+		store.upsertEntity(makeEntity({ path: "p.md", type: "project", status: "active" }));
+		const progressService = makeProgressService();
+		const service = new EntityService(makeStatusRepo(), store, settings, undefined, progressService);
+
+		await service.changeStatus("p.md", "done");
+
+		expect(progressService.recalcAncestors).not.toHaveBeenCalled();
 	});
 });

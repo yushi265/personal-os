@@ -497,6 +497,12 @@
 	min-width: 6em;
 }
 
+/* cancelled Todo(POS-3 AC-8): 取り消し線+グレーで表示。色のみに依存しないためline-throughを併用する */
+.pos-todo-cancelled {
+	text-decoration: line-through;
+	color: var(--text-muted);
+}
+
 .pos-preview-todo-action {
 	font-size: var(--font-ui-smaller);
 	padding: 0 var(--size-4-2);

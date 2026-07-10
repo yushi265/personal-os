@@ -2,6 +2,7 @@ import * as React from "react";
 import { Inbox as InboxIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { today } from "@domain/date";
+import { isCancelledTodo } from "@domain/todo";
 import { useAllTodos } from "@/hooks/useAllTodos";
 import { useAddInboxTodo } from "@/hooks/useAddInboxTodo";
 import { useToggleTodo } from "@/hooks/useTodoMutations";
@@ -27,6 +28,7 @@ export function Inbox() {
   const reduced = useReducedMotion();
   const [text, setText] = React.useState("");
   const [createTicketOpen, setCreateTicketOpen] = React.useState(false);
+  const [showDone, setShowDone] = React.useState(false);
   const now = today();
   usePageTitle(t("webapp.inbox.title"));
 
@@ -39,9 +41,15 @@ export function Inbox() {
   const header = (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <h1 className="text-[28px] font-semibold tracking-[-0.03em]">{t("webapp.inbox.title")}</h1>
-      <Button variant="outline" onClick={() => setCreateTicketOpen(true)}>
-        {t("webapp.createTicket.action")}
-      </Button>
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+          <Checkbox aria-label={t("manage.filter.showDone")} checked={showDone} onCheckedChange={(v) => setShowDone(!!v)} />
+          {t("manage.filter.showDone")}
+        </label>
+        <Button variant="outline" onClick={() => setCreateTicketOpen(true)}>
+          {t("webapp.createTicket.action")}
+        </Button>
+      </div>
     </div>
   );
 
@@ -65,7 +73,9 @@ export function Inbox() {
     </div>
   );
 
-  const inboxTodos = (todos ?? []).filter((todo) => todo.parentType === "inbox");
+  const inboxTodos = (todos ?? []).filter(
+    (todo) => todo.parentType === "inbox" && (showDone || (!todo.done && !isCancelledTodo(todo)))
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -102,7 +112,11 @@ export function Inbox() {
                     onCheckedChange={() => toggle.mutate(todo)}
                     className="data-[state=checked]:animate-in data-[state=checked]:zoom-in-50 data-[state=checked]:duration-200"
                   />
-                  <span className={`min-w-0 flex-1 truncate text-sm ${todo.done ? "text-muted-foreground line-through" : ""}`}>
+                  <span
+                    className={`min-w-0 flex-1 truncate text-sm ${
+                      todo.done || isCancelledTodo(todo) ? "text-muted-foreground line-through" : ""
+                    }`}
+                  >
                     {todo.text}
                   </span>
                   <span className="shrink-0">

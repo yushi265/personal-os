@@ -122,3 +122,30 @@ describe("EntityService.create x ProgressService.recalcAncestors — no double w
 		expect(guard.isSuppressed(file.path)).toBe(false);
 	});
 });
+
+// POS-3 AC-6: cancelledチケットはプロジェクト進捗の集計対象から除外される(archived同様の除外)
+describe("ProgressService.recalcProject — excludes cancelled child tickets (POS-3)", () => {
+	it("averages only the non-cancelled child tickets when one of three is cancelled", async () => {
+		const store = new IndexStore();
+		const guard = new SelfWriteGuard();
+		let capturedFm: Record<string, unknown> | undefined;
+		const repo = makeRepo({
+			updateFrontmatter: vi.fn().mockImplementation(async (_p: string, fn: (fm: Record<string, unknown>) => void) => {
+				capturedFm = {};
+				fn(capturedFm);
+			}),
+		});
+		store.upsertEntity(makeEntity({ path: "project-a.md", type: "project", status: "active" }));
+		store.upsertEntity(makeEntity({ path: "t1.md", status: "done", progress: 100, project: "project-a.md" }));
+		store.upsertEntity(makeEntity({ path: "t2.md", status: "doing", progress: 50, project: "project-a.md" }));
+		store.upsertEntity(makeEntity({ path: "t3.md", status: "cancelled", progress: 0, project: "project-a.md" }));
+		const service = new ProgressService(repo, store, guard);
+
+		// project pathを直接recalcAncestorsに渡し、recalcProjectのみを起動する(recalcTicketによるt1自身の
+		// progress上書き(todos未設定=0%)を経由させず、集計除外そのものを検証する)。
+		await service.recalcAncestors("project-a.md");
+
+		// (100 + 50) / 2件(cancelledのt3を除外) = 75%。含めた場合は (100+50+0)/3=50%になるため、期待値の差で除外を検証する。
+		expect(capturedFm?.progress).toBe(75);
+	});
+});

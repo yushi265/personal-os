@@ -84,6 +84,10 @@ export function removeTodo(todo: Todo): Promise<void> {
   return apiClient.delete<void>("/api/todos", todo);
 }
 
+export function setTodoCancelled(todo: Todo, cancelled: boolean): Promise<void> {
+  return apiClient.patch<void>("/api/todos/cancel", { todo, cancelled });
+}
+
 // ---- comments (旧称: memos。design-reorder-and-notes.md B-4によりAPIパスは/api/memosのまま維持) ----
 
 export function getComments(path: string): Promise<Comment[]> {

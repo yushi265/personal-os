@@ -127,4 +127,25 @@ describe("matchesFilter", () => {
 			matchesFilter({ title: "銀行比較", status: "doing", labels: ["finance"] }, "銀行", new Set(["doing"]), new Set(["finance"]), true)
 		).toBe(true);
 	});
+
+	// POS-3: hideDone は hideClosed に改名され、done に加えて cancelled も隠す(AC-2)
+	it("[デシジョンテーブル] hideClosed=true + status\"cancelled\" → false(キャンセルも隠す)", () => {
+		expect(matchesFilter({ title: "銀行比較", status: "cancelled", labels: [] }, "", new Set(), new Set(), true)).toBe(false);
+	});
+
+	it("[デシジョンテーブル] hideClosed=false(既定・省略) + status\"cancelled\" → true(表示チェックON相当)", () => {
+		expect(matchesFilter({ title: "銀行比較", status: "cancelled", labels: [] }, "", new Set(), new Set())).toBe(true);
+	});
+
+	it("[デシジョンテーブル] hideClosed=true + 他条件も全一致 + status\"cancelled\" → false(hideClosedが優先)", () => {
+		expect(
+			matchesFilter(
+				{ title: "銀行比較", status: "cancelled", labels: ["finance"] },
+				"銀行",
+				new Set(["cancelled"]),
+				new Set(["finance"]),
+				true
+			)
+		).toBe(false);
+	});
 });

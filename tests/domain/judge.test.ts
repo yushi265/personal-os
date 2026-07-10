@@ -52,6 +52,14 @@ describe("isTodoOverdue", () => {
 		expect(isTodoOverdue(makeTodo({ dueDate: "2026-07-01", done: true }), "2026-07-04")).toBe(false);
 	});
 
+	it("returns false for a cancelled todo past its due date", () => {
+		expect(isTodoOverdue(makeTodo({ dueDate: "2026-07-01", statusChar: "-" }), "2026-07-04")).toBe(false);
+	});
+
+	it("returns false when the due date is today (today is not overdue)", () => {
+		expect(isTodoOverdue(makeTodo({ dueDate: "2026-07-04" }), "2026-07-04")).toBe(false);
+	});
+
 	it("returns false when there is no due date", () => {
 		expect(isTodoOverdue(makeTodo({}), "2026-07-04")).toBe(false);
 	});

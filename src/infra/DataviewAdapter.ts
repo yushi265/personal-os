@@ -36,13 +36,15 @@ export class DataviewAdapter implements TodoProvider {
 	}
 
 	private toTodo(t: STask, filePath: string): Todo {
+		const statusChar = t.status?.length === 1 ? t.status : t.completed ? "x" : " ";
 		return {
 			filePath,
 			line: t.line,
 			text: stripMetadata(t.text),
 			rawText: t.text,
 			indent: " ".repeat(t.position?.start.col ?? 0),
-			done: t.completed,
+			done: statusChar === "-" ? false : t.completed,
+			statusChar,
 			dueDate: extractEmojiDate(t.text, "📅"),
 			startDate: extractEmojiDate(t.text, "🛫"),
 			doneDate: extractEmojiDate(t.text, "✅"),

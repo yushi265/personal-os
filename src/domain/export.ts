@@ -5,7 +5,7 @@
  */
 
 import type { Entity } from "./entity";
-import type { Todo } from "./todo";
+import { isCancelledTodo, type Todo } from "./todo";
 
 export interface ExportTicketNode {
 	ticket: Entity;
@@ -73,7 +73,7 @@ function fmtProgress(progress: number | undefined): string {
 }
 
 function fmtTodoLine(todo: Todo): string {
-	const checkbox = todo.done ? "- [x]" : "- [ ]";
+	const checkbox = isCancelledTodo(todo) ? "- [-]" : todo.done ? "- [x]" : "- [ ]";
 	const due = todo.dueDate ? ` 📅 ${todo.dueDate}` : "";
 	return `${checkbox} ${todo.text}${due}`;
 }

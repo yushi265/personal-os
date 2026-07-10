@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { PROJECT_STATUSES, TICKET_STATUSES, type Entity } from "@domain/entity";
+import { isClosedStatus, PROJECT_STATUSES, TICKET_STATUSES, type Entity } from "@domain/entity";
 import { today } from "@domain/date";
 import { ApiError } from "@/api/client";
 import { useEntity, useChildren } from "@/hooks/useEntity";
@@ -156,7 +156,7 @@ export function ProjectDetail() {
 
   const entity = entityQuery.data;
   const tickets = sortEntities(
-    (childrenQuery.data ?? []).filter((c) => c.type === "ticket" && (showDone || c.status !== "done")),
+    (childrenQuery.data ?? []).filter((c) => c.type === "ticket" && (showDone || !isClosedStatus(c.status))),
     sort
   );
   const progress = entity.progress ?? 0;

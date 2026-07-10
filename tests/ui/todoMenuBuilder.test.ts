@@ -13,6 +13,8 @@ function baseActions(overrides: Partial<TodoMenuActions> = {}): TodoMenuActions 
 		moveDownDisabled: false,
 		onMoveDown: vi.fn(),
 		onPromote: vi.fn(),
+		isCancelled: false,
+		onCancel: vi.fn(),
 		onDelete: vi.fn(),
 		...overrides,
 	};
@@ -76,7 +78,7 @@ describe("buildTodoMenu due date item", () => {
 });
 
 describe("buildTodoMenu overall structure", () => {
-	it("renders editText/moveUp/moveDown/promote after the due date item, then delete last", () => {
+	it("renders editText/moveUp/moveDown/promote/cancel after the due date item, then delete last", () => {
 		const menu = buildTodoMenu(baseActions());
 		const titles = menuItems(menu).map((entry) => (entry.type === "item" ? entry.title : "---"));
 		expect(titles).toEqual([
@@ -86,6 +88,7 @@ describe("buildTodoMenu overall structure", () => {
 			"上へ移動",
 			"下へ移動",
 			"昇格",
+			"キャンセル",
 			"---",
 			"削除",
 		]);
@@ -97,5 +100,30 @@ describe("buildTodoMenu overall structure", () => {
 		const moveDown = menuItems(menu).find((entry) => entry.type === "item" && entry.title === "下へ移動");
 		expect(moveUp).toMatchObject({ disabled: true });
 		expect(moveDown).toMatchObject({ disabled: false });
+	});
+});
+
+describe("buildTodoMenu cancel item (POS-3 AC-5 mobile route)", () => {
+	it("shows 'キャンセル' (not 'キャンセル解除') for an open todo", () => {
+		const menu = buildTodoMenu(baseActions({ isCancelled: false }));
+		const titles = menuItems(menu).filter((e) => e.type === "item").map((e) => (e as { title: string }).title);
+		expect(titles).toContain("キャンセル");
+		expect(titles).not.toContain("キャンセル解除");
+	});
+
+	it("shows 'キャンセル解除' (not 'キャンセル') for a cancelled todo", () => {
+		const menu = buildTodoMenu(baseActions({ isCancelled: true }));
+		const titles = menuItems(menu).filter((e) => e.type === "item").map((e) => (e as { title: string }).title);
+		expect(titles).toContain("キャンセル解除");
+		expect(titles).not.toContain("キャンセル");
+	});
+
+	it("invokes onCancel when the item is clicked", () => {
+		const onCancel = vi.fn();
+		const menu = buildTodoMenu(baseActions({ onCancel }));
+		const item = menuItems(menu).find((entry) => entry.type === "item" && entry.title === "キャンセル");
+		expect(item?.type).toBe("item");
+		(item as { onClick?: () => void }).onClick?.();
+		expect(onCancel).toHaveBeenCalled();
 	});
 });

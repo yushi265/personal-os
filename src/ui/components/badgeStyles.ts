@@ -11,6 +11,7 @@ const STATUS_COLOR_CLASS: Record<string, string> = {
 	review: "pos-status-review",
 	done: "pos-status-done",
 	archived: "pos-status-done",
+	cancelled: "pos-status-done",
 };
 
 /** 未知のstatus値は"default"にフォールバックする */

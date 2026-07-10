@@ -220,3 +220,67 @@ describe("TodoService.updateInline", () => {
 		expect(indexer.reindexFile).toHaveBeenCalledWith(file);
 	});
 });
+
+describe("TodoService.setCancelled", () => {
+	it("rebuilds the expected open line and writes the cancelled ([-]) line via editLine", async () => {
+		const repo = makeRepo();
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), makeIndexer());
+
+		const result = await service.setCancelled(TODO, true);
+
+		expect(repo.editLine).toHaveBeenCalledWith(
+			TODO.filePath,
+			TODO.line,
+			EXPECTED_LINE,
+			"- [-] 牛乳を買う 📅 2026-07-10 [priority:: medium]"
+		);
+		expect(result).toBe("ok");
+	});
+
+	it("rebuilds the expected cancelled line and writes the reopened ([ ]) line via editLine", async () => {
+		const cancelledTodo: Todo = { ...TODO, statusChar: "-" };
+		const repo = makeRepo();
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), makeIndexer());
+
+		await service.setCancelled(cancelledTodo, false);
+
+		expect(repo.editLine).toHaveBeenCalledWith(
+			TODO.filePath,
+			TODO.line,
+			"- [-] 牛乳を買う 📅 2026-07-10 [priority:: medium]",
+			EXPECTED_LINE
+		);
+	});
+
+	it("removes the ✅ done date when cancelling a done todo", async () => {
+		const doneTodo: Todo = {
+			...TODO,
+			done: true,
+			doneDate: "2026-01-01",
+			rawText: "牛乳を買う ✅ 2026-01-01",
+		};
+		const repo = makeRepo();
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), makeIndexer());
+
+		await service.setCancelled(doneTodo, true);
+
+		expect(repo.editLine).toHaveBeenCalledWith(
+			doneTodo.filePath,
+			doneTodo.line,
+			"- [x] 牛乳を買う ✅ 2026-01-01",
+			"- [-] 牛乳を買う"
+		);
+	});
+
+	it("re-indexes the file and shows E003 on a line mismatch, following the existing toggle/remove flow", async () => {
+		const indexer = makeIndexer();
+		const file = { path: TODO.filePath };
+		const repo = makeRepo({ editLine: vi.fn().mockResolvedValue("line-mismatch"), getFile: vi.fn().mockReturnValue(file) });
+		const service = new TodoService(repo, {} as IndexStore, makeSettings(), indexer);
+
+		const result = await service.setCancelled(TODO, true);
+
+		expect(result).toBe("conflict");
+		expect(indexer.reindexFile).toHaveBeenCalledWith(file);
+	});
+});

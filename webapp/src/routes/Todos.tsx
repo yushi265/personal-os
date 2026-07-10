@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ListChecks } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { today } from "@domain/date";
+import { isCancelledTodo } from "@domain/todo";
 import { useAllTodos } from "@/hooks/useAllTodos";
 import { useEntities } from "@/hooks/useEntities";
 import { useToggleTodo } from "@/hooks/useTodoMutations";
@@ -50,7 +51,7 @@ export function Todos() {
   }
   if (isError) return <p className="text-destructive">{t("webapp.loadError")}</p>;
 
-  const visible = (todos ?? []).filter((todo) => showDone || !todo.done);
+  const visible = (todos ?? []).filter((todo) => showDone || (!todo.done && !isCancelledTodo(todo)));
 
   return (
     <div className="flex flex-col gap-6">
@@ -87,7 +88,11 @@ export function Todos() {
                       onCheckedChange={() => toggle.mutate(todo)}
                       className="data-[state=checked]:animate-in data-[state=checked]:zoom-in-50 data-[state=checked]:duration-200"
                     />
-                    <span className={`min-w-0 flex-1 truncate text-sm ${todo.done ? "text-muted-foreground line-through" : ""}`}>
+                    <span
+                      className={`min-w-0 flex-1 truncate text-sm ${
+                        todo.done || isCancelledTodo(todo) ? "text-muted-foreground line-through" : ""
+                      }`}
+                    >
                       {todo.text}
                     </span>
                     {parentTitle &&

@@ -50,6 +50,7 @@ interface Mocks {
 		updateInline: ReturnType<typeof vi.fn>;
 		remove: ReturnType<typeof vi.fn>;
 		list: ReturnType<typeof vi.fn>;
+		setCancelled: ReturnType<typeof vi.fn>;
 	};
 	commentService: { list: ReturnType<typeof vi.fn>; add: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; remove: ReturnType<typeof vi.fn> };
 	noteService: { get: ReturnType<typeof vi.fn>; save: ReturnType<typeof vi.fn> };
@@ -72,6 +73,7 @@ function makeMocks(): Mocks {
 		updateInline: vi.fn().mockResolvedValue("ok"),
 		remove: vi.fn().mockResolvedValue("ok"),
 		list: vi.fn().mockReturnValue([]),
+		setCancelled: vi.fn().mockResolvedValue("ok"),
 	};
 	const commentService = {
 		list: vi.fn().mockResolvedValue([]),
@@ -151,6 +153,20 @@ describe("ApiRouter.handle: GET /api/summary", () => {
 		expect(body.todayTodos).toEqual([]);
 		expect(body.overdueTodos).toEqual([]);
 		expect(todoService.list).not.toHaveBeenCalled();
+	});
+
+	// POS-3 AC-7: cancelled Todo(期限切れdue付き)はtodayTodos/overdueTodosのどちらにも残作業として数えない
+	it("excludes a cancelled todo (with an overdue due date) from both todayTodos and overdueTodos", async () => {
+		const { deps, store, todoService } = makeMocks();
+		const cancelledTodo = makeTodo({ text: "cancelled", dueDate: "2026-07-01", statusChar: "-" });
+		todoService.list.mockReturnValue([cancelledTodo]);
+		store.setTodos("ticket-a.md", [cancelledTodo]);
+
+		const res = await ApiRouter.handle("GET", "/api/summary", {}, undefined, deps);
+
+		const body = res.body as { todayTodos: unknown[]; overdueTodos: unknown[] };
+		expect(body.todayTodos).toEqual([]);
+		expect(body.overdueTodos).toEqual([]);
 	});
 });
 
@@ -263,6 +279,21 @@ describe("ApiRouter.handle: POST /api/entity/status", () => {
 		const { deps } = makeMocks();
 		const res = await ApiRouter.handle("POST", "/api/entity/status", { path: "missing.md" }, { next: "done" }, deps);
 		expect(res.status).toBe(404);
+	});
+
+	// POS-3 AC-1: cancelledはvalidStatusesOf経由で自動許可される(ApiRouter側のコード変更なし。regression固定)
+	it("accepts next: cancelled for a ticket, and the entity keeps appearing in the list API", async () => {
+		const { deps, store, entityService } = makeMocks();
+		entityService.changeStatus.mockImplementation(async (path: string, next: string) => {
+			store.upsertEntity({ ...store.get(path)!, status: next });
+		});
+		store.upsertEntity(makeEntity({ path: "a.md", status: "doing" }));
+
+		const res = await ApiRouter.handle("POST", "/api/entity/status", { path: "a.md" }, { next: "cancelled" }, deps);
+		expect(res.status).toBe(200);
+
+		const listRes = await ApiRouter.handle("GET", "/api/entities", { type: "ticket" }, undefined, deps);
+		expect((listRes.body as { entities: Entity[] }).entities.map((e) => e.path)).toContain("a.md");
 	});
 });
 
@@ -437,6 +468,38 @@ describe("ApiRouter.handle: PATCH /api/todos/toggle", () => {
 		const res = await ApiRouter.handle("PATCH", "/api/todos/toggle", {}, makeTodo(), deps);
 		expect(res.status).toBe(409);
 		expect((res.body as { code: string }).code).toBe("E003");
+	});
+});
+
+describe("ApiRouter.handle: PATCH /api/todos/cancel", () => {
+	it("delegates to todoService.setCancelled and returns 200 on success", async () => {
+		const { deps, todoService } = makeMocks();
+		const todo = makeTodo();
+		const res = await ApiRouter.handle("PATCH", "/api/todos/cancel", {}, { todo, cancelled: true }, deps);
+		expect(todoService.setCancelled).toHaveBeenCalledWith(todo, true);
+		expect(res.status).toBe(200);
+	});
+
+	it("returns 409/E003 on line-mismatch conflict", async () => {
+		const { deps, todoService } = makeMocks();
+		todoService.setCancelled.mockResolvedValue("conflict");
+		const res = await ApiRouter.handle("PATCH", "/api/todos/cancel", {}, { todo: makeTodo(), cancelled: true }, deps);
+		expect(res.status).toBe(409);
+		expect((res.body as { code: string }).code).toBe("E003");
+	});
+
+	it("returns 400 when todo is missing", async () => {
+		const { deps, todoService } = makeMocks();
+		const res = await ApiRouter.handle("PATCH", "/api/todos/cancel", {}, { cancelled: true }, deps);
+		expect(res.status).toBe(400);
+		expect(todoService.setCancelled).not.toHaveBeenCalled();
+	});
+
+	it("returns 400 when cancelled is not a boolean", async () => {
+		const { deps, todoService } = makeMocks();
+		const res = await ApiRouter.handle("PATCH", "/api/todos/cancel", {}, { todo: makeTodo(), cancelled: "yes" }, deps);
+		expect(res.status).toBe(400);
+		expect(todoService.setCancelled).not.toHaveBeenCalled();
 	});
 });
 

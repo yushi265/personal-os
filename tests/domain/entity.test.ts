@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeOrderForInsert, parseEntity } from "../../src/domain/entity";
+import { computeOrderForInsert, isClosedStatus, OPEN_STATUSES, parseEntity, TICKET_STATUSES } from "../../src/domain/entity";
 
 const file = { path: "PersonalOS/Tickets/foo.md", basename: "foo" };
 const resolveLink = (link: string): string | null => {
@@ -24,6 +24,12 @@ describe("parseEntity", () => {
 		const result = parseEntity(file, { type: "ticket", status: "not-a-status" }, resolveLink);
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.reason).toContain("不正なstatus");
+	});
+
+	it("accepts 'cancelled' as a valid ticket status", () => {
+		const result = parseEntity(file, { type: "ticket", status: "cancelled" }, resolveLink);
+		expect(result.ok).toBe(true);
+		if (result.ok) expect(result.entity.status).toBe("cancelled");
 	});
 
 	it("defaults status per type when unspecified", () => {
@@ -191,5 +197,41 @@ describe("computeOrderForInsert", () => {
 		];
 		const result = computeOrderForInsert(rows, 0, 0);
 		expect(result).toEqual([]);
+	});
+});
+
+describe("TICKET_STATUSES / OPEN_STATUSES", () => {
+	it("inserts cancelled directly between done and archived", () => {
+		const doneIdx = TICKET_STATUSES.indexOf("done");
+		const cancelledIdx = TICKET_STATUSES.indexOf("cancelled");
+		const archivedIdx = TICKET_STATUSES.indexOf("archived");
+		expect(cancelledIdx).toBe(doneIdx + 1);
+		expect(archivedIdx).toBe(cancelledIdx + 1);
+	});
+
+	it("does not treat cancelled as an open ticket status", () => {
+		expect(OPEN_STATUSES.ticket.has("cancelled")).toBe(false);
+	});
+});
+
+describe("isClosedStatus", () => {
+	it("returns true for done", () => {
+		expect(isClosedStatus("done")).toBe(true);
+	});
+
+	it("returns true for cancelled", () => {
+		expect(isClosedStatus("cancelled")).toBe(true);
+	});
+
+	it("returns false for doing", () => {
+		expect(isClosedStatus("doing")).toBe(false);
+	});
+
+	it("returns false for archived", () => {
+		expect(isClosedStatus("archived")).toBe(false);
+	});
+
+	it("returns false for backlog", () => {
+		expect(isClosedStatus("backlog")).toBe(false);
 	});
 });

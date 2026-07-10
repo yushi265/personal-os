@@ -1,7 +1,15 @@
 import { Notice } from "obsidian";
 import type { Priority } from "../domain/entity";
 import { today } from "../domain/date";
-import { appendTodoToSection, buildTodoLine, moveTodoLine, rebuildTodoLine, toggleTodoLine, updateTodoLine } from "../domain/todo";
+import {
+	appendTodoToSection,
+	buildTodoLine,
+	moveTodoLine,
+	rebuildTodoLine,
+	setTodoLineCancelled,
+	toggleTodoLine,
+	updateTodoLine,
+} from "../domain/todo";
 import type { BuildTodoLineInput, MoveTodoTarget, Todo, TodoPatch } from "../domain/todo";
 import type { EditLineResult } from "../infra/VaultRepository";
 import type { VaultRepository } from "../infra/VaultRepository";
@@ -51,6 +59,14 @@ export class TodoService {
 	async toggle(todo: Todo): Promise<TodoWriteResult> {
 		const expected = rebuildTodoLine(todo);
 		const next = toggleTodoLine(expected, today());
+		const result = await this.repo.editLine(todo.filePath, todo.line, expected, next);
+		return this.handleMismatch(result, todo.filePath);
+	}
+
+	/** キャンセル状態の設定/解除。行頭checkboxを`[-]`(true)/`[ ]`(false)へ書き換える(cancel時は✅日付も除去する) */
+	async setCancelled(todo: Todo, cancelled: boolean): Promise<TodoWriteResult> {
+		const expected = rebuildTodoLine(todo);
+		const next = setTodoLineCancelled(expected, cancelled);
 		const result = await this.repo.editLine(todo.filePath, todo.line, expected, next);
 		return this.handleMismatch(result, todo.filePath);
 	}

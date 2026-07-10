@@ -9,6 +9,7 @@ const STATUS_DOT: Record<string, string> = {
   waiting: "bg-amber-500",
   review: "bg-violet-500",
   done: "bg-emerald-500",
+  cancelled: "bg-zinc-300 dark:bg-zinc-600",
   archived: "bg-zinc-300 dark:bg-zinc-600",
 };
 const ACTIVE_STATUSES = new Set(["active", "doing"]);

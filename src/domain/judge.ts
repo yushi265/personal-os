@@ -4,7 +4,7 @@
  */
 
 import { OPEN_STATUSES, type Entity, type EntityType } from "./entity";
-import type { Todo } from "./todo";
+import { isCancelledTodo, type Todo } from "./todo";
 import { addCycle } from "./date";
 
 function openStatusesOf(type: EntityType): ReadonlySet<string> | undefined {
@@ -20,9 +20,9 @@ export function isOverdue(e: Entity, today: string): boolean {
 	return e.due < today && open.has(e.status);
 }
 
-/** dueを過ぎ、かつ未完了のTodoか */
+/** dueを過ぎ、かつ未完了(cancelled除く)のTodoか */
 export function isTodoOverdue(t: Todo, today: string): boolean {
-	return !t.done && !!t.dueDate && t.dueDate < today;
+	return !t.done && !isCancelledTodo(t) && !!t.dueDate && t.dueDate < today;
 }
 
 /** review_cycleに基づき、レビューが必要な時期に達しているか */

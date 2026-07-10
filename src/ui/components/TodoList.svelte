@@ -3,7 +3,7 @@
 	import type { Priority } from "../../domain/entity";
 	import { PRIORITIES } from "../../domain/entity";
 	import type { Todo } from "../../domain/todo";
-	import { rebuildTodoLine } from "../../domain/todo";
+	import { isCancelledTodo, rebuildTodoLine } from "../../domain/todo";
 	import type { MoveTodoTarget } from "../../domain/todo";
 	import type PersonalOSPlugin from "../../main";
 	import { t, todoDeletedUndoNotice } from "../../i18n/ja";
@@ -28,6 +28,7 @@
 		showParentBadge = false,
 		addTarget,
 		onParentClick,
+		onCancel,
 	}: {
 		plugin: PersonalOSPlugin;
 		todos: Todo[];
@@ -35,9 +36,12 @@
 		showParentBadge?: boolean;
 		addTarget?: string;
 		onParentClick?: (path: string) => void;
+		onCancel: (todo: Todo, cancelled: boolean) => void;
 	} = $props();
 
-	const visibleTodos = $derived(showDone ? todos : todos.filter((todo) => !todo.done));
+	const visibleTodos = $derived(
+		showDone ? todos : todos.filter((todo) => !todo.done && !isCancelledTodo(todo))
+	);
 
 	function priorityOptions(): { value: string; label: string }[] {
 		return [{ value: "", label: t("manage.field.unset") }, ...PRIORITIES.map((p) => ({ value: p, label: p }))];
@@ -61,6 +65,10 @@
 
 	function toggleTodo(todo: Todo): void {
 		void plugin.todoService.toggle(todo);
+	}
+
+	function cancelTodo(todo: Todo, cancelled: boolean): void {
+		onCancel(todo, cancelled);
 	}
 
 	// D&Dによる手動並び替え(design-reorder-and-notes.md A-1/A-4): Todoは行の物理順序そのものが並び順のため、
@@ -135,6 +143,8 @@
 			moveDownDisabled: index === visibleTodos.length - 1,
 			onMoveDown: () => void moveTodo(todo, { kind: "down" }),
 			onPromote: () => promoteTodo(todo),
+			isCancelled: isCancelledTodo(todo),
+			onCancel: () => cancelTodo(todo, !isCancelledTodo(todo)),
 			onDelete: () => void deleteTodo(todo),
 		}).showAtPosition({ x, y });
 	}
@@ -173,6 +183,7 @@
 		{#each visibleTodos as todo, i (todo.filePath + "#" + todo.line)}
 			<li
 				class="pos-widget-item pos-preview-todo-row"
+				class:pos-todo-cancelled={isCancelledTodo(todo)}
 				ondragover={(e) => e.preventDefault()}
 				ondrop={(e) => handleDrop(e, todo)}
 				use:longpress={{ enabled: Platform.isMobile, onLongPress: (x, y) => openTodoMenu(todo, i, x, y) }}
@@ -189,7 +200,14 @@
 					>
 						⠿
 					</span>
-					<input type="checkbox" checked={todo.done} onchange={() => toggleTodo(todo)} />
+					<input
+						type="checkbox"
+						checked={todo.done}
+						disabled={isCancelledTodo(todo)}
+						aria-disabled={isCancelledTodo(todo)}
+						aria-label={isCancelledTodo(todo) ? t("preview.todo.cancelledLabel") : undefined}
+						onchange={() => toggleTodo(todo)}
+					/>
 					<span class="pos-preview-todo-text">
 						<TitleCell
 							value={todo.text}
@@ -245,6 +263,15 @@
 						▼
 					</button>
 					<button class="pos-preview-todo-action" onclick={() => promoteTodo(todo)}>{t("preview.todo.promote")}</button>
+					{#if isCancelledTodo(todo)}
+						<button class="pos-preview-todo-action" onclick={() => cancelTodo(todo, false)}>
+							{t("preview.todo.uncancel")}
+						</button>
+					{:else}
+						<button class="pos-preview-todo-action" onclick={() => cancelTodo(todo, true)}>
+							{t("preview.todo.cancel")}
+						</button>
+					{/if}
 					<button class="pos-preview-todo-action pos-btn-danger-ghost" onclick={() => deleteTodo(todo)}>
 						{t("preview.todo.delete")}
 					</button>

@@ -1,7 +1,7 @@
 import { useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import type { BuildTodoLineInput, Todo, TodoPatch } from "@domain/todo";
 import { today } from "@domain/date";
-import { addTodo, promoteTodo, removeTodo, toggleTodo, updateTodo } from "@/api/endpoints";
+import { addTodo, promoteTodo, removeTodo, setTodoCancelled, toggleTodo, updateTodo } from "@/api/endpoints";
 import type { PromoteOptions } from "@/api/types";
 import { useOptimisticMutation } from "./useOptimisticMutation";
 
@@ -70,6 +70,25 @@ export function useUpdateTodo() {
         text: patch.text ?? t.text,
         dueDate: patch.dueDate === null ? undefined : (patch.dueDate ?? t.dueDate),
         priority: patch.priority === null ? undefined : (patch.priority ?? t.priority),
+      })),
+    onErrorRollback: (snapshot) => {
+      if (snapshot) restoreTodoCaches(queryClient, snapshot);
+    },
+    invalidateKeys: ({ todo }) => [["todos", todo.parentPath], ["todos"]],
+  });
+}
+
+/** Todoのキャンセル/解除。statusChar("-"/" ")を書き換え、doneはfalseに固定(cancelledとdoneは相互排他) */
+export function useSetTodoCancelled() {
+  const queryClient = useQueryClient();
+
+  return useOptimisticMutation<{ todo: Todo; cancelled: boolean }, TodoCacheSnapshot>({
+    mutationFn: ({ todo, cancelled }) => setTodoCancelled(todo, cancelled),
+    onMutate: ({ todo, cancelled }) =>
+      patchTodoCaches(queryClient, todo, (t) => ({
+        ...t,
+        statusChar: cancelled ? "-" : " ",
+        done: false,
       })),
     onErrorRollback: (snapshot) => {
       if (snapshot) restoreTodoCaches(queryClient, snapshot);

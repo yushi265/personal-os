@@ -2,16 +2,21 @@ import { describe, expect, it } from "vitest";
 import { calcProjectProgress, calcTicketProgress } from "../../src/domain/progress";
 import type { Todo } from "../../src/domain/todo";
 
-function makeTodo(done: boolean): Todo {
+function makeTodo(done: boolean, statusChar?: string): Todo {
 	return {
 		filePath: "a.md",
 		line: 0,
 		text: "x",
 		done,
+		statusChar,
 		labels: [],
 		parentType: "ticket",
 		parentPath: "a.md",
 	};
+}
+
+function makeCancelledTodo(): Todo {
+	return makeTodo(false, "-");
 }
 
 describe("calcTicketProgress", () => {
@@ -25,6 +30,20 @@ describe("calcTicketProgress", () => {
 
 	it("P-3: rounds 2/3 done to 67", () => {
 		expect(calcTicketProgress([makeTodo(true), makeTodo(true), makeTodo(false)])).toBe(67);
+	});
+
+	it("P-7: returns 0 when every todo is cancelled (excluded from the denominator)", () => {
+		expect(calcTicketProgress([makeCancelledTodo(), makeCancelledTodo()])).toBe(0);
+	});
+
+	it("P-8: excludes cancelled from the denominator: done2+cancelled1+open1 -> 67", () => {
+		const todos = [makeTodo(true), makeTodo(true), makeCancelledTodo(), makeTodo(false)];
+		expect(calcTicketProgress(todos)).toBe(67);
+	});
+
+	it("P-9: excludes cancelled from the denominator: done3+cancelled1 -> 100", () => {
+		const todos = [makeTodo(true), makeTodo(true), makeTodo(true), makeCancelledTodo()];
+		expect(calcTicketProgress(todos)).toBe(100);
 	});
 });
 

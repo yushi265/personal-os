@@ -3,7 +3,7 @@ import type { EntityType } from "./domain/entity";
 import type { Todo } from "./domain/todo";
 import { today } from "./domain/date";
 import { computeGoalLabelMigration } from "./domain/migrateGoals";
-import { DEFAULT_SETTINGS, type POSSettings } from "./settings/settings";
+import { DEFAULT_SETTINGS, fillKanbanColumnNames, type POSSettings } from "./settings/settings";
 import { POSSettingsTab } from "./settings/SettingsTab";
 import { POSEventBus } from "./infra/EventBus";
 import { SelfWriteGuard } from "./infra/SelfWriteGuard";
@@ -197,6 +197,7 @@ export default class PersonalOSPlugin extends Plugin {
 
 	async loadSettings(): Promise<void> {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings.kanbanColumnNames = fillKanbanColumnNames(this.settings.kanbanColumnNames, DEFAULT_SETTINGS.kanbanColumnNames);
 	}
 
 	async saveSettings(): Promise<void> {

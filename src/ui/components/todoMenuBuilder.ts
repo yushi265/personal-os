@@ -16,6 +16,9 @@ export interface TodoMenuActions {
 	moveDownDisabled: boolean;
 	onMoveDown: () => void;
 	onPromote: () => void;
+	/** true: 現在cancelled状態(「キャンセル解除」項目を出す) / false: open・done状態(「キャンセル」項目を出す) */
+	isCancelled: boolean;
+	onCancel: () => void;
 	onDelete: () => void;
 }
 
@@ -39,6 +42,9 @@ export function buildTodoMenu(actions: TodoMenuActions): Menu {
 		item.setTitle(t("preview.todo.moveDown")).setDisabled(actions.moveDownDisabled).onClick(actions.onMoveDown)
 	);
 	menu.addItem((item) => item.setTitle(t("preview.todo.promote")).onClick(actions.onPromote));
+	menu.addItem((item) =>
+		item.setTitle(t(actions.isCancelled ? "preview.todo.uncancel" : "preview.todo.cancel")).onClick(actions.onCancel)
+	);
 	menu.addSeparator();
 	menu.addItem((item) => item.setTitle(t("preview.todo.delete")).onClick(actions.onDelete));
 	return menu;

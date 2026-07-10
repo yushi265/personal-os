@@ -49,7 +49,8 @@ export class ProgressService implements ProgressRecalculator {
 	}
 
 	private async recalcProject(project: Entity): Promise<void> {
-		const childTickets = this.store.getChildren(project.path).filter((e) => e.type === "ticket");
+		// POS-3 AC-6: cancelledチケットは「やらないことにした仕事」のため集計対象から除外する
+		const childTickets = this.store.getChildren(project.path).filter((e) => e.type === "ticket" && e.status !== "cancelled");
 		const ticketProgresses = childTickets.map((t) => t.progress ?? 0);
 		const directTodos = this.store.getTodos(project.path);
 		const progress = calcProjectProgress(ticketProgresses, directTodos);

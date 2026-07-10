@@ -10,7 +10,7 @@ export type EntityType = (typeof ENTITY_TYPES)[number];
 
 export const GOAL_STATUSES = ["active", "paused", "done", "archived"] as const;
 export const PROJECT_STATUSES = ["backlog", "active", "waiting", "review", "done", "archived"] as const;
-export const TICKET_STATUSES = ["backlog", "ready", "doing", "waiting", "review", "done", "archived"] as const;
+export const TICKET_STATUSES = ["backlog", "ready", "doing", "waiting", "review", "done", "cancelled", "archived"] as const;
 
 export const PRIORITIES = ["high", "medium", "low"] as const;
 export type Priority = (typeof PRIORITIES)[number];
@@ -68,6 +68,11 @@ const KNOWN_FRONTMATTER_KEYS = new Set([
 ]);
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/** 一覧のデフォルト非表示判定(done/cancelled = 終端status)の共有述語 */
+export function isClosedStatus(status: string): boolean {
+	return status === "done" || status === "cancelled";
+}
 
 export function defaultStatusOf(type: EntityType): string {
 	switch (type) {

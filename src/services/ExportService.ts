@@ -14,7 +14,7 @@ import {
 	type UnlinkedEntity,
 } from "../domain/export";
 import { isOverdue, isReviewNeeded, isTodoOverdue } from "../domain/judge";
-import type { Todo } from "../domain/todo";
+import { isCancelledTodo, type Todo } from "../domain/todo";
 import type { IndexStore } from "../infra/IndexStore";
 import { aiContextCopiedNotice, aiSummaryCopiedNotice, t } from "../i18n/ja";
 
@@ -78,8 +78,9 @@ function buildReviewNeededItems(entities: Entity[], now: string): ReviewNeededIt
 		.map((e) => ({ title: e.title, cycle: e.reviewCycle!, lastReviewed: e.lastReviewed }));
 }
 
+// POS-3 AC-7: cancelledは「やらないことにした仕事」のため未完了Todo件数に数えない
 function countOpenTodos(todos: Todo[]): number {
-	return todos.filter((t) => !t.done).length;
+	return todos.filter((t) => !t.done && !isCancelledTodo(t)).length;
 }
 
 /**

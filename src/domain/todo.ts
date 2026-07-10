@@ -5,6 +5,8 @@ import type { Entity, Priority } from "./entity";
  * rawText は元のTodo行から checkbox/インデントを除いた生テキスト(DataviewのSTask.textそのまま)。
  * indent は行頭のインデント文字列(ネストしたTodoの "- [ ]" 前の空白)。
  * どちらも editLine の照合用行復元(rebuildTodoLine)にのみ使う内部用途で、未設定でも動作するようoptionalとする。
+ * statusChar は checkbox の生文字(" "/"x"/"-" など1文字)。設定されていれば行復元(rebuildTodoLine)の正本になり、
+ * `[-]`(cancelled)を含む任意のカスタム状態を保全する。未設定(旧クライアント由来)の場合は done から補完する。
  */
 export interface Todo {
 	filePath: string;
@@ -13,6 +15,7 @@ export interface Todo {
 	rawText?: string;
 	indent?: string;
 	done: boolean;
+	statusChar?: string;
 	dueDate?: string;
 	startDate?: string;
 	doneDate?: string;
@@ -20,6 +23,17 @@ export interface Todo {
 	labels: string[];
 	parentType: "ticket" | "project" | "inbox";
 	parentPath: string;
+}
+
+/** cancelled(`- [-]`)状態のTodoか。done とは相互排他(パース時にinfraが保証)。 */
+export function isCancelledTodo(todo: Todo): boolean {
+	return todo.statusChar === "-";
+}
+
+/** todo.done/statusChar から checkbox 内の1文字を解決する(rebuildTodoLine/updateTodoLineで共有する規則) */
+function resolveStatusChar(todo: Pick<Todo, "done" | "statusChar">): string {
+	if (todo.statusChar && todo.statusChar.length === 1) return todo.statusChar;
+	return todo.done ? "x" : " ";
 }
 
 /**
@@ -99,12 +113,30 @@ export function buildTodoLine(input: BuildTodoLineInput): string {
 /**
  * 完了トグル。インデントは "- [ ]"/"- [x]" 部分文字列の置換のみで実現するため保持される。
  * 未完了→完了: "- [x]" + " ✅ doneDate" を付与。完了→未完了: "✅ date" を除去。
+ * cancelled("- [-]")行は誤トグル防止のためno-op(そのまま返す)。
  */
 export function toggleTodoLine(line: string, doneDate: string): string {
+	if (/^\s*- \[-\]/.test(line)) {
+		return line;
+	}
 	if (/^\s*- \[ \]/.test(line)) {
 		return line.replace("- [ ]", "- [x]") + ` ✅ ${doneDate}`;
 	}
 	return line.replace("- [x]", "- [ ]").replace(/\s*✅\s*\d{4}-\d{2}-\d{2}/u, "");
+}
+
+/**
+ * checkbox のcancelled状態を設定/解除する(TodoService.setCancelledの行変換)。
+ * 行頭 checkbox(インデント許容)を "[-]"(true) / "[ ]"(false) へ置換する。
+ * cancel時は完了時に付与された "✅ YYYY-MM-DD" を除去する(un-checkと同義)。
+ * checkboxの無い行はそのまま返す(変換しない。上位のeditLine照合でconflict検出される)。
+ */
+export function setTodoLineCancelled(line: string, cancelled: boolean): string {
+	if (!/^\s*- \[.\]/.test(line)) return line;
+	const char = cancelled ? "-" : " ";
+	const withChar = line.replace(/^(\s*- \[).(\])/, `$1${char}$2`);
+	if (!cancelled) return withChar;
+	return withChar.replace(/\s*✅\s*\d{4}-\d{2}-\d{2}/u, "");
 }
 
 /**
@@ -115,7 +147,7 @@ export function toggleTodoLine(line: string, doneDate: string): string {
  * stripIndent: true の場合はインデントを除去する(Promote先の新規ノートへ移設する際、トップレベル項目として書き出すため)。
  */
 export function rebuildTodoLine(todo: Todo, opts?: { stripIndent?: boolean }): string {
-	const checkbox = todo.done ? "- [x]" : "- [ ]";
+	const checkbox = `- [${resolveStatusChar(todo)}]`;
 	const body = todo.rawText ?? todo.text;
 	const indent = opts?.stripIndent ? "" : (todo.indent ?? "");
 	return `${indent}${checkbox} ${body}`.trimEnd();
@@ -133,7 +165,7 @@ export interface TodoPatch {
  * 出力順序は text→🛫→📅→✅→[priority::]→[labels::](buildTodoLineの絵文字順序と揃える)。
  */
 export function updateTodoLine(todo: Todo, patch: TodoPatch): string {
-	const checkbox = todo.done ? "- [x]" : "- [ ]";
+	const checkbox = `- [${resolveStatusChar(todo)}]`;
 	const indent = todo.indent ?? "";
 	const text = (patch.text ?? todo.text).trim();
 

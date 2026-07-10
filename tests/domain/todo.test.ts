@@ -6,9 +6,11 @@ import {
 	extractEmojiDate,
 	extractInline,
 	extractInlineList,
+	isCancelledTodo,
 	moveTodoLine,
 	normalizePriority,
 	rebuildTodoLine,
+	setTodoLineCancelled,
 	stripMetadata,
 	toggleTodoLine,
 	updateTodoLine,
@@ -37,6 +39,11 @@ describe("toggleTodoLine", () => {
 		const toggled = toggleTodoLine(original, "2026-07-04");
 		const restored = toggleTodoLine(toggled, "2026-07-05");
 		expect(restored).toBe(original);
+	});
+
+	it("T-4: leaves a cancelled todo line unchanged (no-op)", () => {
+		const result = toggleTodoLine("- [-] x", "2026-07-04");
+		expect(result).toBe("- [-] x");
 	});
 });
 
@@ -88,6 +95,45 @@ describe("defaultProjectForTodo", () => {
 	it("returns undefined for inbox todos", () => {
 		const todo = makeTodo({ parentType: "inbox", parentPath: "00_Inbox/note.md" });
 		expect(defaultProjectForTodo(todo, () => undefined)).toBeUndefined();
+	});
+});
+
+describe("isCancelledTodo", () => {
+	it("returns true when statusChar is '-'", () => {
+		const todo = makeTodo({ statusChar: "-" });
+		expect(isCancelledTodo(todo)).toBe(true);
+	});
+
+	it("returns false when statusChar is absent", () => {
+		const todo = makeTodo({});
+		expect(isCancelledTodo(todo)).toBe(false);
+	});
+
+	it("returns false when statusChar is a different character (e.g. done)", () => {
+		const todo = makeTodo({ statusChar: "x", done: true });
+		expect(isCancelledTodo(todo)).toBe(false);
+	});
+});
+
+describe("setTodoLineCancelled", () => {
+	it("S-1: cancels an open todo", () => {
+		expect(setTodoLineCancelled("- [ ] buy milk", true)).toBe("- [-] buy milk");
+	});
+
+	it("S-2: restores a cancelled todo to open", () => {
+		expect(setTodoLineCancelled("- [-] buy milk", false)).toBe("- [ ] buy milk");
+	});
+
+	it("S-3: cancelling a done todo removes the done-emoji date", () => {
+		expect(setTodoLineCancelled("- [x] buy milk ✅ 2026-01-01", true)).toBe("- [-] buy milk");
+	});
+
+	it("S-4: preserves leading indentation for a nested todo", () => {
+		expect(setTodoLineCancelled("  - [ ] sub", true)).toBe("  - [-] sub");
+	});
+
+	it("returns the line unchanged when it has no checkbox (upstream conflict detection handles it)", () => {
+		expect(setTodoLineCancelled("not a todo line", true)).toBe("not a todo line");
 	});
 });
 
@@ -208,6 +254,26 @@ describe("rebuildTodoLine", () => {
 		const todo = makeTodo({ indent: "  ", rawText: "sub task" });
 		expect(rebuildTodoLine(todo, { stripIndent: true })).toBe("- [ ] sub task");
 	});
+
+	it("uses statusChar '-' to restore a cancelled checkbox", () => {
+		const todo = makeTodo({ statusChar: "-", rawText: "cancelled task" });
+		expect(rebuildTodoLine(todo)).toBe("- [-] cancelled task");
+	});
+
+	it("preserves a custom checkbox character via statusChar", () => {
+		const todo = makeTodo({ statusChar: "/", rawText: "in progress task" });
+		expect(rebuildTodoLine(todo)).toBe("- [/] in progress task");
+	});
+
+	it("falls back to the done-based checkbox when statusChar is an empty string", () => {
+		const todo = makeTodo({ done: false, statusChar: "", rawText: "todo" });
+		expect(rebuildTodoLine(todo)).toBe("- [ ] todo");
+	});
+
+	it("falls back to the done-based checkbox when statusChar has more than one character", () => {
+		const todo = makeTodo({ done: true, statusChar: "xx", rawText: "todo" });
+		expect(rebuildTodoLine(todo)).toBe("- [x] todo");
+	});
 });
 
 describe("updateTodoLine", () => {
@@ -264,6 +330,11 @@ describe("updateTodoLine", () => {
 		expect(updateTodoLine(todo, { dueDate: "2026-07-10" })).toBe(
 			"- [x] buy milk 🛫 2026-07-01 📅 2026-07-10 ✅ 2026-07-03"
 		);
+	});
+
+	it("U-8: preserves the cancelled checkbox character when only text changes", () => {
+		const todo = makeTodo({ statusChar: "-", text: "buy milk" });
+		expect(updateTodoLine(todo, { text: "buy bread" })).toBe("- [-] buy bread");
 	});
 });
 

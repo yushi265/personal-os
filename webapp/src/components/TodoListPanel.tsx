@@ -1,11 +1,11 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { PartyPopper } from "lucide-react";
+import { Ban, PartyPopper, Undo2 } from "lucide-react";
 import type { Priority } from "@domain/entity";
-import type { Todo } from "@domain/todo";
+import { isCancelledTodo, type Todo } from "@domain/todo";
 import { useTodos } from "@/hooks/useTodos";
-import { useAddTodo, useRemoveTodo, useToggleTodo, useUpdateTodo } from "@/hooks/useTodoMutations";
+import { useAddTodo, useRemoveTodo, useSetTodoCancelled, useToggleTodo, useUpdateTodo } from "@/hooks/useTodoMutations";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
   const toggle = useToggleTodo();
   const update = useUpdateTodo();
   const remove = useRemoveTodo();
+  const setCancelled = useSetTodoCancelled();
   const add = useAddTodo(parent);
   const reduced = useReducedMotion();
 
@@ -44,11 +45,12 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
   const wasAllDone = React.useRef<boolean | null>(null);
 
   React.useEffect(() => {
-    if (!todos || todos.length === 0) {
+    const activeTodos = (todos ?? []).filter((todo) => !isCancelledTodo(todo));
+    if (activeTodos.length === 0) {
       wasAllDone.current = null;
       return;
     }
-    const allDone = todos.every((todo) => todo.done);
+    const allDone = activeTodos.every((todo) => todo.done);
     if (allDone && wasAllDone.current === false) {
       setCelebrate(true);
       const timer = setTimeout(() => setCelebrate(false), 1100);
@@ -67,7 +69,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
     );
   }
 
-  const visible = (todos ?? []).filter((todo) => showDone || !todo.done);
+  const visible = (todos ?? []).filter((todo) => showDone || (!todo.done && !isCancelledTodo(todo)));
 
   const submitAdd = () => {
     if (!draftText.trim()) {
@@ -135,6 +137,7 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
               <Checkbox
                 aria-label={todo.text}
                 checked={todo.done}
+                disabled={isCancelledTodo(todo)}
                 onCheckedChange={() => toggle.mutate(todo)}
                 className="data-[state=checked]:animate-in data-[state=checked]:zoom-in-50 data-[state=checked]:duration-200"
               />
@@ -142,13 +145,13 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
                 <TitleEditable
                   value={todo.text}
                   onCommit={(text) => update.mutate({ todo, patch: { text } })}
-                  className={`transition-colors duration-200 ${todo.done ? "text-muted-foreground" : ""}`}
+                  className={`transition-colors duration-200 ${todo.done || isCancelledTodo(todo) ? "text-muted-foreground" : ""}`}
                 />
                 <motion.span
                   aria-hidden
                   className="pointer-events-none absolute inset-x-1 top-1/2 h-px origin-left bg-muted-foreground"
                   initial={false}
-                  animate={{ scaleX: todo.done ? 1 : 0 }}
+                  animate={{ scaleX: todo.done || isCancelledTodo(todo) ? 1 : 0 }}
                   transition={reduced ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }}
                 />
               </div>
@@ -156,6 +159,14 @@ export function TodoListPanel({ parent, scope, today, scopeControl }: TodoListPa
               <DateEdit value={todo.dueDate} today={today} onCommit={(due) => update.mutate({ todo, patch: { dueDate: due ?? null } })} />
               <Button variant="ghost" size="sm" onClick={() => setPromoting(todo)}>
                 {t("preview.todo.promote")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={isCancelledTodo(todo) ? t("preview.todo.uncancel") : t("preview.todo.cancel")}
+                onClick={() => setCancelled.mutate({ todo, cancelled: !isCancelledTodo(todo) })}
+              >
+                {isCancelledTodo(todo) ? <Undo2 className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
               </Button>
               <Button variant="ghost" size="sm" className="text-destructive" onClick={() => remove.mutate(todo)}>
                 {t("preview.todo.delete")}

@@ -1,6 +1,7 @@
 import type { Entity } from "../../domain/entity";
 import { isOverdue, isReviewNeeded, isTodoOverdue } from "../../domain/judge";
 import { today } from "../../domain/date";
+import { isCancelledTodo } from "../../domain/todo";
 import type { Todo } from "../../domain/todo";
 import type PersonalOSPlugin from "../../main";
 import { isManageVaultEmpty } from "../manage/manageData";
@@ -84,10 +85,12 @@ export async function buildDashboardData(plugin: PersonalOSPlugin): Promise<Dash
 	return {
 		todoFeatures,
 		isEmpty: isManageVaultEmpty(plugin.store),
-		todayTodos: todoFeatures ? plugin.todoService.list({ done: false, dueOn: now }) : [],
+		// TodoService.list()はdoneのみでフィルタするため、cancelled除外はここで明示する(POS-3 AC-7)。
+		// overdueTodosはisTodoOverdue(domain/judge)がcancelledを除外済みのため自動追随する。
+		todayTodos: todoFeatures ? plugin.todoService.list({ done: false, dueOn: now }).filter((t) => !isCancelledTodo(t)) : [],
 		overdueTodos: todoFeatures ? plugin.store.getAllTodos().filter((t) => isTodoOverdue(t, now)) : [],
 		overdueEntities: entities.filter((e) => isOverdue(e, now)),
-		openTodosCount: todoFeatures ? plugin.store.getAllTodos().filter((t) => !t.done).length : 0,
+		openTodosCount: todoFeatures ? plugin.store.getAllTodos().filter((t) => !t.done && !isCancelledTodo(t)).length : 0,
 		activeProjects: plugin.store.listByType("project").filter((e) => e.status === "active"),
 		activeTickets: plugin.store.listByType("ticket").filter((e) => e.status === "doing"),
 		reviewNeeded: entities.filter((e) => isReviewNeeded(e, now)),

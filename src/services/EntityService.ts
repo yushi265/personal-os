@@ -129,7 +129,9 @@ export class EntityService {
 			fm.status = next;
 		});
 
-		if (next === "done" && entity.type === "ticket" && this.progressService) {
+		// POS-3 AC-6: cancelled遷移(集計除外)・離脱のどちらも親progressの値が変わるため、doneと同様にrecalcを発火する
+		const affectsProgress = next === "done" || next === "cancelled" || old === "cancelled";
+		if (affectsProgress && entity.type === "ticket" && this.progressService) {
 			await this.progressService.recalcAncestors(path);
 		}
 

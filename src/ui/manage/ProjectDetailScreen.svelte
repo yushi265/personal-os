@@ -2,6 +2,7 @@
 	import { Notice } from "obsidian";
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, validStatusesOf } from "../../domain/entity";
+	import type { Todo } from "../../domain/todo";
 	import type PersonalOSPlugin from "../../main";
 	import { entityCreatedNotice, t } from "../../i18n/ja";
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
@@ -94,6 +95,10 @@
 	}
 	function commitLabels(next: string[]): Promise<void> {
 		return plugin.entityFieldService.updateField(screen.path, "labels", next);
+	}
+
+	function cancelTodo(todo: Todo, cancelled: boolean): void {
+		void plugin.todoService.setCancelled(todo, cancelled);
 	}
 
 	function changeTicketFilter(next: ManageFilter): void {
@@ -240,6 +245,7 @@
 				showParentBadge={screen.todoScope === "all"}
 				addTarget={screen.path}
 				onParentClick={onNavigateTicket}
+				onCancel={cancelTodo}
 			/>
 		</section>
 	{:else}

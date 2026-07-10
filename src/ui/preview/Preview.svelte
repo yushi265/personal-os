@@ -5,6 +5,7 @@
 	import type { PreviewData } from "./previewData";
 	import type { Entity } from "../../domain/entity";
 	import { PRIORITIES, REVIEW_CYCLES, validStatusesOf } from "../../domain/entity";
+	import type { Todo } from "../../domain/todo";
 	import { collectKnownLabels, collectKnownTags, entityProgressFraction } from "../manage/manageData";
 	import { CreateEntityModal } from "../modals/CreateEntityModal";
 	import { PromoteTicketModal } from "../modals/PromoteModal";
@@ -95,6 +96,9 @@
 	}
 	function commitChildStatus(child: Entity, next: string): Promise<void> {
 		return plugin.entityService.changeStatus(child.path, next);
+	}
+	function cancelTodo(todo: Todo, cancelled: boolean): void {
+		void plugin.todoService.setCancelled(todo, cancelled);
 	}
 
 	// ---- 操作行(design-ui-first.md §4.2) ----
@@ -233,7 +237,7 @@
 					/>
 					{t("manage.filter.showDone")}
 				</label>
-				<TodoList {plugin} todos={$data.todos} showDone={showDoneTodos} addTarget={entity.path} />
+				<TodoList {plugin} todos={$data.todos} showDone={showDoneTodos} addTarget={entity.path} onCancel={cancelTodo} />
 			</details>
 		{:else}
 			<div class="pos-widget pos-widget-banner">
